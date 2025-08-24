@@ -5,7 +5,7 @@ repositories {
         url = 'https://maven.brott.dev/'
     }
     maven {
-        url = 'https://gearup12499-org.github.io/TaskShark/'
+        url = 'https://www.gearup12499.com/TaskShark/'
     }
 }
 
@@ -18,7 +18,7 @@ dependencies {
     implementation 'org.firstinspires.ftc:Hardware:10.3.0'
     implementation 'org.firstinspires.ftc:FtcCommon:10.3.0'
     implementation 'org.firstinspires.ftc:Vision:10.3.0'
-    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation 'androidx.core:core-ktx:1.17.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
