@@ -20,7 +20,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
         hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM,0,0, AngleUnit.DEGREES,0));
         hardware.PinPoint.setOffsets(96,24, DistanceUnit.MM);
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);;
+        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);;
 
         hardware.PinPoint.resetPosAndIMU();
         hardware.PinPoint.recalibrateIMU();
