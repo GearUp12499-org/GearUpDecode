@@ -20,7 +20,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
         hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM,0,0, AngleUnit.DEGREES,0));
         hardware.PinPoint.setOffsets(96,24, DistanceUnit.MM);
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);;
+        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);;
 
         hardware.PinPoint.resetPosAndIMU();
         hardware.PinPoint.recalibrateIMU();
@@ -52,6 +52,32 @@ public class DumbledoreTeleOp extends LinearOpMode {
             hardware.backLeft.setPower(backLeftPower);
             hardware.frontRight.setPower(frontRightPower);
             hardware.backRight.setPower(backRightPower);
+
+            if (gamepad1.y){
+                hardware.frontLeft.setPower(1);
+                hardware.backLeft.setPower(1);
+                hardware.frontRight.setPower(1);
+                hardware.backRight.setPower(1);
+            }
+            if (gamepad1.a){
+                hardware.frontLeft.setPower(-1);
+                hardware.backLeft.setPower(-1);
+                hardware.frontRight.setPower(-1);
+                hardware.backRight.setPower(-1);
+            }
+            if (gamepad1.b){
+                hardware.frontLeft.setPower(-1);
+                hardware.backLeft.setPower(1);
+                hardware.frontRight.setPower(1);
+                hardware.backRight.setPower(-1);
+            }
+            if (gamepad1.x){
+                hardware.frontLeft.setPower(1);
+                hardware.backLeft.setPower(-1);
+                hardware.frontRight.setPower(-1);
+                hardware.backRight.setPower(1);
+            }
+            telemetry.update();
 
             telemetry.update();
         }
