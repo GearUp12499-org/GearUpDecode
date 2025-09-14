@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.widget.ZoomControls;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -36,6 +38,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.PtzControl;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
@@ -112,6 +116,7 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
      * The variable to store our instance of the vision portal.
      */
     private VisionPortal visionPortal;
+    private PtzControl zoomControl;
 
     @Override
     public void runOpMode() {
@@ -122,12 +127,24 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
         telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
         telemetry.addData(">", "Touch START to start OpMode");
         telemetry.update();
-        waitForStart();
 
+        waitForStart();
+        if (USE_WEBCAM) {
+            zoomControl = visionPortal.getCameraControl(PtzControl.class);
+        }
         while (opModeIsActive()) {
 
             telemetryAprilTag();
-
+            if (zoomControl != null) {
+                if (gamepad1.a) {
+                    zoomControl.setZoom(zoomControl.getMaxZoom());
+                    telemetry.addData("Zoom", "Set to Max");
+                }
+                if (gamepad1.b) {
+                    zoomControl.setZoom(zoomControl.getMinZoom());
+                    telemetry.addData("Zoom", "Set to Min");
+                }
+            }
             // Push telemetry to the Driver Station.
             telemetry.update();
 
@@ -137,7 +154,6 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
             } else if (gamepad1.dpad_up) {
                 visionPortal.resumeStreaming();
             }
-
             // Share the CPU.
             sleep(20);
         }
