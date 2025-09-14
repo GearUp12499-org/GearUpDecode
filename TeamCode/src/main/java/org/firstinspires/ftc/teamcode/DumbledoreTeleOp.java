@@ -17,10 +17,10 @@ public class DumbledoreTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         hardware = new DumbledoreHardware(hardwareMap);
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM,0,0, AngleUnit.DEGREES,0));
-        hardware.PinPoint.setOffsets(96,24, DistanceUnit.MM);
+        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
+        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);;
+        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         hardware.PinPoint.resetPosAndIMU();
         hardware.PinPoint.recalibrateIMU();
@@ -34,6 +34,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
             telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
             telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("imu angle (DEGREES)", hardware.PinPoint.getHeading(AngleUnit.DEGREES));
 
             hardware.PinPoint.update();
 
@@ -76,6 +77,33 @@ public class DumbledoreTeleOp extends LinearOpMode {
                 hardware.backLeft.setPower(-1);
                 hardware.frontRight.setPower(-1);
                 hardware.backRight.setPower(1);
+            }
+
+            if (gamepad1.right_bumper) {
+                while (hardware.PinPoint.getPosX(DistanceUnit.INCH) >= -48) {
+                    hardware.frontLeft.setPower(-0.3);
+                    hardware.backLeft.setPower(-0.3);
+                    hardware.frontRight.setPower(-0.3);
+                    hardware.backRight.setPower(-0.3);
+                    hardware.PinPoint.update();
+                }
+                hardware.frontLeft.setPower(0);
+                hardware.backLeft.setPower(0);
+                hardware.frontRight.setPower(0);
+                hardware.backRight.setPower(0);
+            }
+            if (gamepad1.left_bumper) {
+                while (hardware.PinPoint.getPosX(DistanceUnit.INCH) <= 0) {
+                    hardware.frontLeft.setPower(0.3);
+                    hardware.backLeft.setPower(0.3);
+                    hardware.frontRight.setPower(0.3);
+                    hardware.backRight.setPower(0.3);
+                    hardware.PinPoint.update();
+                }
+                hardware.frontLeft.setPower(0);
+                hardware.backLeft.setPower(0);
+                hardware.frontRight.setPower(0);
+                hardware.backRight.setPower(0);
             }
             telemetry.update();
 
