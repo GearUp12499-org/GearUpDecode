@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.hardware.DumbledoreHardware;
 public class DumbledoreTeleOp extends LinearOpMode {
     DumbledoreHardware hardware;
 
+
     @Override
     public void runOpMode() throws InterruptedException {
         hardware = new DumbledoreHardware(hardwareMap);
@@ -30,11 +31,13 @@ public class DumbledoreTeleOp extends LinearOpMode {
         while (opModeIsActive()){
             Pose2D pose2D = hardware.PinPoint.getPosition();
 
-
-            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
-            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
-            telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
-            telemetry.addData("imu angle (DEGREES)", hardware.PinPoint.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("pinpointa",hardware.PinPoint.getHeading(AngleUnit.RADIANS));
+            telemetry.addData("pinpointx",hardware.PinPoint.getPosX(DistanceUnit.INCH));
+            telemetry.addData("pinpointy",hardware.PinPoint.getPosY(DistanceUnit.INCH));
+//            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
+//            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
+//            telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
+//            telemetry.addData("imu angle (DEGREES)", hardware.PinPoint.getHeading(AngleUnit.DEGREES));
 
             hardware.PinPoint.update();
 
@@ -54,12 +57,10 @@ public class DumbledoreTeleOp extends LinearOpMode {
             hardware.frontRight.setPower(frontRightPower);
             hardware.backRight.setPower(backRightPower);
 
-            if (gamepad1.y){
-                hardware.frontLeft.setPower(1);
-                hardware.backLeft.setPower(1);
-                hardware.frontRight.setPower(1);
-                hardware.backRight.setPower(1);
+            if(gamepad1.y){
+                drive2Pose(-24,0,Math.PI/2 );
             }
+
             if (gamepad1.a){
                 hardware.frontLeft.setPower(-1);
                 hardware.backLeft.setPower(-1);
@@ -109,5 +110,56 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
             telemetry.update();
         }
+    }
+    public void drive2Pose (double targetx, double targety, double targeta){
+
+        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
+//        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
+//        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+//        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.recalibrateIMU();
+        hardware = new DumbledoreHardware(hardwareMap);
+        while(true) {
+            double kp = 0.2;
+            double deltax = targetx - hardware.PinPoint.getPosX(DistanceUnit.INCH);
+            double deltay = targety - hardware.PinPoint.getPosY(DistanceUnit.INCH);
+            double deltaA = targeta - hardware.PinPoint.getHeading(AngleUnit.RADIANS);
+            double R = 9.375 ;
+            double F = Math.cos(deltaA) * deltax + Math.sin(deltaA) * deltay;
+            double S = Math.sin(deltaA) * deltax - Math.cos(deltaA) * deltay;
+            double W = R * deltaA;
+            double deltaAll = Math.sqrt((F*F) + (S*S) + (W*W));
+            double DFL = F + S - W;
+            double DBL = F - S - W;
+            double DFR = F - S + W;
+            double DBR = F + S + W;
+
+            double scale = Math.max(Math.abs(F) + Math.abs(S) + Math.abs(W), kp*deltaAll);
+
+            hardware.frontLeft.setPower(DFL / (scale*2));
+            hardware.backLeft.setPower(DBL / (scale*2));
+            hardware.frontRight.setPower(DFR / (scale*2));
+            hardware.backRight.setPower(DBR / (scale*2));
+
+            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24){
+                break;
+            }
+            telemetry.addData("pinpointa",hardware.PinPoint.getHeading(AngleUnit.RADIANS));
+            telemetry.addData("pinpointx",hardware.PinPoint.getPosX(DistanceUnit.INCH));
+            telemetry.addData("pinpointy",hardware.PinPoint.getPosY(DistanceUnit.INCH));
+            telemetry.addData("deltaY", deltay);
+            telemetry.addData("deltaX", deltax);
+            telemetry.addData("deltaA", deltaA);
+//            telemetry.addData("DFL",DFL);
+//            telemetry.addData("DFR",DFR);
+//            telemetry.addData("DBL",DBL);
+//            telemetry.addData("DBR",DBR);
+            telemetry.update();
+            hardware.PinPoint.update();
+        }
+
+
     }
 }
