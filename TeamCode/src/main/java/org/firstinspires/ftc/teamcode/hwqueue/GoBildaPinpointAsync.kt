@@ -8,7 +8,9 @@ import java.nio.ByteOrder.LITTLE_ENDIAN
 import java.util.concurrent.Future
 import kotlin.math.abs
 
-class GoBildaPinpointAsync(private val around: GoBildaPinpointDriver, private val sink: HardwareSinkThread) {
+class GoBildaPinpointAsync(private val around: GoBildaPinpointDriver) {
+    private val sink by LogicThread.hw
+
     var deviceStatus = 0; private set
     var loopTime = 0; private set
     var xEncoderValue = 0; private set
@@ -83,8 +85,7 @@ class GoBildaPinpointAsync(private val around: GoBildaPinpointDriver, private va
 
     fun update() {
         fut?.let {
-            if (!it.isDone)
-                throw IllegalStateException("Previous update hasn't completed yet! You should be calling update() only once per iteration.")
+            if (!it.isDone) return
             updateFromFuture()
         }
         fut = sink.supply(object : HardwareQuery<ByteArray>() {

@@ -5,10 +5,10 @@ import java.util.concurrent.Future
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.math.sign
 
-class HardwareSinkThread : Thread() {
-    private val theQueue = ConcurrentLinkedQueue<HardwareQuery<*>>()
+class HardwareThreadSink {
+    private val asynchronous = ConcurrentLinkedQueue<HardwareQuery<*>>()
+    private val synchronous = ConcurrentLinkedQueue<SyncHardwareQuery<*>>()
     @Volatile
     private var stopFlag = false
     private val signalling = ReentrantLock()
@@ -16,11 +16,19 @@ class HardwareSinkThread : Thread() {
     private val emptied: Condition = signalling.newCondition()
 
     fun <T> supply(query: HardwareQuery<T>): Future<T> {
-        theQueue.add(query)
+        asynchronous.add(query)
         signalling.withLock {
             stateUpdated.signal()
         }
         return query.get()
+    }
+
+    fun <T> supplySync(query: SyncHardwareQuery<T>): T {
+        synchronous.add(query)
+        signalling.withLock {
+            stateUpdated.signal()
+        }
+        return query.wait()
     }
 
     fun quit() {
@@ -31,10 +39,6 @@ class HardwareSinkThread : Thread() {
         }
     }
 
-    init {
-        isDaemon = true
-    }
-
     private fun iteration(): Boolean {
         if (stopFlag) return true
         signalling.withLock {
@@ -43,11 +47,21 @@ class HardwareSinkThread : Thread() {
         if (stopFlag) return true
         var didAnythingHappen = false
         while (true) {
-            val item: HardwareQuery<*>? = theQueue.poll()
-            if (item == null) break
-            didAnythingHappen = true
-
-            item.run()
+            val item1: SyncHardwareQuery<*>? = synchronous.poll()
+            if (item1 != null) {
+                if (item1.isRevoked) continue
+                didAnythingHappen = true
+                item1.run()
+                continue
+            }
+            val item2: HardwareQuery<*>? = asynchronous.poll()
+            if (item2 != null) {
+                if (item2.isRevoked) continue
+                didAnythingHappen = true
+                item2.run()
+                continue
+            }
+            break
         }
         if (didAnythingHappen) signalling.withLock {
             emptied.signalAll()
@@ -55,14 +69,14 @@ class HardwareSinkThread : Thread() {
         return false
     }
 
-    override fun run() {
+    fun run() {
         while (true) {
             if (iteration()) return
         }
     }
 
     fun waitForAll() {
-        while (!theQueue.isEmpty()) signalling.withLock {
+        while (!asynchronous.isEmpty()) signalling.withLock {
             emptied.await()
         }
     }
