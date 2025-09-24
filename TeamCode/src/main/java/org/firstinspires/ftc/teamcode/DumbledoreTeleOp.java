@@ -18,7 +18,6 @@ public class DumbledoreTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         hardware = new DumbledoreHardware(hardwareMap);
 
-
         hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
         hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -31,17 +30,18 @@ public class DumbledoreTeleOp extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()){
-            Pose2D pose2D = hardware.PinPoint.getPosition();
+            hardware.PinPoint.update();
 
-            telemetry.addData("pinpointa",hardware.PinPoint.getHeading(AngleUnit.RADIANS));
-            telemetry.addData("pinpointx",hardware.PinPoint.getPosX(DistanceUnit.INCH));
-            telemetry.addData("pinpointy",hardware.PinPoint.getPosY(DistanceUnit.INCH));
+            Pose2D currentPose = hardware.PinPoint.getPosition();
+
+            telemetry.addData("pinpointa",currentPose.getHeading(AngleUnit.RADIANS));
+            telemetry.addData("pinpointx",currentPose.getX(DistanceUnit.INCH));
+            telemetry.addData("pinpointy",currentPose.getY(DistanceUnit.INCH));
 //            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
 //            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
 //            telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
 //            telemetry.addData("imu angle (DEGREES)", hardware.PinPoint.getHeading(AngleUnit.DEGREES));
 
-            hardware.PinPoint.update();
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -115,20 +115,24 @@ public class DumbledoreTeleOp extends LinearOpMode {
     }
     public void drive2Pose (double targetx, double targety, double targeta){
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
+        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0)); //Do we want to do this again?
 //        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
 //        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 //        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
 //        hardware.PinPoint.resetPosAndIMU();
 //        hardware.PinPoint.recalibrateIMU();
-        hardware = new DumbledoreHardware(hardwareMap);
+//        hardware = new DumbledoreHardware(hardwareMap);
         while(true) {
-            double kp = 0.2;
+            hardware.PinPoint.update();
 
-            double currentx = hardware.PinPoint.getPosX(DistanceUnit.INCH);
-            double currenty = hardware.PinPoint.getPosY(DistanceUnit.INCH);
-            double currentTheta = hardware.PinPoint.getHeading(AngleUnit.RADIANS);
+            Pose2D currentPose = hardware.PinPoint.getPosition();
+
+            double currentx = currentPose.getX(DistanceUnit.INCH);
+            double currenty = currentPose.getY(DistanceUnit.INCH);
+            double currentTheta = currentPose.getHeading(AngleUnit.RADIANS);
+
+            double kp = 0.2;
 
             double deltax = targetx - currentx;
             double deltay = targety - currenty;
@@ -137,6 +141,15 @@ public class DumbledoreTeleOp extends LinearOpMode {
             if (deltaA > Math.PI) {
                 deltaA -= 2 * Math.PI;
             }
+
+            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24){
+                hardware.frontLeft.setPower(0);
+                hardware.backLeft.setPower(0);
+                hardware.frontRight.setPower(0);
+                hardware.backRight.setPower(0);
+                break;
+            }
+
             double R = 9.375 ;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
@@ -155,9 +168,6 @@ public class DumbledoreTeleOp extends LinearOpMode {
             hardware.frontRight.setPower(DFR / (scale*2));
             hardware.backRight.setPower(DBR / (scale*2));
 
-            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24){
-                break;
-            }
             telemetry.addData("pinpointa",currentTheta);
             telemetry.addData("pinpointx",currentx);
             telemetry.addData("pinpointy",currenty);
@@ -169,7 +179,6 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //            telemetry.addData("DBL",DBL);
 //            telemetry.addData("DBR",DBR);
             telemetry.update();
-            hardware.PinPoint.update();
         }
 
 
