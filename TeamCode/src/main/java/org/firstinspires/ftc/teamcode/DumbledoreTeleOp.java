@@ -137,7 +137,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             double deltax = targetx - currentx;
             double deltay = targety - currenty;
             double deltaA = targeta - currentTheta;
-            deltaA = deltaA % 2*(Math.PI);
+            deltaA = deltaA % (2*(Math.PI));
             if (deltaA > Math.PI) {
                 deltaA -= 2 * Math.PI;
             }
