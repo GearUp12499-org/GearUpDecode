@@ -19,7 +19,10 @@ public class DumbledoreTeleOp extends LinearOpMode {
         hardware = new DumbledoreHardware(hardwareMap);
 
         hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
-        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
+//        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
+        hardware.PinPoint.setOffsets(3.25,-1.25, DistanceUnit.INCH);
+
+
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
@@ -60,7 +63,8 @@ public class DumbledoreTeleOp extends LinearOpMode {
             hardware.backRight.setPower(backRightPower);
 
             if(gamepad1.y){
-                drive2Pose(-24,0,Math.PI/2 );
+                drive2Pose(78,0,-Math.PI/2 );
+//                drive2Pose(78,-18,-Math.PI/4);
             }
 
             if (gamepad1.a){
@@ -115,7 +119,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
     }
     public void drive2Pose (double targetx, double targety, double targeta){
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0)); //Do we want to do this again?
+//        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0)); //Do we want to do this again?
 //        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
 //        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 //        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
