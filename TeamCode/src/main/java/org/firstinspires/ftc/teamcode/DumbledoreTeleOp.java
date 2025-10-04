@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -11,6 +12,8 @@ import org.firstinspires.ftc.teamcode.hardware.DumbledoreHardware;
 
 @TeleOp
 public class DumbledoreTeleOp extends LinearOpMode {
+
+    private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     DumbledoreHardware hardware;
 
 
@@ -20,7 +23,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
         hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0));
 //        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
-        hardware.PinPoint.setOffsets(3.25,-1.25, DistanceUnit.INCH);
+        hardware.PinPoint.setOffsets(3.38,-1.10, DistanceUnit.INCH);
 //        hardware.PinPoint.setOffsets(0,0,DistanceUnit.INCH);
 
 
@@ -65,14 +68,18 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
             if(gamepad1.y){
                 drive2Pose(78,0,-Math.PI/4 );
+                sleep(2000);
                 drive2Pose(78,-18,-Math.PI/2);
+                sleep(2000);
+                drive2Pose(24,-16.5,-Math.PI/2);
             }
 
             if (gamepad1.a){
-                hardware.frontLeft.setPower(-1);
-                hardware.backLeft.setPower(-1);
-                hardware.frontRight.setPower(-1);
-                hardware.backRight.setPower(-1);
+                drive2Pose(78,0,0);
+//                hardware.frontLeft.setPower(-1);
+//                hardware.backLeft.setPower(-1);
+//                hardware.frontRight.setPower(-1);
+//                hardware.backRight.setPower(-1);
             }
             if (gamepad1.b){
                 hardware.frontLeft.setPower(-1);
@@ -128,7 +135,20 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //        hardware.PinPoint.resetPosAndIMU();
 //        hardware.PinPoint.recalibrateIMU();
 //        hardware = new DumbledoreHardware(hardwareMap);
+
+        double kp = 0.2;
+        double kd = 55;
+
+        double currenTime = runtime.time();
+        double prevTime = runtime.time();
+        double deltaTime = 0;
+        double prevDeltaAll = 0;
+
+
+
         while(true) {
+            currenTime = runtime.time();
+
             hardware.PinPoint.update();
 
             Pose2D currentPose = hardware.PinPoint.getPosition();
@@ -136,8 +156,6 @@ public class DumbledoreTeleOp extends LinearOpMode {
             double currentx = currentPose.getX(DistanceUnit.INCH);
             double currenty = currentPose.getY(DistanceUnit.INCH);
             double currentTheta = currentPose.getHeading(AngleUnit.RADIANS);
-
-            double kp = 0.2;
 
             double deltax = targetx - currentx;
             double deltay = targety - currenty;
@@ -166,12 +184,43 @@ public class DumbledoreTeleOp extends LinearOpMode {
             double DFR = F - S + W;
             double DBR = F + S + W;
 
-            double scale = Math.max(Math.abs(F) + Math.abs(S) + Math.abs(W), kp*deltaAll);
+            //rescale the four speeds so the largest is +/- 1
+            double tempMax1 = Math.max(Math.abs(DFL),Math.abs(DBL));
+            double tempMax2 =  Math.max(Math.abs(DFR),Math.abs(DBR));
+            double scale = Math.max(tempMax1,tempMax2);
 
-            hardware.frontLeft.setPower(DFL / (scale*2));
-            hardware.backLeft.setPower(DBL / (scale*2));
-            hardware.frontRight.setPower(DFR / (scale*2));
-            hardware.backRight.setPower(DBR / (scale*2));
+            if (scale<0.01){
+                scale = 0.01;
+            }
+
+//            double scale = Math.max(Math.abs(F) + Math.abs(S) + Math.abs(W), kp*deltaAll);
+
+            DFL /= scale;
+            DBL /= scale;
+            DFR /= scale;
+            DBR /= scale;
+
+            //PID computation
+
+            deltaTime = Math.max(currenTime - prevTime,0.001);//making sure we don't divide by 0
+
+            double pid = kp*deltaAll + kd*(deltaAll-prevDeltaAll)/deltaTime;
+
+            prevDeltaAll = deltaAll;
+            prevTime = currenTime;
+
+            //if pid<1, rescale so fastest speed is +/- pid
+            if (pid<1){
+                DFL *= pid;
+                DBL *= pid;
+                DFR *= pid;
+                DBR *= pid;
+            }
+
+            hardware.frontLeft.setPower(DFL);
+            hardware.backLeft.setPower(DBL);
+            hardware.frontRight.setPower(DFR);
+            hardware.backRight.setPower(DBR);
 
             telemetry.addData("pinpointa",currentTheta);
             telemetry.addData("pinpointx",currentx);
@@ -184,6 +233,8 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //            telemetry.addData("DBL",DBL);
 //            telemetry.addData("DBR",DBR);
             telemetry.update();
+
+
         }
 
 
