@@ -8,7 +8,7 @@ import java.nio.ByteOrder.LITTLE_ENDIAN
 import java.util.concurrent.Future
 import kotlin.math.abs
 
-class GoBildaPinpointAsync(private val around: GoBildaPinpointDriver) {
+class GoBildaPinpointAsync(val underlying: GoBildaPinpointDriver) {
     private val sink by LogicThread.hw
 
     var deviceStatus = 0; private set
@@ -90,7 +90,7 @@ class GoBildaPinpointAsync(private val around: GoBildaPinpointDriver) {
         }
         fut = sink.supply(object : HardwareQuery<ByteArray>() {
             override fun runInner(): ByteArray {
-                return around.deviceClient.read(BULK_READ, 40)
+                return underlying.deviceClient.read(BULK_READ, 40)
             }
         })
     }

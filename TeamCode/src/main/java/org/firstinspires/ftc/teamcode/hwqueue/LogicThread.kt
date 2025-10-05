@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.hwqueue
 
 
-class LogicThread(val hw: HardwareThreadSink, val action: Action) : Thread() {
+class LogicThread(val hw: HardwareThreadSink, val action: Action) : Thread("OpMode offthread logic") {
     companion object {
         val threadHw: HardwareThreadSink get() = (currentThread() as? LogicThread)?.hw ?: throw IllegalStateException("No hardware context available!")
         val hw get() = lazy { threadHw }
