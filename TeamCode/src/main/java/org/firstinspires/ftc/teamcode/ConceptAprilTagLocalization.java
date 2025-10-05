@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.annotation.SuppressLint;
 import android.util.Size;
 import android.widget.ZoomControls;
 
@@ -259,6 +260,7 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
     /**
      * Add telemetry about AprilTag detections.
      */
+    @SuppressLint("DefaultLocale")
     private void telemetryAprilTag() {
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -276,6 +278,8 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
                     telemetry.addData("Bearing: ", detection.ftcPose.bearing);
                     double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)) - pose2D.getHeading(AngleUnit.DEGREES));
                     telemetry.addData("Angle Error (Yaw): ", angleErr);
+                    telemetry.addData("Curr Zoom: %6.1f", zoomControl.getZoom());
+                   // telemetry.addData("Curr Exp: ", )
                     telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
                             detection.robotPose.getPosition().x,
                             detection.robotPose.getPosition().y,
