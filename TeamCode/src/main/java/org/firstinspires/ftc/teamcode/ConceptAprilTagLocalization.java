@@ -262,43 +262,54 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
      */
     @SuppressLint("DefaultLocale")
     private void telemetryAprilTag() {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+        telemetry.addLine("\n---- AprilTag Detection Info ----");
+        telemetry.addData("Number of Tags Detected", detections.size());
 
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
-
-        // Step through the list of detections and display info for each one.
-        for (AprilTagDetection detection : currentDetections) {
+        for (AprilTagDetection detection : detections) {
             if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                // Only use tags that don't have Obelisk in them
-                if (!detection.metadata.name.contains("Obelisk")) {
-                    double squareDist = Math.pow(detection.robotPose.getPosition().x, 2) + Math.pow(detection.robotPose.getPosition().y, 2);
-                    double dist = detection.ftcPose.range;
-                    telemetry.addData("Camera Dist: ", dist);
-                    telemetry.addData("Bearing: ", detection.ftcPose.bearing);
-                    double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)) - pose2D.getHeading(AngleUnit.DEGREES));
-                    telemetry.addData("Angle Error (Yaw): ", angleErr);
-                    telemetry.addData("Curr Zoom: %6.1f", zoomControl.getZoom());
-                   // telemetry.addData("Curr Exp: ", )
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
-                            detection.robotPose.getPosition().x,
-                            detection.robotPose.getPosition().y,
-                            detection.robotPose.getPosition().z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
-                            detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
-                            detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
-                            detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
-                }
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                telemetry.addLine("\n==============================");
+                telemetry.addData("Tag ID", detection.id);
+                telemetry.addData("Tag Name", detection.metadata.name);
+
+                // Distance from camera center to tag center (meters → inches)
+                double distance = detection.ftcPose.range; // already in inches
+                telemetry.addData("Distance from Camera to Tag Center (in)", String.format("%.2f", distance));
+
+                // Angle offset from camera center to tag center
+                double bearing = detection.ftcPose.bearing; // degrees
+                telemetry.addData("Bearing Offset (deg)", String.format("%.2f", bearing));
+
+                // Angle error from robot heading
+                double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES))
+                        - pose2D.getHeading(AngleUnit.DEGREES));
+                telemetry.addData("Angle Error (Yaw)", String.format("%.2f", angleErr));
+
+                // X, Y, Z positions
+                telemetry.addLine("Tag Position (XYZ in inches):");
+                telemetry.addData("X (Right)", String.format("%.2f", detection.robotPose.getPosition().x));
+                telemetry.addData("Y (Forward)", String.format("%.2f", detection.robotPose.getPosition().y));
+                telemetry.addData("Z (Up)", String.format("%.2f", detection.robotPose.getPosition().z));
+
+                // Errors vs actuals
+                telemetry.addLine("---- Errors & Offsets ----");
+                double expectedDistance = 24.0; // Example: replace with actual known test distance
+                double distanceError = distance - expectedDistance;
+                telemetry.addData("Distance Error (in)", String.format("%.2f", distanceError));
+
+                double expectedBearing = 0.0; // Straight ahead
+                double bearingError = bearing - expectedBearing;
+                telemetry.addData("Bearing Error (deg)", String.format("%.2f", bearingError));
+
+                telemetry.addData("Angle Offset from Heading (deg)", String.format("%.2f", angleErr));
             }
-        }   // end for() loop
+        }
 
-        // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nRobot Post: XYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("Robot Pose: PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-
-    }   // end method telemetryAprilTag()
+        telemetry.addLine("\n---- Telemetry Key ----");
+        telemetry.addLine("X = Right, Y = Forward, Z = Up");
+        telemetry.addLine("Bearing = Angle offset from center of camera view");
+        telemetry.addLine("Range = Distance from camera to tag center");
+        telemetry.addLine("Angle Error = Difference between measured yaw and robot heading");
+    } // end method telemetryAprilTag()
 
 }   // end class
