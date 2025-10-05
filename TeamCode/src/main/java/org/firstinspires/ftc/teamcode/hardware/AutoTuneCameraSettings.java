@@ -40,6 +40,11 @@ public class AutoTuneCameraSettings extends LinearOpMode {
     private int minGain, maxGain, currentGain;
     private int minZoom, maxZoom, currentZoom = 1;
 
+    private int finalExposure;
+    private int finalGain;
+
+    private List<String> detectionSequence = new ArrayList<>();
+
     private Position cameraPosition = new Position(DistanceUnit.INCH, 0, 8.315, 7.73, 0);
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
@@ -57,10 +62,20 @@ public class AutoTuneCameraSettings extends LinearOpMode {
 
         initAprilTag();
         setupCameraControls();
+
+        // Run auto-tuning before starting main loop
         autoTuneExposureAndGain();
 
+        // Set to chosen values before starting loop
+        currentExposure = finalExposure;
+        currentGain = finalGain;
+        if (exposureControl != null) exposureControl.setExposure(currentExposure, TimeUnit.MILLISECONDS);
+        if (gainControl != null) gainControl.setGain(currentGain);
+
         telemetry.addData("Init", "Complete. Use bumpers/triggers/D-pad to adjust camera settings.");
-        telemetry.addData(">", "Press START");
+        telemetry.addData("Final Exposure", currentExposure);
+        telemetry.addData("Final Gain", currentGain);
+        telemetry.addData("Detection Sequence", detectionSequence.toString());
         telemetry.update();
 
         waitForStart();
@@ -76,6 +91,7 @@ public class AutoTuneCameraSettings extends LinearOpMode {
             telemetryAprilTag();
             handleCameraControls();
 
+            telemetry.addData("Detection Sequence", detectionSequence.toString());
             telemetry.update();
             sleep(20);
         }
@@ -83,7 +99,6 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         visionPortal.close();
     }
 
-    // ---------------------- INIT APRILTAG ----------------------
     private void initAprilTag() {
         aprilTag = new AprilTagProcessor.Builder()
                 .setDrawAxes(false)
@@ -106,19 +121,16 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         visionPortal = builder.build();
     }
 
-    // ---------------------- CAMERA CONTROLS ----------------------
     private void setupCameraControls() {
         if (visionPortal == null) return;
 
         telemetry.addLine("Checking camera capabilities...");
         telemetry.update();
 
-        // Wait until camera is streaming
         while (opModeInInit() && visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             sleep(20);
         }
 
-        // Initialize controls
         zoomControl = visionPortal.getCameraControl(PtzControl.class);
         exposureControl = visionPortal.getCameraControl(ExposureControl.class);
         gainControl = visionPortal.getCameraControl(GainControl.class);
@@ -151,32 +163,35 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         telemetry.update();
     }
 
-    // ---------------------- AUTO CAM HANDLER ----------------------
     private void autoTuneExposureAndGain() {
-        List<String> detectionSequence = new ArrayList<>();
         boolean detected = false;
 
-        // -------- EXPOSURE TUNING --------
-        if (exposureControl != null) {
-            telemetry.addLine("Starting exposure tuning...");
-            telemetry.update();
+        telemetry.addLine("Starting auto exposure tuning...");
+        telemetry.update();
 
-            // Step 1: Increase from 1 → 15 by 1
+        if (exposureControl != null) {
             for (int e = 1; e <= 15; e++) {
+                telemetry.addData("Testing Exposure", e);
+                telemetry.update();
                 exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                sleep(500); // let camera adjust
+                sleep(500);
                 if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
+                    finalExposure = e;
+                    finalGain = currentGain;
                     detected = true;
                     break;
                 }
             }
 
-            // Step 2: Increase from last exposure → 50 by +3–5
             if (!detected) {
-                for (int e = 18; e <= 50; e += 4) { // average +4 increment
+                for (int e = 18; e <= 50; e += 4) {
+                    telemetry.addData("Testing Exposure", e);
+                    telemetry.update();
                     exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
                     sleep(500);
                     if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
+                        finalExposure = e;
+                        finalGain = currentGain;
                         detected = true;
                         break;
                     }
@@ -187,57 +202,58 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         if (detected) {
             telemetry.addLine("Detection achieved during exposure tuning!");
             telemetry.update();
-            return; // Quit everything
+            return;
         }
 
-        // -------- GAIN TUNING --------
         if (gainControl != null) {
-            telemetry.addLine("Starting gain tuning...");
+            telemetry.addLine("Starting auto gain tuning...");
             telemetry.update();
 
-            if (exposureControl != null) {
-                exposureControl.setExposure(3, TimeUnit.MILLISECONDS);
-            }
+            if (exposureControl != null) exposureControl.setExposure(3, TimeUnit.MILLISECONDS);
 
             int gainStart = currentGain;
             for (int g = gainStart; g >= minGain; g -= 10) {
+                telemetry.addData("Testing Gain", g);
+                telemetry.update();
                 gainControl.setGain(g);
                 sleep(500);
                 if (checkAprilTagDetection(detectionSequence, g, "Gain")) {
+                    finalGain = g;
+                    finalExposure = 3;
                     detected = true;
                     break;
                 }
             }
-
-            if(detected){
-                telemetry.addData("Sequence: ", "%s, %s, %s",
-                        detectionSequence.get(0),
-                        detectionSequence.get(1),
-                        detectionSequence.get(2));
-            }
         }
 
-        telemetry.addLine("Tuning complete.");
+        if (!detected) {
+            finalExposure = currentExposure;
+            finalGain = currentGain;
+        }
+
+        telemetry.addLine("Auto tuning complete!");
+        telemetry.addData("Final Exposure", finalExposure);
+        telemetry.addData("Final Gain", finalGain);
         telemetry.addData("Detection Sequence", detectionSequence.toString());
         telemetry.update();
     }
 
-    // -------- DETECTION CHECKER --------
     private boolean checkAprilTagDetection(List<String> detectionSequence, int value, String mode) {
         List<AprilTagDetection> detections = aprilTag.getDetections();
+        boolean detected = false;
         for (AprilTagDetection detection : detections) {
             if (detection.metadata != null && detection.metadata.name.contains("Obelisk")) {
                 detectionSequence.add(String.format("%s: %d detected at ID %d", mode, value, detection.id));
-                telemetry.addLine("Obelisk detected!");
-                telemetry.update();
-                return true;
+                detected = true;
+                break;
             }
         }
-        detectionSequence.add(String.format("%s: %d no detection", mode, value));
-        return false;
+        if (!detected) {
+            detectionSequence.add(String.format("%s: %d no detection", mode, value));
+        }
+        return detected;
     }
 
-    // ---------------------- MANUAL CAMERA CONTROL HANDLER ----------------------
     private void handleCameraControls() {
         if (exposureControl != null && (gamepad1.left_bumper || gamepad1.left_trigger > 0.25)) {
             if (gamepad1.left_bumper) currentExposure += 1;
@@ -268,7 +284,6 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         telemetry.addData("Zoom", "%d (min=%d, max=%d)", currentZoom, minZoom, maxZoom);
     }
 
-    // ---------------------- APRILTAG TELEMETRY ----------------------
     @SuppressLint("DefaultLocale")
     private void telemetryAprilTag() {
         List<AprilTagDetection> detections = aprilTag.getDetections();
