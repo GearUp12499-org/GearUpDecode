@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.hardware.DumbledoreHardware;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +57,7 @@ public class AutoTuneCameraSettings extends LinearOpMode {
 
         initAprilTag();
         setupCameraControls();
+        autoTuneExposureAndGain();
 
         telemetry.addData("Init", "Complete. Use bumpers/triggers/D-pad to adjust camera settings.");
         telemetry.addData(">", "Press START");
@@ -145,7 +147,94 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         telemetry.addData("Exposure Control", (exposureControl != null) ? "Supported" : "Not Supported");
         telemetry.addData("Gain Control", (gainControl != null) ? "Supported" : "Not Supported");
         telemetry.addData("Zoom Control", (zoomControl != null) ? "Supported" : "Not Supported");
+        sleep(1000);
         telemetry.update();
+    }
+
+    // ---------------------- AUTO CAM HANDLER ----------------------
+    private void autoTuneExposureAndGain() {
+        List<String> detectionSequence = new ArrayList<>();
+        boolean detected = false;
+
+        // -------- EXPOSURE TUNING --------
+        if (exposureControl != null) {
+            telemetry.addLine("Starting exposure tuning...");
+            telemetry.update();
+
+            // Step 1: Increase from 1 → 15 by 1
+            for (int e = 1; e <= 15; e++) {
+                exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
+                sleep(500); // let camera adjust
+                if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
+                    detected = true;
+                    break;
+                }
+            }
+
+            // Step 2: Increase from last exposure → 50 by +3–5
+            if (!detected) {
+                for (int e = 18; e <= 50; e += 4) { // average +4 increment
+                    exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
+                    sleep(500);
+                    if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
+                        detected = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (detected) {
+            telemetry.addLine("Detection achieved during exposure tuning!");
+            telemetry.update();
+            return; // Quit everything
+        }
+
+        // -------- GAIN TUNING --------
+        if (gainControl != null) {
+            telemetry.addLine("Starting gain tuning...");
+            telemetry.update();
+
+            if (exposureControl != null) {
+                exposureControl.setExposure(3, TimeUnit.MILLISECONDS);
+            }
+
+            int gainStart = currentGain;
+            for (int g = gainStart; g >= minGain; g -= 10) {
+                gainControl.setGain(g);
+                sleep(500);
+                if (checkAprilTagDetection(detectionSequence, g, "Gain")) {
+                    detected = true;
+                    break;
+                }
+            }
+
+            if(detected){
+                telemetry.addData("Sequence: ", "%s, %s, %s",
+                        detectionSequence.get(0),
+                        detectionSequence.get(1),
+                        detectionSequence.get(2));
+            }
+        }
+
+        telemetry.addLine("Tuning complete.");
+        telemetry.addData("Detection Sequence", detectionSequence.toString());
+        telemetry.update();
+    }
+
+    // -------- DETECTION CHECKER --------
+    private boolean checkAprilTagDetection(List<String> detectionSequence, int value, String mode) {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+        for (AprilTagDetection detection : detections) {
+            if (detection.metadata != null && detection.metadata.name.contains("Obelisk")) {
+                detectionSequence.add(String.format("%s: %d detected at ID %d", mode, value, detection.id));
+                telemetry.addLine("Obelisk detected!");
+                telemetry.update();
+                return true;
+            }
+        }
+        detectionSequence.add(String.format("%s: %d no detection", mode, value));
+        return false;
     }
 
     // ---------------------- MANUAL CAMERA CONTROL HANDLER ----------------------
