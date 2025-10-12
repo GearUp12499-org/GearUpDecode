@@ -4,11 +4,21 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.hardware.DumbledoreHardware;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Locale;
 
 @TeleOp
 public class DumbledoreTeleOp extends LinearOpMode {
@@ -44,6 +54,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             telemetry.addData("pinpointa",currentPose.getHeading(AngleUnit.RADIANS));
             telemetry.addData("pinpointx",currentPose.getX(DistanceUnit.INCH));
             telemetry.addData("pinpointy",currentPose.getY(DistanceUnit.INCH));
+            telemetry.addData("pinpoint",hardware.PinPoint.getDeviceStatus());
 //            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
 //            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
 //            telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
@@ -75,7 +86,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a){
-                drive2Pose(78,0,0);
+                drive2Pose(48,0,0);
 //                hardware.frontLeft.setPower(-1);
 //                hardware.backLeft.setPower(-1);
 //                hardware.frontRight.setPower(-1);
@@ -127,6 +138,20 @@ public class DumbledoreTeleOp extends LinearOpMode {
     }
     public void drive2Pose (double targetx, double targety, double targeta){
 
+
+        ArrayList<Long> Time = new ArrayList<>();
+        ArrayList<Double> VelocityX = new ArrayList<>();
+        ArrayList<Double> VelocityY = new ArrayList<>();
+
+        ArrayList<Double> FLspeed = new ArrayList<>();
+        ArrayList<Double> BLspeed = new ArrayList<>();
+        ArrayList<Double> FRspeed = new ArrayList<>();
+        ArrayList<Double> BRspeed = new ArrayList<>();
+
+        ArrayList<Double> FLpower = new ArrayList<>();
+        ArrayList<Double> BLpower = new ArrayList<>();
+        ArrayList<Double> FRpower = new ArrayList<>();
+        ArrayList<Double> BRpower = new ArrayList<>();
 //        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.DEGREES,0)); //Do we want to do this again?
 //        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
 //        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -137,7 +162,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //        hardware = new DumbledoreHardware(hardwareMap);
 
         double kp = 0.2;
-        double kd = 55;
+        double kd = 30;
 
         double currenTime = runtime.time();
         double prevTime = runtime.time();
@@ -150,6 +175,11 @@ public class DumbledoreTeleOp extends LinearOpMode {
             currenTime = runtime.time();
 
             hardware.PinPoint.update();
+
+            double yVelocity= hardware.PinPoint.getVelY(DistanceUnit.INCH);
+            double xVelocity = hardware.PinPoint.getVelX(DistanceUnit.INCH);
+
+            double speed = Math.sqrt((yVelocity*yVelocity)+(xVelocity*xVelocity));
 
             Pose2D currentPose = hardware.PinPoint.getPosition();
 
@@ -165,7 +195,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
                 deltaA -= 2 * Math.PI;
             }
 
-            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24){
+            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24 && speed < 10){
                 hardware.frontLeft.setPower(0);
                 hardware.backLeft.setPower(0);
                 hardware.frontRight.setPower(0);
@@ -210,17 +240,36 @@ public class DumbledoreTeleOp extends LinearOpMode {
             prevTime = currenTime;
 
             //if pid<1, rescale so fastest speed is +/- pid
-            if (pid<1){
+            if (Math.abs(pid)<1){
                 DFL *= pid;
                 DBL *= pid;
                 DFR *= pid;
                 DBR *= pid;
             }
 
-            hardware.frontLeft.setPower(DFL);
-            hardware.backLeft.setPower(DBL);
-            hardware.frontRight.setPower(DFR);
-            hardware.backRight.setPower(DBR);
+            double PFL = speed2Power(DFL);
+            double PFR = speed2Power(DFR);
+            double PBL = speed2Power(DBL);
+            double PBR = speed2Power(DBR);
+
+            hardware.frontLeft.setPower(PFL);
+            hardware.backLeft.setPower(PBL);
+            hardware.frontRight.setPower(PFR);
+            hardware.backRight.setPower(PBR);
+
+            Time.add(System.nanoTime());
+            VelocityY.add(yVelocity);
+            VelocityX.add(xVelocity);
+            FLspeed.add(DFL);
+            FRspeed.add(DFR);
+            BLspeed.add(DBL);
+            BRspeed.add(DBR);
+
+            FLpower.add(PFL);
+            FRpower.add(PFR);
+            BLpower.add(PBL);
+            BRpower.add(PBR);
+
 
             telemetry.addData("pinpointa",currentTheta);
             telemetry.addData("pinpointx",currentx);
@@ -237,6 +286,48 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
         }
 
+        File f = FileUtil.getfile();
+        RobotLog.i("Writing file to " + f);
+        try (FileOutputStream fos = new FileOutputStream(f);
+             OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)
+        ){
+            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR\n");
+            for(int i = 0; i<Time.size(); i++){
+                writer.write(String.format(
+                        Locale.ROOT,
+                        "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+                        Time.get(i),
+                        VelocityX.get(i),
+                        VelocityY.get(i),
+                        FLspeed.get(i),
+                        FRspeed.get(i),
+                        BLspeed.get(i),
+                        BRspeed.get(i),
+                        FLpower.get(i),
+                        FRpower.get(i),
+                        BLpower.get(i),
+                        BRpower.get(i)
 
+                ));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public double speed2Power(double speed){
+        final double threshold = 0.2;
+
+        if(Math.abs(speed)<0.001){
+            return 0;
+        }
+
+        if(speed > 0){
+            return threshold+((1-threshold)*speed);
+        }
+        if(speed <0){
+            return -threshold+((1-threshold)*speed);
+        }
+
+        throw new IllegalArgumentException();
     }
 }
