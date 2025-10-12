@@ -42,6 +42,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.PtzControl;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -56,6 +57,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /*
  * This OpMode illustrates the basics of AprilTag based localization.
@@ -109,7 +111,7 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
      * z-axis = roll
      */
     private Position cameraPosition = new Position(DistanceUnit.INCH,
-            0, 8.315, 7.73, 0);
+            0, 7.75, 0, 0); //y = 7.75,
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
 
@@ -125,6 +127,10 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
     private PtzControl zoomControl;
     DumbledoreHardware hardware;
     Pose2D pose2D;
+    // Manual camera control values (you can change these before running)
+    private static final int MANUAL_EXPOSURE_MS = 1; // exposure in milliseconds
+    private static final int MANUAL_GAIN = 80;       // camera gain (typically 0–255)
+
     @Override
     public void runOpMode() {
         hardware = new DumbledoreHardware(hardwareMap);
@@ -140,7 +146,7 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
         initAprilTag();
 
         // Wait for the DS start button to be touched.
-        telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
+        telemetry.addData("Look up! DS preview on/off", "3 dots, Camera Stream");
         telemetry.addData(">", "Touch START to start OpMode");
         telemetry.update();
 
@@ -148,11 +154,9 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
 
         while (opModeIsActive()) {
             pose2D = hardware.PinPoint.getPosition();
-
-
-            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
-            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
-            telemetry.addData("Heading angle (DEGREES)\n", pose2D.getHeading(AngleUnit.DEGREES));
+//            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
+//            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
+//            telemetry.addData("Heading angle (DEGREES)\n", pose2D.getHeading(AngleUnit.DEGREES));
 
             hardware.PinPoint.update();
 
@@ -170,6 +174,36 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
                     telemetry.addData("Zoom", "Set to Min");
                 }
             }
+
+            // === Manual Exposure and Gain Control ===
+            try {
+                // Get camera controls
+                GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
+                ExposureControl exposureControl = visionPortal.getCameraControl(
+                        ExposureControl.class);
+
+                // Set exposure (manual mode)
+                if (exposureControl != null) {
+                    exposureControl.setMode(org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl.Mode.Manual);
+                    exposureControl.setExposure(MANUAL_EXPOSURE_MS, TimeUnit.MILLISECONDS);
+                }
+
+                // Set gain
+                if (gainControl != null) {
+                    gainControl.setGain(MANUAL_GAIN);
+                }
+
+                telemetry.addLine("Manual camera settings applied:");
+                telemetry.addData("Exposure (ms)", MANUAL_EXPOSURE_MS);
+                telemetry.addData("Gain", MANUAL_GAIN);
+                telemetry.update();
+
+            } catch (Exception e) {
+                telemetry.addLine("Failed to set manual exposure/gain!");
+                telemetry.addData("Error", e.getMessage());
+                telemetry.update();
+            }
+
             // Push telemetry to the Driver Station.
             telemetry.update();
 

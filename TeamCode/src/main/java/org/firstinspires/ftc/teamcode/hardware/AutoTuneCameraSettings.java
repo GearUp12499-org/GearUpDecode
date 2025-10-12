@@ -84,9 +84,9 @@ public class AutoTuneCameraSettings extends LinearOpMode {
             hardware.PinPoint.update();
             pose2D = hardware.PinPoint.getPosition();
 
-            telemetry.addData("X (in)", pose2D.getX(DistanceUnit.INCH));
-            telemetry.addData("Y (in)", pose2D.getY(DistanceUnit.INCH));
-            telemetry.addData("Heading (deg)", pose2D.getHeading(AngleUnit.DEGREES));
+//            telemetry.addData("X (in)", pose2D.getX(DistanceUnit.INCH));
+//            telemetry.addData("Y (in)", pose2D.getY(DistanceUnit.INCH));
+//            telemetry.addData("Heading (deg)", pose2D.getHeading(AngleUnit.DEGREES));
 
             telemetryAprilTag();
             handleCameraControls();
