@@ -86,7 +86,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a){
-                drive2Pose(48,0,0);
+                drive2Pose(72,0,0);
 //                hardware.frontLeft.setPower(-1);
 //                hardware.backLeft.setPower(-1);
 //                hardware.frontRight.setPower(-1);
@@ -162,7 +162,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //        hardware = new DumbledoreHardware(hardwareMap);
 
         double kp = 0.2;
-        double kd = 30;
+        double kd = 43.75;
 
         double currenTime = runtime.time();
         double prevTime = runtime.time();
