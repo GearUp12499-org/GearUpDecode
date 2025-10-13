@@ -36,7 +36,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
 
         hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
 
         hardware.PinPoint.resetPosAndIMU();
@@ -56,6 +56,9 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
 
         while (opModeIsActive()){
+
+
+
             hardware.PinPoint.update();
 
             Pose2D currentPose = hardware.PinPoint.getPosition();
@@ -69,6 +72,10 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //            telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
 //            telemetry.addData("imu angle (DEGREES)", hardware.PinPoint.getHeading(AngleUnit.DEGREES));
 
+
+            if (gamepad1.b){
+                hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,0,0, AngleUnit.RADIANS,Math.PI/2));
+            }
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -103,12 +110,12 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //                hardware.frontRight.setPower(-1);
 //                hardware.backRight.setPower(-1);
             }
-            if (gamepad1.b){
-                hardware.frontLeft.setPower(-1);
-                hardware.backLeft.setPower(1);
-                hardware.frontRight.setPower(1);
-                hardware.backRight.setPower(-1);
-            }
+//            if (gamepad1.b){
+//                hardware.frontLeft.setPower(-1);
+//                hardware.backLeft.setPower(1);
+//                hardware.frontRight.setPower(1);
+//                hardware.backRight.setPower(-1);
+//            }
             if (gamepad1.x){
                 hardware.frontLeft.setPower(1);
                 hardware.backLeft.setPower(-1);
