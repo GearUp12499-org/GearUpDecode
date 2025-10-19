@@ -38,7 +38,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
         hardware.PinPoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.FORWARD, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
 
 
-        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.resetPosAndIMU();
         hardware.PinPoint.recalibrateIMU();
 
 //        sleep(5000);
@@ -51,7 +51,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16, AngleUnit.RADIANS,0));
+//        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16, AngleUnit.RADIANS,0));
 
 
         while (opModeIsActive()){
@@ -80,11 +80,21 @@ public class DumbledoreTeleOp extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
+            double heading = currentPose.getHeading(AngleUnit.RADIANS) + Math.PI/2;
+            // Rotate the movement direction counter to the bot's rotation
+            double rotX = x * Math.cos(-heading) - y * Math.sin(-heading);
+            double rotY = x * Math.sin(-heading) + y * Math.cos(-heading);
+
+            rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+            double frontLeftPower = (rotY + rotX + rx) / denominator;
+            double backLeftPower = (rotY - rotX + rx) / denominator;
+            double frontRightPower = (rotY - rotX - rx) / denominator;
+            double backRightPower = (rotY + rotX - rx) / denominator;
 
 
             hardware.frontLeft.setPower(frontLeftPower);
@@ -93,7 +103,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             hardware.backRight.setPower(backRightPower);
 
             if(gamepad1.y){
-                drive2Pose(0,0,0);
+                drive2Pose(new double[]{0, 0, 0});
 
 //                drive2Pose(78,0,-Math.PI/4 );
 //                sleep(2000);
@@ -103,7 +113,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a){
-                drive2Pose(72,0,0);
+                drive2Pose(hardware.shootPos);
 //                hardware.frontLeft.setPower(-1);
 //                hardware.backLeft.setPower(-1);
 //                hardware.frontRight.setPower(-1);
@@ -153,7 +163,7 @@ public class DumbledoreTeleOp extends LinearOpMode {
             telemetry.update();
         }
     }
-    public void drive2Pose (double targetx, double targety, double targeta){
+    public void drive2Pose (double[] xya){
 
 
         ArrayList<Long> Time = new ArrayList<>();
@@ -187,6 +197,10 @@ public class DumbledoreTeleOp extends LinearOpMode {
         double prevDeltaAll = 0;
 
 
+        double tgtx = xya[0];
+        double tgty = xya[1];
+        double tgta = xya[2];
+
 
         while(true) {
             currenTime = runtime.time();
@@ -204,9 +218,9 @@ public class DumbledoreTeleOp extends LinearOpMode {
             double currenty = currentPose.getY(DistanceUnit.INCH);
             double currentTheta = currentPose.getHeading(AngleUnit.RADIANS);
 
-            double deltax = targetx - currentx;
-            double deltay = targety - currenty;
-            double deltaA = targeta - currentTheta;
+            double deltax = tgtx - currentx;
+            double deltay = tgty - currenty;
+            double deltaA = tgta - currentTheta;
             deltaA = deltaA % (2*(Math.PI));
             if (deltaA > Math.PI) {
                 deltaA -= 2 * Math.PI;
