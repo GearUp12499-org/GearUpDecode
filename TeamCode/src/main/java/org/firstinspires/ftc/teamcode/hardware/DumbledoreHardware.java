@@ -4,7 +4,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
 public class DumbledoreHardware extends HardwareMapper {
+
+    public double[] redFarStart = {-63,-16,0};
+
+    public double[] shootPos = {12,-12,-Math.PI/4};
     @HardwareName("PinPoint")
     public GoBildaPinpoint2Driver PinPoint;
 
