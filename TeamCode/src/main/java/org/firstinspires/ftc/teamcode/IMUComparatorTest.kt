@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode
 
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.hardware.kauailabs.NavxMicroNavigationSensor
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
@@ -13,6 +12,7 @@ import io.github.gearup12499.taskshark.api.BuiltInTags
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
+import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.HardwareMapper
 import org.firstinspires.ftc.teamcode.hardware.HardwareName
 
@@ -24,7 +24,7 @@ class IMUComparatorTest : LinearOpMode() {
         lateinit var navX: NavxMicroNavigationSensor
 
         @HardwareName("PinPoint")
-        lateinit var pinpoint: GoBildaPinpointDriver
+        lateinit var pinpoint: GoBildaPinpoint2Driver
 
         @HardwareName("imu")
         lateinit var builtInIMU: IMU
@@ -55,7 +55,7 @@ class IMUComparatorTest : LinearOpMode() {
                 val navXCalib = hw.navX.isCalibrating
                 telemetry.addData("NavX", if (navXCalib) "..." else "done")
                 val pinpointCalib =
-                    hw.pinpoint.deviceStatus == GoBildaPinpointDriver.DeviceStatus.CALIBRATING
+                    hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.CALIBRATING
                 telemetry.addData("Pinpoint", if (pinpointCalib) "..." else "done")
                 telemetry.addData("Pinpoint status", hw.pinpoint.deviceStatus)
                 telemetry.update()

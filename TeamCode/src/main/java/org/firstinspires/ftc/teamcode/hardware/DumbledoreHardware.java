@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class DumbledoreHardware extends HardwareMapper {
     @HardwareName("PinPoint")
-    public GoBildaPinpointDriver PinPoint;
+    public GoBildaPinpoint2Driver PinPoint;
 
     @HardwareName("frontLeft")
     @Reversed
