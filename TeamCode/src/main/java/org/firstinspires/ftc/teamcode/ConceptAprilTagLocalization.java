@@ -128,8 +128,8 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
     DumbledoreHardware hardware;
     Pose2D pose2D;
     // Manual camera control values (you can change these before running)
-    private static final int MANUAL_EXPOSURE_MS = 1; // exposure in milliseconds
-    private static final int MANUAL_GAIN = 80;       // camera gain (typically 0–255)
+    private static int manualExposureMs = 1; // exposure in milliseconds
+    private static int manualGain = 100;       // camera gain (typically 0–255)
 
     @Override
     public void runOpMode() {
@@ -181,21 +181,36 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
                 GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
                 ExposureControl exposureControl = visionPortal.getCameraControl(
                         ExposureControl.class);
+                // === Controller input for tuning ===
+                if (gamepad1.a) { // increase exposure
+                    manualExposureMs = Math.min(30, manualExposureMs + 1);
+                    sleep(150);
+                } else if (gamepad1.b) { // decrease exposure
+                    manualExposureMs = Math.max(1, manualExposureMs - 1);
+                    sleep(150);
+                }
 
+                if (gamepad1.x) { // increase gain
+                    manualGain = Math.min(255, manualGain + 5);
+                    sleep(150);
+                } else if (gamepad1.y) { // decrease gain
+                    manualGain = Math.max(1, manualGain - 5);
+                    sleep(150);
+                }
                 // Set exposure (manual mode)
                 if (exposureControl != null) {
                     exposureControl.setMode(org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl.Mode.Manual);
-                    exposureControl.setExposure(MANUAL_EXPOSURE_MS, TimeUnit.MILLISECONDS);
+                    exposureControl.setExposure(manualExposureMs, TimeUnit.MILLISECONDS);
                 }
 
                 // Set gain
                 if (gainControl != null) {
-                    gainControl.setGain(MANUAL_GAIN);
+                    gainControl.setGain(manualGain);
                 }
 
                 telemetry.addLine("Manual camera settings applied:");
-                telemetry.addData("Exposure (ms)", MANUAL_EXPOSURE_MS);
-                telemetry.addData("Gain", MANUAL_GAIN);
+                telemetry.addData("Exposure (ms)", manualExposureMs);
+                telemetry.addData("Gain", manualGain);
                 telemetry.update();
 
             } catch (Exception e) {
@@ -213,6 +228,7 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
             } else if (gamepad1.dpad_up) {
                 visionPortal.resumeStreaming();
             }
+
             // Share the CPU.
             sleep(20);
         }
@@ -297,53 +313,83 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
     @SuppressLint("DefaultLocale")
     private void telemetryAprilTag() {
         List<AprilTagDetection> detections = aprilTag.getDetections();
-        telemetry.addLine("\n---- AprilTag Detection Info ----");
+
+        telemetry.addLine("\n==== APRILTAG DETECTION SUMMARY ====");
         telemetry.addData("Number of Tags Detected", detections.size());
+
+        // If no tags are detected, just show the count
+        if (detections.isEmpty()) {
+            telemetry.addLine("No AprilTags currently detected.");
+        }
 
         for (AprilTagDetection detection : detections) {
             if (detection.metadata != null) {
-                telemetry.addLine("\n==============================");
+                telemetry.addLine("\n-------------------------------");
                 telemetry.addData("Tag ID", detection.id);
                 telemetry.addData("Tag Name", detection.metadata.name);
 
-                // Distance from camera center to tag center (meters → inches)
-                double distance = detection.ftcPose.range; // already in inches
-                telemetry.addData("Distance from Camera to Tag Center (in)", String.format("%.2f", distance));
+                // === Pose Information ===
+                telemetry.addLine("Pose (Relative to Field Origin):");
+                telemetry.addData("X (Right, in)", String.format("%.2f", detection.robotPose.getPosition().x));
+                telemetry.addData("Y (Forward, in)", String.format("%.2f", detection.robotPose.getPosition().y));
+                telemetry.addData("Z (Up, in)", String.format("%.2f", detection.robotPose.getPosition().z));
 
-                // Angle offset from camera center to tag center
-                double bearing = detection.ftcPose.bearing; // degrees
-                telemetry.addData("Bearing Offset (deg)", String.format("%.2f", bearing));
+                double yaw = detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
+                double pitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+                double roll = detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES);
 
-                // Angle error from robot heading
-                double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES))
-                        - pose2D.getHeading(AngleUnit.DEGREES));
-                telemetry.addData("Angle Error (Yaw)", String.format("%.2f", angleErr));
+                telemetry.addData("Yaw (deg)", String.format("%.2f", yaw));
+                telemetry.addData("Pitch (deg)", String.format("%.2f", pitch));
+                telemetry.addData("Roll (deg)", String.format("%.2f", roll));
 
-                // X, Y, Z positions
-                telemetry.addLine("Tag Position (XYZ in inches):");
-                telemetry.addData("X (Right)", String.format("%.2f", detection.robotPose.getPosition().x));
-                telemetry.addData("Y (Forward)", String.format("%.2f", detection.robotPose.getPosition().y));
-                telemetry.addData("Z (Up)", String.format("%.2f", detection.robotPose.getPosition().z));
+                // === Bearing, Range, and Errors ===
+                double bearing = detection.ftcPose.bearing; // degrees offset from camera center
+                double range = detection.ftcPose.range;     // distance from camera to tag center (inches)
 
-                // Errors vs actuals
-                telemetry.addLine("---- Errors & Offsets ----");
-                double expectedDistance = 24.0; // Example: replace with actual known test distance
-                double distanceError = distance - expectedDistance;
-                telemetry.addData("Distance Error (in)", String.format("%.2f", distanceError));
+                telemetry.addLine("\nBearing and Range:");
+                telemetry.addData("Bearing (deg)", String.format("%.2f", bearing));
+                telemetry.addData("Range (in)", String.format("%.2f", range));
 
-                double expectedBearing = 0.0; // Straight ahead
+                double expectedRange = 24.0; // Example: known test distance in inches
+                double expectedBearing = 0.0; // Expected straight ahead
+
+                double rangeError = range - expectedRange;
                 double bearingError = bearing - expectedBearing;
+
+                telemetry.addLine("---- Errors & Offsets ----");
+                telemetry.addData("Range Error (in)", String.format("%.2f", rangeError));
                 telemetry.addData("Bearing Error (deg)", String.format("%.2f", bearingError));
 
-                telemetry.addData("Angle Offset from Heading (deg)", String.format("%.2f", angleErr));
+                // Yaw offset relative to robot heading
+                double robotYaw = pose2D.getHeading(AngleUnit.DEGREES);
+                double yawOffset = yaw - robotYaw;
+                telemetry.addData("Yaw Offset (deg)", String.format("%.2f", yawOffset));
             }
+        } // end method telemetryAprilTag()
+
+        // === Current Camera Settings (for manual tuning) ===
+        try {
+            GainControl gainControl = visionPortal.getCameraControl(GainControl.class);
+            ExposureControl exposureControl = visionPortal.getCameraControl(ExposureControl.class);
+
+            if (exposureControl != null && gainControl != null) {
+                telemetry.addLine("\nCAMERA SETTINGS");
+                telemetry.addData("Exposure (ms)", manualExposureMs);
+                telemetry.addData("Gain", manualGain);
+            }
+        } catch (Exception e) {
+            telemetry.addLine("\nCAMERA SETTINGS UNAVAILABLE");
         }
 
-        telemetry.addLine("\n---- Telemetry Key ----");
-        telemetry.addLine("X = Right, Y = Forward, Z = Up");
-        telemetry.addLine("Bearing = Angle offset from center of camera view");
+        // === Telemetry Key ===
+        telemetry.addLine("\n---- TELEMETRY KEY ----");
+        telemetry.addLine("Tag ID = Detected AprilTag identifier");
+        telemetry.addLine("X/Y/Z = Position of tag relative to field origin (inches)");
+        telemetry.addLine("Yaw/Pitch/Roll = Tag orientation relative to field");
+        telemetry.addLine("Bearing = Angle offset from camera center to tag center");
         telemetry.addLine("Range = Distance from camera to tag center");
-        telemetry.addLine("Angle Error = Difference between measured yaw and robot heading");
-    } // end method telemetryAprilTag()
+        telemetry.addLine("Yaw Offset = Difference between tag yaw and robot heading");
+        telemetry.addLine("Range/Bearing Error = Difference from known test values");
+    }
 
 }   // end class
