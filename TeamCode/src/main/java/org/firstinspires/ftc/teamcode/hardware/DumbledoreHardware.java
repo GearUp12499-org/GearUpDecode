@@ -13,6 +13,10 @@ public class DumbledoreHardware extends HardwareMapper {
     public double[] shootPos = {12,-12,-Math.PI/4};
 
     public double[] blueBase = {-38,-33,0};
+
+    public double[] gateWaypoint = {0,-48,0};
+
+    public double[] gatePos = {0,-55,0};
     @HardwareName("PinPoint")
     public GoBildaPinpoint2Driver PinPoint;
 
