@@ -126,10 +126,11 @@ public class DumbledoreTeleOp extends LinearOpMode {
 //                hardware.backRight.setPower(-1);
 //            }
             if (gamepad1.x){
-                hardware.frontLeft.setPower(1);
-                hardware.backLeft.setPower(-1);
-                hardware.frontRight.setPower(-1);
-                hardware.backRight.setPower(1);
+                drive2Pose(hardware.blueBase);
+//                hardware.frontLeft.setPower(1);
+//                hardware.backLeft.setPower(-1);
+//                hardware.frontRight.setPower(-1);
+//                hardware.backRight.setPower(1);
             }
 
             if (gamepad1.right_bumper) {
