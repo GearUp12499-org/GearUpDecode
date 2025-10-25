@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.IMU
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
+import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
+import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver.Register
 import org.firstinspires.ftc.teamcode.hardware.HardwareMapper
 import org.firstinspires.ftc.teamcode.hardware.HardwareName
 import org.firstinspires.ftc.teamcode.perform.PerformanceHelpers
@@ -29,11 +31,11 @@ class PinpointProfiler : LinearOpMode() {
     }
 
     class Hw(map: HardwareMap) : HardwareMapper(map) {
-        @HardwareName("navx")
-        lateinit var navX: NavxMicroNavigationSensor
+//        @HardwareName("navx")
+//        lateinit var navX: NavxMicroNavigationSensor
 
         @HardwareName("PinPoint")
-        lateinit var pinpoint: GoBildaPinpointDriver
+        lateinit var pinpoint: GoBildaPinpoint2Driver
 
         @HardwareName("imu")
         lateinit var builtInIMU: IMU
@@ -56,7 +58,17 @@ class PinpointProfiler : LinearOpMode() {
             override fun onStart() {
                 hw.builtInIMU.initialize(imuOptions)
                 hw.builtInIMU.resetYaw()
-                hw.navX.initialize()
+//                hw.navX.initialize()
+                // we want: position, rotation (heading), and velocity
+                hw.pinpoint.setBulkReadScope(
+                    Register.X_POSITION,
+                    Register.Y_POSITION,
+                    Register.H_ORIENTATION,
+                    Register.X_VELOCITY,
+                    Register.Y_VELOCITY,
+                    Register.DEVICE_STATUS,
+                    // maybe you'd also want PITCH and ROLL
+                )
                 hw.pinpoint.resetPosAndIMU()
             }
 
@@ -66,7 +78,7 @@ class PinpointProfiler : LinearOpMode() {
 //                telemetry.addData("NavX", if (navXCalib) "..." else "done")
                 hw.pinpoint.update()
                 val pinpointCalib =
-                    hw.pinpoint.deviceStatus == GoBildaPinpointDriver.DeviceStatus.CALIBRATING
+                    hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.CALIBRATING
                 telemetry.addData("Pinpoint", if (pinpointCalib) "..." else "done")
                 telemetry.addData("Pinpoint status", hw.pinpoint.deviceStatus)
                 telemetry.update()
