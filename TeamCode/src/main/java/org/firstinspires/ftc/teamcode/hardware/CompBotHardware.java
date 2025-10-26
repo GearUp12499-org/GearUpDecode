@@ -15,7 +15,7 @@ public class CompBotHardware extends HardwareMapper{
 
     public double[] gatePos = {0,-55,0};
     @HardwareName("pinpoint")
-    public GoBildaPinpoint2Driver pinpoint;
+    public GoBildaPinpoint2Driver PinPoint;
     @HardwareName("frontLeft")
     @Reversed
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
