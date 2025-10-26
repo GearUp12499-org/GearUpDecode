@@ -47,16 +47,26 @@ public class CompBotTeleOp extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double FrontLeftPower = (y+x+rx)/denominator;
-            double FrontRightPower = (y-x-rx)/denominator;
-            double BackRightPower = (y+x-rx)/denominator;
-            double BackLeftPower = (y-x+rx)/denominator;
+            double heading = currentPose.getHeading(AngleUnit.RADIANS) + Math.PI/2;
+            // Rotate the movement direction counter to the bot's rotation
+            double rotX = x * Math.cos(-heading) - y * Math.sin(-heading);
+            double rotY = x * Math.sin(-heading) + y * Math.cos(-heading);
 
-            hardware.frontLeft.setPower(FrontLeftPower);
-            hardware.frontRight.setPower(FrontRightPower);
-            hardware.backRight.setPower(BackRightPower);
-            hardware.backLeft.setPower(BackLeftPower);
+            rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+            double frontLeftPower = (rotY + rotX + rx) / denominator;
+            double backLeftPower = (rotY - rotX + rx) / denominator;
+            double frontRightPower = (rotY - rotX - rx) / denominator;
+            double backRightPower = (rotY + rotX - rx) / denominator;
+
+            hardware.frontLeft.setPower(frontLeftPower);
+            hardware.frontRight.setPower(frontRightPower);
+            hardware.backRight.setPower(backRightPower);
+            hardware.backLeft.setPower(backLeftPower);
 
             telemetry.update();
 
