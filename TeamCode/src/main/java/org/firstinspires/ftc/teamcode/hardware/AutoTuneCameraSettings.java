@@ -147,7 +147,7 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         if (gainControl != null) {
             minGain = gainControl.getMinGain();
             maxGain = gainControl.getMaxGain();
-            currentGain = 20; //changed for now
+            currentGain = 15; //changed for now
             gainControl.setGain(currentGain);
         }
 
@@ -157,10 +157,10 @@ public class AutoTuneCameraSettings extends LinearOpMode {
 //            currentZoom = (int) zoomControl.getZoom();
 //        }
 
-        telemetry.addData("Exposure Control", (exposureControl != null) ? "Supported" : "Not Supported");
-        telemetry.addData("Gain Control", (gainControl != null) ? "Supported" : "Not Supported");
-        telemetry.addData("Zoom Control", (zoomControl != null) ? "Supported" : "Not Supported");
-        sleep(500);
+//        telemetry.addData("Exposure Control", (exposureControl != null) ? "Supported" : "Not Supported");
+//        telemetry.addData("Gain Control", (gainControl != null) ? "Supported" : "Not Supported");
+//        telemetry.addData("Zoom Control", (zoomControl != null) ? "Supported" : "Not Supported");
+//        sleep(250);
         telemetry.update();
     }
 
@@ -171,15 +171,14 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         telemetry.update();
 
         if (exposureControl != null) {
-            for (int e = 1; e <= 3; e++) {
+            for (int e = 1; e <= 4; e++) {
                 telemetry.addData("Testing Exposure", e);
                 telemetry.update();
                 exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                sleep(500);
+                sleep(300);
                 if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
                     finalExposure = e;
-                    finalGain = currentGain;
-                    detected = true;
+//                    detected = true; We still want to find the best gain
                     break;
                 }
             }
@@ -210,17 +209,23 @@ public class AutoTuneCameraSettings extends LinearOpMode {
             telemetry.addLine("Starting auto gain tuning...");
             telemetry.update();
 
-            if (exposureControl != null) exposureControl.setExposure(1, TimeUnit.MILLISECONDS);
+            if (exposureControl != null) exposureControl.setExposure(finalExposure, TimeUnit.MILLISECONDS);
 
-            int gainStart = 100;
+            int gainStart = 70;
+
             for (int g = gainStart; g >= minGain; g -= 10) {
                 telemetry.addData("Testing Gain", g);
                 telemetry.update();
                 gainControl.setGain(g);
                 sleep(250);
                 if (checkAprilTagDetection(detectionSequence, g, "Gain")) {
-                    finalGain = g;
-                    finalExposure = 1; //Usually works in darker environments with this
+                    if(g <= 20){
+                        finalGain = 20;
+                    } else if(g<=50){
+                        finalGain = g - 10;
+                    } else{
+                        finalGain = g - 20;
+                    }
                     detected = true;
                     break;
                 }
@@ -228,8 +233,8 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         }
 
         if (!detected) {
-            finalExposure = 0;
-            finalGain = 5;
+            finalExposure = 3;
+            finalGain = 13;
         }
 
         telemetry.addLine("Auto tuning complete!");
