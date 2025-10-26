@@ -134,14 +134,14 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
     @Override
     public void runOpMode() {
         hardware = new DumbledoreHardware(hardwareMap);
-
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM,0,0, AngleUnit.DEGREES,0));
-        hardware.PinPoint.setOffsets(96,24, DistanceUnit.MM);
-        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);;
-
-        hardware.PinPoint.resetPosAndIMU();
-        hardware.PinPoint.recalibrateIMU();
+//
+//        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM,0,0, AngleUnit.DEGREES,0));
+//        hardware.PinPoint.setOffsets(96,24, DistanceUnit.MM);
+//        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);;
+//
+//        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.recalibrateIMU();
 
         initAprilTag();
 
@@ -153,12 +153,12 @@ public class ConceptAprilTagLocalization extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            pose2D = hardware.PinPoint.getPosition();
+//            pose2D = hardware.PinPoint.getPosition();
 //            telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
 //            telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
 //            telemetry.addData("Heading angle (DEGREES)\n", pose2D.getHeading(AngleUnit.DEGREES));
 
-            hardware.PinPoint.update();
+//            hardware.PinPoint.update();
 
             telemetryAprilTag();
             if (USE_WEBCAM) {

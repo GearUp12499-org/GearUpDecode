@@ -50,15 +50,15 @@ public class AutoTuneCameraSettings extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        hardware = new DumbledoreHardware(hardwareMap);
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM, 0, 0, AngleUnit.DEGREES, 0));
-        hardware.PinPoint.setOffsets(96, 24, DistanceUnit.MM);
-        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,
-                GoBildaPinpointDriver.EncoderDirection.FORWARD);
-
-        hardware.PinPoint.resetPosAndIMU();
-        hardware.PinPoint.recalibrateIMU();
+      hardware = new DumbledoreHardware(hardwareMap);
+//        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM, 0, 0, AngleUnit.DEGREES, 0));
+//        hardware.PinPoint.setOffsets(96, 24, DistanceUnit.MM);
+//        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,
+//                GoBildaPinpointDriver.EncoderDirection.FORWARD);
+//
+//        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.recalibrateIMU();
 
         initAprilTag();
         setupCameraControls();
@@ -81,8 +81,8 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            hardware.PinPoint.update();
-            pose2D = hardware.PinPoint.getPosition();
+//            hardware.PinPoint.update();
+//            pose2D = hardware.PinPoint.getPosition();
 
 //            telemetry.addData("X (in)", pose2D.getX(DistanceUnit.INCH));
 //            telemetry.addData("Y (in)", pose2D.getY(DistanceUnit.INCH));
@@ -116,7 +116,7 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         else
             builder.setCamera(BuiltinCameraDirection.BACK);
 
-        builder.setCameraResolution(new Size(960, 720));
+        builder.setCameraResolution(new Size(1280, 960));
         builder.addProcessor(aprilTag);
         visionPortal = builder.build();
     }
@@ -139,27 +139,28 @@ public class AutoTuneCameraSettings extends LinearOpMode {
             exposureControl.setMode(ExposureControl.Mode.Manual);
             minExposure = (int) exposureControl.getMinExposure(TimeUnit.MILLISECONDS) + 1;
             maxExposure = (int) exposureControl.getMaxExposure(TimeUnit.MILLISECONDS);
-            currentExposure = Range.clip(10, minExposure, maxExposure);
-            exposureControl.setExposure(currentExposure, TimeUnit.MILLISECONDS);
+//            currentExposure = Range.clip(10, minExposure, maxExposure);
+//            exposureControl.setExposure(currentExposure, TimeUnit.MILLISECONDS);
+            exposureControl.setExposure(minExposure, TimeUnit.MILLISECONDS);
         }
 
         if (gainControl != null) {
             minGain = gainControl.getMinGain();
             maxGain = gainControl.getMaxGain();
-            currentGain = 25; //changed for now
+            currentGain = 20; //changed for now
             gainControl.setGain(currentGain);
         }
 
-        if (zoomControl != null) {
-            minZoom = (int) zoomControl.getMinZoom();
-            maxZoom = (int) zoomControl.getMaxZoom();
-            currentZoom = (int) zoomControl.getZoom();
-        }
+//        if (zoomControl != null) {
+//            minZoom = (int) zoomControl.getMinZoom();
+//            maxZoom = (int) zoomControl.getMaxZoom();
+//            currentZoom = (int) zoomControl.getZoom();
+//        }
 
         telemetry.addData("Exposure Control", (exposureControl != null) ? "Supported" : "Not Supported");
         telemetry.addData("Gain Control", (gainControl != null) ? "Supported" : "Not Supported");
         telemetry.addData("Zoom Control", (zoomControl != null) ? "Supported" : "Not Supported");
-        sleep(1000);
+        sleep(500);
         telemetry.update();
     }
 
@@ -174,7 +175,7 @@ public class AutoTuneCameraSettings extends LinearOpMode {
                 telemetry.addData("Testing Exposure", e);
                 telemetry.update();
                 exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                sleep(1000);
+                sleep(500);
                 if (checkAprilTagDetection(detectionSequence, e, "Exposure")) {
                     finalExposure = e;
                     finalGain = currentGain;
@@ -209,17 +210,17 @@ public class AutoTuneCameraSettings extends LinearOpMode {
             telemetry.addLine("Starting auto gain tuning...");
             telemetry.update();
 
-            if (exposureControl != null) exposureControl.setExposure(3, TimeUnit.MILLISECONDS);
+            if (exposureControl != null) exposureControl.setExposure(1, TimeUnit.MILLISECONDS);
 
-            int gainStart = currentGain;
+            int gainStart = 100;
             for (int g = gainStart; g >= minGain; g -= 10) {
                 telemetry.addData("Testing Gain", g);
                 telemetry.update();
                 gainControl.setGain(g);
-                sleep(500);
+                sleep(250);
                 if (checkAprilTagDetection(detectionSequence, g, "Gain")) {
                     finalGain = g;
-                    finalExposure = 2;
+                    finalExposure = 1; //Usually works in darker environments with this
                     detected = true;
                     break;
                 }
@@ -227,8 +228,8 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         }
 
         if (!detected) {
-            finalExposure = 25;
-            finalGain = 1;
+            finalExposure = 0;
+            finalGain = 5;
         }
 
         telemetry.addLine("Auto tuning complete!");
@@ -258,14 +259,16 @@ public class AutoTuneCameraSettings extends LinearOpMode {
         if (exposureControl != null && (gamepad1.left_bumper || gamepad1.left_trigger > 0.25)) {
             if (gamepad1.left_bumper) currentExposure += 1;
             else if (gamepad1.left_trigger > 0.25) currentExposure -= 1;
-            currentExposure = Range.clip(currentExposure, minExposure, maxExposure);
+            sleep(100);
+//            currentExposure = Range.clip(currentExposure, minExposure, maxExposure);
             exposureControl.setExposure(currentExposure, TimeUnit.MILLISECONDS);
         }
 
         if (gainControl != null && (gamepad1.right_bumper || gamepad1.right_trigger > 0.25)) {
             if (gamepad1.right_bumper) currentGain += 1;
             else if (gamepad1.right_trigger > 0.25) currentGain -= 1;
-            currentGain = Range.clip(currentGain, minGain, maxGain);
+            sleep(100);
+//            currentGain = Range.clip(currentGain, minGain, maxGain);
             gainControl.setGain(currentGain);
         }
 

@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class DumbledoreHardware extends HardwareMapper {
-    @HardwareName("PinPoint")
-    public GoBildaPinpointDriver PinPoint;
+//    @HardwareName("PinPoint")
+//    public GoBildaPinpointDriver PinPoint;
 
     @HardwareName("frontLeft")
     @Reversed

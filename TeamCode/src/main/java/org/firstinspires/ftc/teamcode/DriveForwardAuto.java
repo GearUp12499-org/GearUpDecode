@@ -23,14 +23,14 @@ public class DriveForwardAuto extends LinearOpMode {
         DumbledoreHardware hardware = new DumbledoreHardware(hardwareMap);
         FastScheduler scheduler = new FastScheduler();
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM, 0, 0, AngleUnit.DEGREES, 0));
-        hardware.PinPoint.setOffsets(96, 24, DistanceUnit.MM);
-        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
-
-
-        hardware.PinPoint.resetPosAndIMU();
-        hardware.PinPoint.recalibrateIMU();
+//        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.MM, 0, 0, AngleUnit.DEGREES, 0));
+//        hardware.PinPoint.setOffsets(96, 24, DistanceUnit.MM);
+//        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+//
+//
+//        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.recalibrateIMU();
 
 
         hardware.pivot.setPosition(0.5);
@@ -44,22 +44,24 @@ public class DriveForwardAuto extends LinearOpMode {
                     hardware.frontRight.setPower(0.25);
                     hardware.frontLeft.setPower(0.25);
                 }))
-                .then(new WaitUntil(() -> {
-                    Pose2D pose2D = hardware.PinPoint.getPosition();
-                    hardware.PinPoint.update();
-                    return pose2D.getX(DistanceUnit.INCH) < -36;
-
-                }))
+//                .then(new WaitUntil(() -> {
+////                    Pose2D pose2D = hardware.PinPoint.getPosition();
+////                    hardware.PinPoint.update();
+////                    return pose2D.getX(DistanceUnit.INCH) < -36;
+//
+//                }))
                 .then(new OneShot(() -> {
                     hardware.backLeft.setPower(-0.25);
                     hardware.backRight.setPower(0.25);
                     hardware.frontRight.setPower(-0.25);
                     hardware.frontLeft.setPower(0.25);
-                })).then(new WaitUntil(() -> {
-                    Pose2D pose2D = hardware.PinPoint.getPosition();
-                    hardware.PinPoint.update();
-                    return pose2D.getY(DistanceUnit.INCH) > 36;
-                })).then(new OneShot(() -> {
+                }))
+//                .then(new WaitUntil(() -> {
+////                    Pose2D pose2D = hardware.PinPoint.getPosition();
+////                    hardware.PinPoint.update();
+////                    return pose2D.getY(DistanceUnit.INCH) > 36;
+//                }))
+                .then(new OneShot(() -> {
                     hardware.backLeft.setPower(0);
                     hardware.backRight.setPower(0);
                     hardware.frontRight.setPower(0);

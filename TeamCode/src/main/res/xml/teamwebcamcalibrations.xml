@@ -169,13 +169,30 @@
     </Camera>
     <!-- ======================================================================================= -->
     <!-- Global Shutter Camera 640x480, Calibrated 2025 -->
+<!--    <Camera vid="0x32E4" pid="0x0234">-->
+<!--        <Calibration-->
+<!--            size="640 480"-->
+<!--            focalLength="239.2408f, 239.2408f"-->
+<!--            principalPoint="299.8581f, 232.5749f"-->
+<!--            distortionCoefficients="0.0100759f, -0.0297823f, 0.0002437f, -0.0000143f, 0.0050266f, 0f, 0f, 0f"-->
+<!--            />-->
+<!--    </Camera>-->
     <Camera vid="0x32E4" pid="0x0234">
         <Calibration
-            size="640 480"
-            focalLength="239.2408f, 239.2408f"
-            principalPoint="299.8581f, 232.5749f"
-            distortionCoefficients="0.0100759f, -0.0297823f, 0.0002437f, -0.0000143f, 0.0050266f, 0f, 0f, 0f"
+            size="1280 960"
+            focalLength="506.261f, 506.261f"
+            principalPoint="591.618f, 467.828f"
+            distortionCoefficients="-0.0496769f, 0.0955565f, -0.000709267f, -0.00138, -0.0756639f, 0f, 0f, 0f"
             />
     </Camera>
     <!-- ======================================================================================= -->
+<!--    MODEL/FORMAT:-->
+<!--    <Camera vid="0x32E4" pid="0x0234">-->
+<!--        <Calibration-->
+<!--            size="640 480"-->
+<!--            focalLength="Fx, Fy"-->
+<!--            principalPoint="C1, C2"-->
+<!--            distortionCoefficients="0.0100759f, -0.0297823f, 0.0002437f, -0.0000143f, 0.0050266f, 0f, 0f, 0f"-->
+<!--            />-->
+<!--    </Camera>-->
 </Calibrations>
