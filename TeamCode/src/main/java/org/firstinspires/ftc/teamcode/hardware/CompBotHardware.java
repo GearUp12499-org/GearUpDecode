@@ -1,20 +1,27 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+
+import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
 
-    public double[] redFarStart = {-63, -16, 0};
+    public static final double[] redFarStart = {-63, -16, 0};
 
-    public double[] shootPos = {12, -12, -Math.PI / 4};
+    public static final double[] shootPos = {12, -12, -Math.PI / 4};
 
-    public double[] blueBase = {-38, -33, 0};
+    public static final double[] blueBase = {-38, -33, 0};
 
-    public double[] gateWaypoint = {0, -48, 0};
+    public static final double[] gateWaypoint = {0, -48, 0};
 
-    public double[] gatePos = {0, -55, 0};
+    public static final double[] gatePos = {0, -55, 0};
+
+    public static final double FLIPPER_DOWN = 0.515;
+    public static final double FLIPPER_UP = 0.900;
 
 
     @HardwareName("frontLeft")
@@ -65,7 +72,35 @@ public class CompBotHardware extends HardwareMapper {
     @DigitalMode(DigitalChannel.Mode.INPUT)
     public DigitalChannel idxMag4;
 
+    @HardwareName("flipper")
+    @GoBildaExtendedServo
+    public ServoImplEx flipper;
+
+    @HardwareName("shooter1")
+    @ZeroPower(DcMotor.ZeroPowerBehavior.FLOAT)
+    @Reversed
+    public DcMotorEx shooter1;
+
     public CompBotHardware(HardwareMap map) {
         super(map);
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    public static class Locks {
+        /**
+         * {@link CompBotHardware#frontLeft}, {@link CompBotHardware#frontRight},
+         * {@link CompBotHardware#backLeft}, {@link CompBotHardware#backRight}
+         */
+        public static final Lock DRIVE_MOTORS = new Lock.StrLock("driveMotors");
+
+        /**
+         * {@link CompBotHardware#indexer}, {@link CompBotHardware#flipper}
+         */
+        public static final Lock INDEXER = new Lock.StrLock("indexer");
+
+        /**
+         * {@link CompBotHardware#intake}
+         */
+        public static final Lock INTAKE = new Lock.StrLock("intake");
     }
 }

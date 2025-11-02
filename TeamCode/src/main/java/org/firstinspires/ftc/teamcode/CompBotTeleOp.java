@@ -80,7 +80,23 @@ public class CompBotTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a) {
-                drive2Pose(hardware.shootPos);
+                drive2Pose(CompBotHardware.shootPos);
+            }
+
+            if (gamepad2.b) {
+                hardware.flipper.setPosition(CompBotHardware.FLIPPER_UP);
+            } else {
+                hardware.flipper.setPosition(CompBotHardware.FLIPPER_DOWN);
+            }
+
+            if (gamepad2.right_bumper) {
+                // 2000, 1500: too fast for mid range
+                // 1000: too slow for mid range
+                hardware.shooter1.setVelocity(1250);
+            } else if (gamepad2.left_bumper) {
+                hardware.shooter1.setVelocity(-500);
+            } else {
+                hardware.shooter1.setVelocity(0);
             }
 
             hardware.frontLeft.setPower(frontLeftPower);
