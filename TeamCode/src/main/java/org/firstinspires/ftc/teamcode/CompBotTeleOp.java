@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -21,49 +19,47 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 @TeleOp
 public class CompBotTeleOp extends LinearOpMode {
 
-    private ElapsedTime runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
     CompBotHardware hardware;
+    private ElapsedTime runtime;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         hardware = new CompBotHardware(hardwareMap);
 
-        hardware.PinPoint.setOffsets(-3.9,-3.875, DistanceUnit.INCH);
-        hardware.PinPoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
-        hardware.PinPoint.resetPosAndIMU();
-        hardware.PinPoint.recalibrateIMU();
+        hardware.pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
+        hardware.pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        hardware.pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
+        hardware.pinpoint.resetPosAndIMU();
+        hardware.pinpoint.recalibrateIMU();
 
 
-        telemetry.addData("pose",hardware.PinPoint.getPosition());
+        telemetry.addData("pose", hardware.pinpoint.getPosition());
         telemetry.update();
 
         waitForStart();
+        runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16, AngleUnit.RADIANS,0));
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, 0));
 
         while (opModeIsActive()) {
+            hardware.pinpoint.update();
 
-            hardware.PinPoint.update();
+            Pose2D currentPose = hardware.pinpoint.getPosition();
 
-            Pose2D currentPose = hardware.PinPoint.getPosition();
-
-            telemetry.addData("pinpointa",currentPose.getHeading(AngleUnit.RADIANS));
-            telemetry.addData("pinpointx",currentPose.getX(DistanceUnit.INCH));
-            telemetry.addData("pinpointy",currentPose.getY(DistanceUnit.INCH));
-            telemetry.addData("pinpoint",hardware.PinPoint.getDeviceStatus());
+            telemetry.addData("pinpointa", currentPose.getHeading(AngleUnit.RADIANS));
+            telemetry.addData("pinpointx", currentPose.getX(DistanceUnit.INCH));
+            telemetry.addData("pinpointy", currentPose.getY(DistanceUnit.INCH));
+            telemetry.addData("pinpoint", hardware.pinpoint.getDeviceStatus());
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            double heading = currentPose.getHeading(AngleUnit.RADIANS) + Math.PI/2;
+            double heading = currentPose.getHeading(AngleUnit.RADIANS) + Math.PI / 2;
             // Rotate the movement direction counter to the bot's rotation
             double rotX = x * Math.cos(-heading) - y * Math.sin(-heading);
             double rotY = x * Math.sin(-heading) + y * Math.cos(-heading);
@@ -79,12 +75,28 @@ public class CompBotTeleOp extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            if (gamepad1.x){
-                drive2Pose(new double[] {0,0,0} );
+            if (gamepad1.x) {
+                drive2Pose(new double[]{0, 0, 0});
             }
 
-            if(gamepad1.a){
-                drive2Pose(hardware.shootPos);
+            if (gamepad1.a) {
+                drive2Pose(CompBotHardware.shootPos);
+            }
+
+            if (gamepad2.b) {
+                hardware.flipper.setPosition(CompBotHardware.FLIPPER_UP);
+            } else {
+                hardware.flipper.setPosition(CompBotHardware.FLIPPER_DOWN);
+            }
+
+            if (gamepad2.right_bumper) {
+                // 2000, 1500: too fast for mid range
+                // 1000: too slow for mid range
+                hardware.shooter1.setVelocity(1250);
+            } else if (gamepad2.left_bumper) {
+                hardware.shooter1.setVelocity(-500);
+            } else {
+                hardware.shooter1.setVelocity(0);
             }
 
             hardware.frontLeft.setPower(frontLeftPower);
@@ -96,9 +108,8 @@ public class CompBotTeleOp extends LinearOpMode {
 
         }
     }
-    public void drive2Pose (double[] xya){
 
-
+    public void drive2Pose(double[] xya) {
         ArrayList<Long> Time = new ArrayList<>();
         ArrayList<Double> VelocityX = new ArrayList<>();
         ArrayList<Double> VelocityY = new ArrayList<>();
@@ -142,22 +153,19 @@ public class CompBotTeleOp extends LinearOpMode {
         double tgta = xya[2];
 
 
-        while(true) {
-
-
-
+        while (true) {
             currenTime = runtime.time();
 
             double Timeout = timeout.time();
 
-            hardware.PinPoint.update();
+            hardware.pinpoint.update();
 
-            double yVelocity= hardware.PinPoint.getVelY(DistanceUnit.INCH);
-            double xVelocity = hardware.PinPoint.getVelX(DistanceUnit.INCH);
+            double yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH);
+            double xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH);
 
-            double speed = Math.sqrt((yVelocity*yVelocity)+(xVelocity*xVelocity));
+            double speed = Math.sqrt((yVelocity * yVelocity) + (xVelocity * xVelocity));
 
-            Pose2D currentPose = hardware.PinPoint.getPosition();
+            Pose2D currentPose = hardware.pinpoint.getPosition();
 
             double currentx = currentPose.getX(DistanceUnit.INCH);
             double currenty = currentPose.getY(DistanceUnit.INCH);
@@ -166,15 +174,12 @@ public class CompBotTeleOp extends LinearOpMode {
             double deltax = tgtx - currentx;
             double deltay = tgty - currenty;
             double deltaA = tgta - currentTheta;
-            deltaA = deltaA % (2*(Math.PI));
+            deltaA = deltaA % (2 * (Math.PI));
             if (deltaA > Math.PI) {
                 deltaA -= 2 * Math.PI;
             }
 
-
-
-
-            if(Math.abs(deltax)< 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI/24 && speed < 10 || Timeout > 1){
+            if (Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 24 && speed < 10 || Timeout > 1) {
                 hardware.frontLeft.setPower(0);
                 hardware.backLeft.setPower(0);
                 hardware.frontRight.setPower(0);
@@ -182,17 +187,15 @@ public class CompBotTeleOp extends LinearOpMode {
                 break;
             }
 
-            double R = 9.375 ;
+            double R = 9.375;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
             double W = R * deltaA;
-            double deltaAll = Math.sqrt((F*F) + (S*S) + (W*W));
+            double deltaAll = Math.sqrt((F * F) + (S * S) + (W * W));
 
-            if (Math.abs(deltaAll-prevDeltaAll) > 0.5 ){
+            if (Math.abs(deltaAll - prevDeltaAll) > 0.5) {
                 timeout.reset();
             }
-
-
 
             double DFL = F + S - W;
             double DBL = F - S - W;
@@ -200,11 +203,11 @@ public class CompBotTeleOp extends LinearOpMode {
             double DBR = F + S + W;
 
             //rescale the four speeds so the largest is +/- 1
-            double tempMax1 = Math.max(Math.abs(DFL),Math.abs(DBL));
-            double tempMax2 =  Math.max(Math.abs(DFR),Math.abs(DBR));
-            double scale = Math.max(tempMax1,tempMax2);
+            double tempMax1 = Math.max(Math.abs(DFL), Math.abs(DBL));
+            double tempMax2 = Math.max(Math.abs(DFR), Math.abs(DBR));
+            double scale = Math.max(tempMax1, tempMax2);
 
-            if (scale<0.01){
+            if (scale < 0.01) {
                 scale = 0.01;
             }
 
@@ -217,14 +220,12 @@ public class CompBotTeleOp extends LinearOpMode {
 
             //PID computation
 
-            deltaTime = Math.max(currenTime - prevTime,0.001);//making sure we don't divide by 0
+            deltaTime = Math.max(currenTime - prevTime, 0.001);//making sure we don't divide by 0
 
-            double pid = kp*deltaAll + kd*(deltaAll-prevDeltaAll)/deltaTime;
-
-
+            double pid = kp * deltaAll + kd * (deltaAll - prevDeltaAll) / deltaTime;
 
             //if pid<1, rescale so fastest speed is +/- pid
-            if (Math.abs(pid)<1){
+            if (Math.abs(pid) < 1) {
                 DFL *= pid;
                 DBL *= pid;
                 DFR *= pid;
@@ -254,16 +255,14 @@ public class CompBotTeleOp extends LinearOpMode {
             BLpower.add(PBL);
             BRpower.add(PBR);
 
-            LoopTime.add(currenTime-prevTime);
+            LoopTime.add(currenTime - prevTime);
             deltaX.add(currentx);
             deltaY.add(currenty);
             Angle.add(currentTheta);
 
-
-
-            telemetry.addData("pinpointa",currentTheta);
-            telemetry.addData("pinpointx",currentx);
-            telemetry.addData("pinpointy",currenty);
+            telemetry.addData("pinpointa", currentTheta);
+            telemetry.addData("pinpointx", currentx);
+            telemetry.addData("pinpointy", currenty);
             telemetry.addData("deltaY", deltay);
             telemetry.addData("deltaX", deltax);
             telemetry.addData("deltaA", deltaA);
@@ -281,9 +280,9 @@ public class CompBotTeleOp extends LinearOpMode {
         RobotLog.i("Writing file to " + f);
         try (FileOutputStream fos = new FileOutputStream(f);
              OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)
-        ){
-            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR,LoopTime,detlaX,deltaY,Angle\n");
-            for(int i = 0; i<Time.size(); i++){
+        ) {
+            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR,LoopTime,deltaX,deltaY,Angle\n");
+            for (int i = 0; i < Time.size(); i++) {
                 writer.write(String.format(
                         Locale.ROOT,
                         "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
@@ -309,18 +308,19 @@ public class CompBotTeleOp extends LinearOpMode {
             throw new RuntimeException(e);
         }
     }
-    public double speed2Power(double speed){
+
+    public double speed2Power(double speed) {
         final double threshold = 0.2;
 
-        if(Math.abs(speed)<0.001){
+        if (Math.abs(speed) < 0.001) {
             return 0;
         }
 
-        if(speed > 0){
-            return threshold+((1-threshold)*speed);
+        if (speed > 0) {
+            return threshold + ((1 - threshold) * speed);
         }
-        if(speed <0){
-            return -threshold+((1-threshold)*speed);
+        if (speed < 0) {
+            return -threshold + ((1 - threshold) * speed);
         }
 
         throw new IllegalArgumentException();
