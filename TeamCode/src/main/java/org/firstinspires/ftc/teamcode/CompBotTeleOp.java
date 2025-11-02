@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -21,7 +19,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 @TeleOp
 public class CompBotTeleOp extends LinearOpMode {
@@ -33,30 +30,30 @@ public class CompBotTeleOp extends LinearOpMode {
     public void runOpMode() {
         hardware = new CompBotHardware(hardwareMap);
 
-        hardware.PinPoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
-        hardware.PinPoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.PinPoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
-        hardware.PinPoint.resetPosAndIMU();
-        hardware.PinPoint.recalibrateIMU();
+        hardware.pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
+        hardware.pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        hardware.pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
+        hardware.pinpoint.resetPosAndIMU();
+        hardware.pinpoint.recalibrateIMU();
 
 
-        telemetry.addData("pose", hardware.PinPoint.getPosition());
+        telemetry.addData("pose", hardware.pinpoint.getPosition());
         telemetry.update();
 
         waitForStart();
         runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-        hardware.PinPoint.setPosition(new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, 0));
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, 0));
 
         while (opModeIsActive()) {
-            hardware.PinPoint.update();
+            hardware.pinpoint.update();
 
-            Pose2D currentPose = hardware.PinPoint.getPosition();
+            Pose2D currentPose = hardware.pinpoint.getPosition();
 
             telemetry.addData("pinpointa", currentPose.getHeading(AngleUnit.RADIANS));
             telemetry.addData("pinpointx", currentPose.getX(DistanceUnit.INCH));
             telemetry.addData("pinpointy", currentPose.getY(DistanceUnit.INCH));
-            telemetry.addData("pinpoint", hardware.PinPoint.getDeviceStatus());
+            telemetry.addData("pinpoint", hardware.pinpoint.getDeviceStatus());
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -145,14 +142,14 @@ public class CompBotTeleOp extends LinearOpMode {
 
             double Timeout = timeout.time();
 
-            hardware.PinPoint.update();
+            hardware.pinpoint.update();
 
-            double yVelocity = hardware.PinPoint.getVelY(DistanceUnit.INCH);
-            double xVelocity = hardware.PinPoint.getVelX(DistanceUnit.INCH);
+            double yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH);
+            double xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH);
 
             double speed = Math.sqrt((yVelocity * yVelocity) + (xVelocity * xVelocity));
 
-            Pose2D currentPose = hardware.PinPoint.getPosition();
+            Pose2D currentPose = hardware.pinpoint.getPosition();
 
             double currentx = currentPose.getX(DistanceUnit.INCH);
             double currenty = currentPose.getY(DistanceUnit.INCH);

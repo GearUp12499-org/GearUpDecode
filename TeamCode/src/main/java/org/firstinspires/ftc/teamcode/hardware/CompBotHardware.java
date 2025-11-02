@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class CompBotHardware extends HardwareMapper {
@@ -15,8 +16,6 @@ public class CompBotHardware extends HardwareMapper {
 
     public double[] gatePos = {0, -55, 0};
 
-    @HardwareName("pinpoint")
-    public GoBildaPinpoint2Driver PinPoint;
 
     @HardwareName("frontLeft")
     @Reversed
@@ -47,6 +46,24 @@ public class CompBotHardware extends HardwareMapper {
     @HardwareName("intake")
     public DcMotor intake;
 
+    @HardwareName("pinpoint")
+    public GoBildaPinpoint2Driver pinpoint;
+
+    @HardwareName("idxMag1")
+    @DigitalMode(DigitalChannel.Mode.INPUT)
+    public DigitalChannel idxMag1;
+
+    @HardwareName("idxMag2")
+    @DigitalMode(DigitalChannel.Mode.INPUT)
+    public DigitalChannel idxMag2;
+
+    @HardwareName("idxMag3")
+    @DigitalMode(DigitalChannel.Mode.INPUT)
+    public DigitalChannel idxMag3;
+
+    @HardwareName("idxMag4")
+    @DigitalMode(DigitalChannel.Mode.INPUT)
+    public DigitalChannel idxMag4;
 
     public CompBotHardware(HardwareMap map) {
         super(map);
