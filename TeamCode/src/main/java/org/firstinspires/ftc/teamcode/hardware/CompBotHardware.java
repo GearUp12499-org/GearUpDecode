@@ -49,13 +49,14 @@ public class CompBotHardware extends HardwareMapper {
 
     @HardwareName("indexer")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
-    public DcMotor indexer;
+    public DcMotorEx indexer;
 
     @EncoderFor("indexer")
     @AutoClearEncoder
     public Encoder indexerEncoder;
 
     @HardwareName("intake")
+    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotor intake;
 
     @HardwareName("pinpoint")
