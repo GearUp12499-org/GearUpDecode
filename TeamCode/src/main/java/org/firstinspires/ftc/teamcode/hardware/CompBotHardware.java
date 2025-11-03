@@ -15,7 +15,7 @@ import io.github.gearup12499.taskshark.Lock;
 public class CompBotHardware extends HardwareMapper {
 
     public static final double[] redFarStart = {-63, -16, 0};
-    public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, 0);
+    public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, Math.PI);
 
     public static final double[] shootPos = {12, -12, 3 * Math.PI / 4};
 
@@ -50,13 +50,14 @@ public class CompBotHardware extends HardwareMapper {
 
     @HardwareName("indexer")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
-    public DcMotor indexer;
+    public DcMotorEx indexer;
 
     @EncoderFor("indexer")
     @AutoClearEncoder
     public Encoder indexerEncoder;
 
     @HardwareName("intake")
+    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotor intake;
 
     @HardwareName("pinpoint")
