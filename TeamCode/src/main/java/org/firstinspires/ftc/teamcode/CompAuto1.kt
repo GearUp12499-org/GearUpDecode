@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
-import io.github.gearup12499.taskshark.api.LogOutlet
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
@@ -37,10 +36,7 @@ class CompAuto1 : LinearOpMode() {
         val shooter = scheduler.add(Shooter(hw.shooter1, hw.flipper))
 
         scheduler.add(remover.drive2Pose(CompBotHardware.shootPos))
-            .then(OneShot {
-                shooter.targetVelocity = 1200.0
-            })
-            .then(shooter.waitForTargetHold(0.5))
+            .then(shooter.setTargetAndWait(CompBotHardware.SHOOT_MIDRANGE))
             .then(OneShot {
                 hw.flipper.position = CompBotHardware.FLIPPER_UP
             })
@@ -48,6 +44,7 @@ class CompAuto1 : LinearOpMode() {
             .then(OneShot {
                 hw.flipper.position = CompBotHardware.FLIPPER_DOWN
             })
+            .then(shooter.stopSoft())
             .then(Wait.s(3))
 
         waitForStart()

@@ -27,6 +27,7 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
+    public static final double SHOOT_MIDRANGE = 1200.0;
 
 
     @HardwareName("frontLeft")

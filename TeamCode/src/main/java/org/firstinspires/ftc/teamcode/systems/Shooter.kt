@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.Servo
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
+import io.github.gearup12499.taskshark.prefabs.OneShot
+import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import kotlin.math.abs
@@ -38,7 +40,6 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
     }
 
     override fun onTick(): Boolean {
-        motor.velocity = targetVelocity
         currentVelocity = motor.velocity
         return false
     }
@@ -52,6 +53,10 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
     override fun getTags(): Set<String> = TAGS
 
     fun isAtTarget() = abs(currentVelocity - targetVelocity) < ACCEPTABLE_VELOCITY_DIFF
+    fun setTarget(velo: Double) {
+        targetVelocity = velo
+        motor.velocity = velo
+    }
 
     /**
      * Wait to reach the target velocity. Does not account for overshooting.
@@ -60,6 +65,8 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
 
     /**
      * Wait to reach the target velocity for [minimumDuration] seconds continuously.
+     *
+     * Setting the [minimumDuration] to `0.0` is effectively the same as [waitForTargetSimple].
      */
     @JvmOverloads
     fun waitForTargetHold(minimumDuration: Double = 0.5) = object : Anonymous() {
@@ -75,5 +82,24 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
             return (now - lastMetAt) >= targetDuration
         }
 
+    }
+
+    /**
+     * Set the target velocity, then wait to stabilize on that velocity.
+     *
+     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
+     * similar to [waitForTargetSimple].
+     */
+    @JvmOverloads
+    fun setTargetAndWait(velocity: Double, minDuration: Double = 0.5) = VirtualGroup {
+        add(OneShot { setTarget(velocity) })
+            .then(waitForTargetHold(minDuration))
+    }
+
+    /**
+     * Set the target velocity to 0 (as a task.)
+     */
+    fun stopSoft() = OneShot {
+        setTarget(0.0)
     }
 }
