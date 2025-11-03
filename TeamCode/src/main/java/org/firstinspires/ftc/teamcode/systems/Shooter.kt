@@ -22,7 +22,7 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
         private const val ACCEPTABLE_VELOCITY_DIFF = 50.0
     }
 
-    private var targetVelocity: Double = 0.0
+    var targetVelocity: Double = 0.0
     private var currentVelocity: Double = 0.0
 
     init {
@@ -38,6 +38,7 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
     }
 
     override fun onTick(): Boolean {
+        motor.velocity = targetVelocity
         currentVelocity = motor.velocity
         return false
     }

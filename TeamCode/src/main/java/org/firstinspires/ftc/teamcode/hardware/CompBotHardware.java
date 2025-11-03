@@ -6,13 +6,18 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
 
     public static final double[] redFarStart = {-63, -16, 0};
+    public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, 0);
 
-    public static final double[] shootPos = {12, -12, -Math.PI / 4};
+    public static final double[] shootPos = {12, -12, 3 * Math.PI / 4};
 
     public static final double[] blueBase = {-38, -33, 0};
 
