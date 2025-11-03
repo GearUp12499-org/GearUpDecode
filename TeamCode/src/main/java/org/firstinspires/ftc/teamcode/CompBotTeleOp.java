@@ -92,7 +92,9 @@ public class CompBotTeleOp extends LinearOpMode {
             if (gamepad2.right_bumper) {
                 // 2000, 1500: too fast for mid range
                 // 1000: too slow for mid range
-                hardware.shooter1.setVelocity(1250);
+                // 600, 800 too slow barely goes anywhere
+                // 1200 seems good for shootingPos in hardware
+                hardware.shooter1.setVelocity(1200);
             } else if (gamepad2.left_bumper) {
                 hardware.shooter1.setVelocity(-500);
             } else {
