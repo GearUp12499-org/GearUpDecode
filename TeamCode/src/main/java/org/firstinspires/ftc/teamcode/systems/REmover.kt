@@ -5,6 +5,7 @@ import io.github.gearup12499.taskshark.Task
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -12,47 +13,49 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class REmover(private val hardware: CompBotHardware) : Task<REmover>() {
+@Suppress("SpellCheckingInspection")
+object REmover {
+    const val KP = 0.2
+    const val KD = 43.75
+    const val THRESHOLD = 0.2
 
-    companion object {
-        const val kp = 0.2
-        const val kd = 43.75
+    @JvmStatic
+    fun speed2Power(speed: Double) = when {
+        abs(speed) < 0.001 -> 0.0
+        speed > 0 -> THRESHOLD + (1 - THRESHOLD) * speed
+        speed < 0 -> -THRESHOLD + (1 - THRESHOLD) * speed
+        else -> throw IllegalArgumentException()
     }
 
-    override fun onTick(): Boolean {
-        return false
-    }
-
-    init {
-        require(CompBotHardware.Locks.DRIVE_MOTORS)
-    }
-
-    fun drive2Pose(xya: DoubleArray): Task<*> {
+    @JvmStatic
+    fun drive2Pose(hardware: CompBotHardware, xya: DoubleArray): Task<*> {
         val tgtx = xya[0]
         val tgty = xya[1]
         val tgta = xya[2]
 
-
-        return object : Anonymous() {
+        return object : Task.Anonymous() {
+            init {
+                require(CompBotHardware.Locks.DRIVE_MOTORS)
+            }
 
             lateinit var timeout: ElapsedTime
             lateinit var runtime: ElapsedTime
             var deltaTime = 0.0
-            var currenTime = 0.0
+            var currentTime = 0.0
             var prevTime = 0.0
             var prevDeltaAll = 0.0
 
             override fun onStart() {
                 timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)
                 runtime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
-                currenTime = runtime.time()
+                currentTime = runtime.time()
                 prevTime = runtime.time()
             }
 
             override fun onTick(): Boolean {
-                currenTime = runtime.time()
+                currentTime = runtime.time()
 
-                val Timeout = timeout.time()
+                val timeoutTime = timeout.time()
 
                 hardware.pinpoint.update()
 
@@ -62,98 +65,81 @@ class REmover(private val hardware: CompBotHardware) : Task<REmover>() {
                 val speed = hypot(xVelocity, yVelocity)
                 val currentPose = hardware.pinpoint.position
 
-                val currentx = currentPose.getX(DistanceUnit.INCH)
-                val currenty = currentPose.getY(DistanceUnit.INCH)
+                val currentX = currentPose.getX(DistanceUnit.INCH)
+                val currentY = currentPose.getY(DistanceUnit.INCH)
                 val currentTheta = currentPose.getHeading(AngleUnit.RADIANS)
 
-                val deltax = tgtx - currentx
-                val deltay = tgty - currenty
+                val deltaX = tgtx - currentX
+                val deltaY = tgty - currentY
                 var deltaA = tgta - currentTheta
-                deltaA = deltaA % (2 * (Math.PI))
-                if (deltaA > Math.PI) {
-                    deltaA -= 2 * Math.PI
+                deltaA %= 2 * PI
+                if (deltaA > PI) {
+                    deltaA -= 2 * PI
                 }
 
-                if (abs(deltax) < 0.5 && abs(deltay) < 0.5 && abs(deltaA) < Math.PI / 24 && speed < 10 || Timeout > 1) {
-
+                if (abs(deltaX) < 0.5 && abs(deltaY) < 0.5 && abs(deltaA) < Math.PI / 24 && speed < 10 || timeoutTime > 1) {
                     hardware.frontLeft.power = 0.0
                     hardware.frontRight.power = 0.0
                     hardware.backLeft.power = 0.0
                     hardware.backRight.power = 0.0
                     return true
-
                 }
 
-                val R = 9.375
-                val F = cos(currentTheta) * deltax + sin(currentTheta) * deltay
-                val S = sin(currentTheta) * deltax - cos(currentTheta) * deltay
-                val W = R * deltaA
-                val deltaAll = sqrt((F * F) + (S * S) + (W * W))
+                val r = 9.375
+                val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
+                val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
+                val w = r * deltaA
+                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
                 if (abs(deltaAll - prevDeltaAll) > 0.5) {
                     timeout.reset()
                 }
 
-                var DFL = F + S - W
-                var DBL = F - S - W
-                var DFR = F - S + W
-                var DBR = F + S + W
+                var dfl = f + s - w
+                var dbl = f - s - w
+                var dfr = f - s + w
+                var dbr = f + s + w
 
 
                 //rescale the four speeds so the largest is +/- 1
-                val tempMax1 = max(abs(DFL), abs(DBL))
-                val tempMax2 = max(abs(DFR), abs(DBR))
-                var scale = max(tempMax1, tempMax2)
+                var scale = max(
+                    max(abs(dfl), abs(dbl)),
+                    max(abs(dfr), abs(dbr))
+                )
 
                 if (scale < 0.01) {
                     scale = 0.01
                 }
 
-                DFL /= scale
-                DBL /= scale
-                DFR /= scale
-                DBR /= scale
+                dfl /= scale
+                dbl /= scale
+                dfr /= scale
+                dbr /= scale
 
-                deltaTime = max(currenTime - prevTime, 0.001)
+                deltaTime = max(currentTime - prevTime, 0.001)
 
-                val pid = kp * deltaAll + kd * (deltaAll - prevDeltaAll) / deltaTime
+                val pid =
+                    KP * deltaAll + KD * (deltaAll - prevDeltaAll) / deltaTime
 
                 if (abs(pid) < 1.0) {
-                    DFL *= pid
-                    DBL *= pid
-                    DFR *= pid
-                    DBR *= pid
+                    dfl *= pid
+                    dbl *= pid
+                    dfr *= pid
+                    dbr *= pid
                 }
 
-                val PFL = speed2Power(DFL)
-                val PFR = speed2Power(DFR)
-                val PBL = speed2Power(DBL)
-                val PBR = speed2Power(DBR)
+                val pfl = speed2Power(dfl)
+                val pfr = speed2Power(dfr)
+                val pbl = speed2Power(dbl)
+                val pbr = speed2Power(dbr)
 
-                hardware.frontLeft.power = PFL
-                hardware.backLeft.power = PBL
-                hardware.frontRight.power = PFR
-                hardware.backRight.power = PBR
+                hardware.frontLeft.power = pfl
+                hardware.backLeft.power = pbl
+                hardware.frontRight.power = pfr
+                hardware.backRight.power = pbr
 
                 return false
             }
         }
-    }
-
-    fun speed2Power(speed: Double): Double {
-        val threshold = 0.2
-
-        if (abs(speed) < 0.001) {
-            return 0.0
-        }
-
-        if (speed > 0) {
-            return threshold + ((1 - threshold) * speed)
-        }
-        if (speed < 0) {
-            return -threshold + ((1 - threshold) * speed)
-        }
-
-        throw IllegalArgumentException()
     }
 }

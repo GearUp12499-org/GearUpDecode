@@ -32,10 +32,9 @@ class CompAuto1 : LinearOpMode() {
 
         val scheduler = FastScheduler()
 
-        val remover = scheduler.add(REmover(hw))
         val shooter = scheduler.add(Shooter(hw.shooter1, hw.flipper))
 
-        scheduler.add(remover.drive2Pose(CompBotHardware.shootPos))
+        scheduler.add(REmover.drive2Pose(hw, CompBotHardware.shootPos))
             .then(shooter.setTargetAndWait(CompBotHardware.SHOOT_MIDRANGE))
             .then(OneShot {
                 hw.flipper.position = CompBotHardware.FLIPPER_UP
