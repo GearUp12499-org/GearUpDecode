@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -50,11 +52,8 @@ public class CompBotHardware extends HardwareMapper {
 
     @HardwareName("indexer")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
-    public DcMotorEx indexer;
-
-    @EncoderFor("indexer")
     @AutoClearEncoder
-    public Encoder indexerEncoder;
+    public DcMotorEx indexer;
 
     @HardwareName("intake")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
@@ -87,6 +86,34 @@ public class CompBotHardware extends HardwareMapper {
     @ZeroPower(DcMotor.ZeroPowerBehavior.FLOAT)
     @Reversed
     public DcMotorEx shooter1;
+
+    @HardwareName("limelightLight1")
+    public Servo limelightLight1;
+
+    @HardwareName("limelightLight2")
+    public Servo limelightLight2;
+
+    @HardwareName("indicator1")
+    public Servo indicator1;
+
+    @HardwareName("indicator2")
+    public Servo indicator2;
+
+    @HardwareName("frontColor1")
+    public RevColorSensorV3 frontColor1;
+
+    @HardwareName("frontColor2")
+    public RevColorSensorV3 frontColor2;
+
+    @HardwareName("shooterHood1")
+    @GoBildaExtendedServo
+    public ServoImplEx shooterHood1;
+
+    @HardwareName("shooterHood2")
+    @GoBildaExtendedServo
+    public ServoImplEx shooterHood2;
+
+
 
     public CompBotHardware(HardwareMap map) {
         super(map);
