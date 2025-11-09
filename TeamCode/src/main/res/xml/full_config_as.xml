@@ -1,24 +1,34 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <Robot type="FirstInspires-FTC">
+    <EthernetDevice name="Ethernet Device" serialNumber="EthernetOverUsb:eth0:172.29.0.30" port="-1" ipAddress="172.29.0.1" />
     <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
         <LynxModule name="Expansion Hub 1" port="1">
             <goBILDA5202SeriesMotor name="intake" port="0" />
             <goBILDA5202SeriesMotor name="indexer" port="1" />
             <goBILDA5202SeriesMotor name="backRight" port="2" />
             <goBILDA5202SeriesMotor name="frontRight" port="3" />
+            <Servo name="limelightLight2" port="0" />
+            <Servo name="indicator2" port="5" />
             <DigitalDevice name="idxMag3" port="0" />
             <DigitalDevice name="idxMag4" port="2" />
+            <RevColorSensorV3 name="frontColor2" port="0" bus="0" />
         </LynxModule>
         <ServoHub name="Servo Hub 3" port="3">
             <Servo name="flipper" port="0" />
+            <Servo name="shooterHood1" port="4" />
+            <Servo name="shooterHood2" port="5" />
         </ServoHub>
         <LynxModule name="Control Hub" port="173">
             <goBILDA5202SeriesMotor name="shooter1" port="0" />
             <goBILDA5202SeriesMotor name="backLeft" port="2" />
             <goBILDA5202SeriesMotor name="frontLeft" port="3" />
+            <Servo name="indicator1" port="0" />
+            <Servo name="limelightLight1" port="5" />
             <DigitalDevice name="idxMag1" port="0" />
             <DigitalDevice name="idxMag2" port="2" />
             <goBILDAPinpoint2 name="pinpoint" port="0" bus="0" />
+            <RevColorSensorV3 name="frontColor1" port="0" bus="1" />
         </LynxModule>
     </LynxUsbDevice>
+    <Webcam name="Webcam 1" serialNumber="01.00.00" />
 </Robot>

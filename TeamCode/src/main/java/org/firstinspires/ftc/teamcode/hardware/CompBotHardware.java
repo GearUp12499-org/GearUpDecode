@@ -1,18 +1,26 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
 
     public static final double[] redFarStart = {-63, -16, 0};
+    public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, Math.PI);
 
-    public static final double[] shootPos = {12, -12, -Math.PI / 4};
+    public static final double[] shootPos = {12, -12, 3 * Math.PI / 4};
 
     public static final double[] blueBase = {-38, -33, 0};
 
@@ -22,6 +30,7 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
+    public static final double SHOOT_MIDRANGE = 1200.0;
 
 
     @HardwareName("frontLeft")
@@ -44,13 +53,11 @@ public class CompBotHardware extends HardwareMapper {
 
     @HardwareName("indexer")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
-    public DcMotor indexer;
-
-    @EncoderFor("indexer")
     @AutoClearEncoder
-    public Encoder indexerEncoder;
+    public DcMotorEx indexer;
 
     @HardwareName("intake")
+    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotor intake;
 
     @HardwareName("pinpoint")
@@ -80,6 +87,35 @@ public class CompBotHardware extends HardwareMapper {
     @ZeroPower(DcMotor.ZeroPowerBehavior.FLOAT)
     @Reversed
     public DcMotorEx shooter1;
+
+    @HardwareName("limelightLight1")
+    public Servo limelightLight1;
+
+    @HardwareName("limelightLight2")
+    public Servo limelightLight2;
+
+    @HardwareName("indicator1")
+    public Servo indicator1;
+
+    @HardwareName("indicator2")
+    public Servo indicator2;
+
+    @HardwareName("frontColor1")
+    public RevColorSensorV3 frontColor1;
+
+    @HardwareName("frontColor2")
+    public RevColorSensorV3 frontColor2;
+
+    @HardwareName("shooterHood1")
+    @GoBildaExtendedServo
+    public ServoImplEx shooterHood1;
+
+    @HardwareName("shooterHood2")
+    @GoBildaExtendedServo
+    public ServoImplEx shooterHood2;
+
+    @HardwareName("Webcam 1")
+    public WebcamName gsc;
 
     public CompBotHardware(HardwareMap map) {
         super(map);
