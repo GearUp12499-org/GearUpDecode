@@ -24,16 +24,14 @@ import java.util.Locale;
 @TeleOp
 public class CompBotTeleOp extends LinearOpMode {
 
+    public static final int ticksPerRotation = 970;
+    public static final int ticksPerStep = ticksPerRotation / 6;
     CompBotHardware hardware;
     private ElapsedTime runtime;
-
-    public static final int ticksPerRotation = 970;
-    public static final int ticksPerStep = ticksPerRotation/6;
 
     @Override
     public void runOpMode() {
         hardware = new CompBotHardware(hardwareMap);
-
 
 
         hardware.pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
@@ -83,10 +81,9 @@ public class CompBotTeleOp extends LinearOpMode {
                 drive2Pose(new double[]{0, 0, 0});
             }
 
-            if(gamepad1.y){
+            if (gamepad1.y) {
                 hardware.intake.setPower(1);
-            }
-            else{
+            } else {
                 hardware.intake.setPower(0);
             }
 
@@ -100,7 +97,7 @@ public class CompBotTeleOp extends LinearOpMode {
                 hardware.flipper.setPosition(CompBotHardware.FLIPPER_DOWN);
             }
 
-            if (gamepad1.dpad_up){
+            if (gamepad1.dpad_up) {
                 hardware.indexer.setTargetPosition(hardware.indexer.getCurrentPosition() + ticksPerStep);
                 hardware.indexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 hardware.indexer.setPower(0.5);
@@ -118,7 +115,7 @@ public class CompBotTeleOp extends LinearOpMode {
                 hardware.shooter1.setVelocity(0);
             }
 
-            if (gamepad1.start){
+            if (gamepad1.start) {
                 spindexer0();
             }
             hardware.frontLeft.setPower(frontLeftPower);
@@ -126,7 +123,7 @@ public class CompBotTeleOp extends LinearOpMode {
             hardware.backRight.setPower(backRightPower);
             hardware.backLeft.setPower(backLeftPower);
 
-            telemetry.addData("indexerPos",hardware.indexer.getCurrentPosition());
+            telemetry.addData("indexerPos", hardware.indexer.getCurrentPosition());
 
             telemetry.update();
 
@@ -349,14 +346,14 @@ public class CompBotTeleOp extends LinearOpMode {
 
         throw new IllegalArgumentException();
     }
-    public void spindexer0(){
+
+    public void spindexer0() {
 
 
-        while(true) {
+        while (true) {
             boolean indexer3 = hardware.idxMag3.getState();
             boolean indexer2 = hardware.idxMag2.getState();
             hardware.indexer.setVelocity(250);
-
 
 
             if (!indexer2 && !indexer3) {
