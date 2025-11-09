@@ -45,7 +45,7 @@ abstract class HardwareTestBase : LinearOpMode() {
             if (result != Result.NO_RESULT) throw IllegalStateException("Test $name is already $result")
             result = Result.PASS
             this.reason = reason
-            stop()
+            finish()
         }
 
         fun fail(reason: String) {
