@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -113,7 +114,8 @@ public class CompBotHardware extends HardwareMapper {
     @GoBildaExtendedServo
     public ServoImplEx shooterHood2;
 
-
+    @HardwareName("Webcam 1")
+    public WebcamName gsc;
 
     public CompBotHardware(HardwareMap map) {
         super(map);

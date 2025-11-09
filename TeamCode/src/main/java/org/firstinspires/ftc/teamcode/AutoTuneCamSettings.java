@@ -114,7 +114,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
         VisionPortal.Builder builder = new VisionPortal.Builder();
         if (USE_WEBCAM)
-            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+            builder.setCamera(hardware.gsc);
         else
             builder.setCamera(BuiltinCameraDirection.BACK);
 
