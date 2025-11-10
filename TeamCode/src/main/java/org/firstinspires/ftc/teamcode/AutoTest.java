@@ -1,15 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
 import org.firstinspires.ftc.teamcode.hardware.FileUtil;
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver;
@@ -22,16 +20,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
 
-@TeleOp
-public class CompBotTeleOp extends LinearOpMode {
-
-    public static final int ticksPerRotation = 970;
-    public static final int ticksPerStep = ticksPerRotation / 6;
+@Autonomous
+public class AutoTest extends LinearOpMode {
     CompBotHardware hardware;
+
     private ElapsedTime runtime;
 
+
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
         hardware = new CompBotHardware(hardwareMap);
 
 
@@ -46,102 +43,24 @@ public class CompBotTeleOp extends LinearOpMode {
 
         waitForStart();
         runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16,AngleUnit.RADIANS, -Math.PI));
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16, AngleUnit.RADIANS, -Math.PI));
 
 
-
-        while (opModeIsActive()) {
-            hardware.pinpoint.update();
-
-            Pose2D currentPose = hardware.pinpoint.getPosition();
-
-            telemetry.addData("pinpointa", currentPose.getHeading(AngleUnit.RADIANS));
-            telemetry.addData("pinpointx", currentPose.getX(DistanceUnit.INCH));
-            telemetry.addData("pinpointy", currentPose.getY(DistanceUnit.INCH));
-            telemetry.addData("pinpoint", hardware.pinpoint.getDeviceStatus());
-
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
-
-            double heading = currentPose.getHeading(AngleUnit.RADIANS) + Math.PI / 2;
-            // Rotate the movement direction counter to the bot's rotation
-            double rotX = x * Math.cos(-heading) - y * Math.sin(-heading);
-            double rotY = x * Math.sin(-heading) + y * Math.cos(-heading);
-
-            rotX = rotX * 1.1;  // Counteract imperfect strafing
-
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            double frontLeftPower = (rotY + rotX + rx) / denominator;
-            double backLeftPower = (rotY - rotX + rx) / denominator;
-            double frontRightPower = (rotY - rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
-
-            if (gamepad1.x) {
-                drive2Pose(new double[]{0, -2, 0});
-                sleep(100);
-                drive2Pose(new double[]{4,-2,0});
-            }
-
-            if (gamepad1.y) {
-                hardware.intake.setPower(1);
-            } else {
-                hardware.intake.setPower(0);
-            }
-
-            if (gamepad1.a) {
-                drive2Pose(CompBotHardware.shootPos);
-            }
-
-            if (gamepad1.b) {
-                hardware.frontRight.setPower(0.15);
-                hardware.frontLeft.setPower(0.15);
-                hardware.backRight.setPower(0.15);
-                hardware.backLeft.setPower(0.15);
-            }
-
-            if (gamepad2.b) {
-                hardware.flipper.setPosition(CompBotHardware.FLIPPER_UP);
-            } else {
-                hardware.flipper.setPosition(CompBotHardware.FLIPPER_DOWN);
-            }
-
-            if (gamepad1.dpad_up) {
-                hardware.indexer.setTargetPosition(hardware.indexer.getCurrentPosition() + ticksPerStep);
-                hardware.indexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                hardware.indexer.setPower(0.5);
-            }
-
-            if (gamepad2.right_bumper) {
-                // 2000, 1500: too fast for mid range
-                // 1000: too slow for mid range
-                // 600, 800 too slow barely goes anywhere
-                // 1200 seems good for shootingPos in hardware
-                hardware.shooter1.setVelocity(1200);
-            } else if (gamepad2.left_bumper) {
-                hardware.shooter1.setVelocity(-500);
-            } else {
-                hardware.shooter1.setVelocity(0);
-            }
-
-            if (gamepad1.start) {
-                spindexer0();
-            }
-//            hardware.frontLeft.setPower(frontLeftPower);
-//            hardware.frontRight.setPower(frontRightPower);
-//            hardware.backRight.setPower(backRightPower);
-//            hardware.backLeft.setPower(backLeftPower);
-
-            telemetry.addData("indexerPos", hardware.indexer.getCurrentPosition());
-
-            telemetry.update();
+        while (opModeIsActive()){
+            drive2Pose(new double[] {-54.8,-13,2.76});
+            sleep(2000);
+            drive2Pose(new double[] {-34.9,-33.3,-Math.PI/2});
+            sleep(2000);
+            drive2Pose(new double[] {-34.9, -50.1, -Math.PI/2});
+            sleep(2000);
+            drive2Pose(new double[] {-54.8,-13,2.76});
+            sleep(2000);
+            drive2Pose(new double[] {-10.7,-33.8,-Math.PI/2});
 
         }
-    }
 
+
+    }
 
     public void drive2Pose(double[] xya) {
         ArrayList<Long> Time = new ArrayList<>();
@@ -174,7 +93,7 @@ public class CompBotTeleOp extends LinearOpMode {
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         double kp = 0.2;
-        double kd = 50;
+        double kd = 43.75;
 
 
         double currenTime = runtime.time();
@@ -362,21 +281,5 @@ public class CompBotTeleOp extends LinearOpMode {
         }
 
         throw new IllegalArgumentException();
-    }
-
-    public void spindexer0() {
-
-
-        while (true) {
-            boolean indexer3 = hardware.idxMag3.getState();
-            boolean indexer2 = hardware.idxMag2.getState();
-            hardware.indexer.setVelocity(250);
-
-
-            if (!indexer2 && !indexer3) {
-                hardware.indexer.setVelocity(0);
-                break;
-            }
-        }
     }
 }
