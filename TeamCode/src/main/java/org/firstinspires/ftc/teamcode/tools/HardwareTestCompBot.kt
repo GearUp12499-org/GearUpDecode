@@ -1,8 +1,14 @@
 package org.firstinspires.ftc.teamcode.tools
 
+import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.DigitalChannel
 import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark.ITask
+import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.TaskStopException
+import io.github.gearup12499.taskshark.prefabs.OneShot
+import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -15,15 +21,15 @@ class HardwareTestCompBot : HardwareTestBase() {
     lateinit var hardware: CompBotHardware
 
     fun buildTelemetry() {
-        telemetry.addLine("press START to quit early")
-        telemetry.addLine()
-        headingMessage?.split("\n")?.forEach(telemetry::addLine)
-        buildReport().split("\n").forEach(telemetry::addLine)
+        telemetry.addLine(headingMessage)
+        telemetry.addLine(buildReport())
 
         telemetry.update()
     }
 
-    private fun testPinpointSetup() = object: TestableAction("pinpoint status") {
+    /* -- BACKGROUND TESTS -- */
+
+    private fun testPinpointSetup() = object : TestableAction("pinpoint status") {
         override fun onStart() {
             super.onStart()
             val p = hardware.pinpoint
@@ -60,15 +66,125 @@ class HardwareTestCompBot : HardwareTestBase() {
         Pair(p.getVelX(DistanceUnit.INCH), p.getVelY(DistanceUnit.INCH))
     }
 
+    private fun testDigitalSensor(name: String, part: DigitalChannel) = watchForChanges(name) {
+        part.state
+    }
+
+    private fun testRevColorSensor(name: String, part: RevColorSensorV3) = watchForChanges(name) {
+        part.normalizedColors
+    }
+
+    private fun alert(message: String) = VirtualGroup {
+        this.add(OneShot {
+            headingMessage = message
+        })
+        this.add(fallingEdge { gamepad1.a })
+            .then(OneShot {
+                headingMessage = null
+            })
+    }
+
+    private fun branch(message: String, ifTrue: VirtualGroup.Configure) =
+        object : Task.Anonymous() {
+            var waitFor: ITask<*>? = null
+            var wasA = false
+            var wasB = false
+
+            override fun onStart() {
+                headingMessage = message
+            }
+
+            override fun onTick(): Boolean {
+                if (waitFor != null) {
+                    if (waitFor?.getState() == ITask.State.Finished) return true
+                } else {
+                    val isA = gamepad1.a
+                    val isB = gamepad1.b
+                    if (!isA && wasA) {
+                        headingMessage = null
+                        // soft depend on this by polling the OneShot
+                        // not amazing but it works i guess
+                        waitFor = scheduler!!.add(VirtualGroup(ifTrue))
+                            .then(OneShot {})
+                    }
+                    if (!isB && wasB) {
+                        headingMessage = null
+                        return true
+                    }
+                    wasA = isA
+                    wasB = isB
+                }
+                return false
+            }
+        }
+
+    fun testYesNo(name: String, instructions: String): TestableAction {
+        return object : TestableAction(name) {
+            override fun onStart() {
+                super.onStart()
+                headingMessage = "$instructions\nPress [A] (yes!) or [B] (no.)"
+            }
+
+            var wasA = false
+            var wasB = false
+
+            override fun testIt() {
+                val isA = gamepad1.a
+                val isB = gamepad1.b
+                if (!isA && wasA) {
+                    pass("manual")
+                }
+                if (!isB && wasB) {
+                    fail("manual")
+                }
+                wasA = isA
+                wasB = isB
+            }
+        }
+    }
+
     override fun runOpMode() {
         hardware = CompBotHardware(hardwareMap)
         TaskSharkAndroid.setup()
         val scheduler = FastScheduler()
 
+        // BACKGROUND ITEMS
         val pinpointSetup = scheduler.add(put(testPinpointSetup()))
         pinpointSetup.then(put(testPinpointHeading()))
         pinpointSetup.then(put(testPinpointPosition()))
         pinpointSetup.then(put(testPinpointVel()))
+        scheduler.add(put(testDigitalSensor("idxMag1", hardware.idxMag1)))
+        scheduler.add(put(testDigitalSensor("idxMag2", hardware.idxMag2)))
+        scheduler.add(put(testDigitalSensor("idxMag3", hardware.idxMag3)))
+        scheduler.add(put(testDigitalSensor("idxMag4", hardware.idxMag4)))
+        scheduler.add(put(testRevColorSensor("frontColor1", hardware.frontColor1)))
+        scheduler.add(put(testRevColorSensor("frontColor2", hardware.frontColor2)))
+
+        // LIVE TEST SEQUENCE
+        scheduler.add(
+            branch("Test lights?") {
+                add(OneShot { hardware.limelightLight1.position = 1.0 })
+                    .then(put(testYesNo("limelightLight1", "Is the light on?")))
+                    .then(OneShot {
+                        hardware.limelightLight1.position = 0.0
+                        hardware.limelightLight2.position = 1.0
+                    })
+                    .then(put(testYesNo("limelightLight2", "Is the other light on?")))
+                    .then(OneShot {
+                        hardware.limelightLight2.position = 0.0
+                        hardware.indicator1.position = 0.5
+                    })
+                    .then(put(testYesNo("indicator1", "Is the light colored?")))
+                    .then(OneShot {
+                        hardware.indicator1.position = 0.0
+                        hardware.indicator2.position = 0.5
+                    })
+                    .then(put(testYesNo("indicator2", "Is the other light colored?")))
+                    .then(OneShot {
+                        hardware.indicator2.position = 0.0
+                    })
+            }
+        )
 
         while (opModeInInit()) buildTelemetry()
 
