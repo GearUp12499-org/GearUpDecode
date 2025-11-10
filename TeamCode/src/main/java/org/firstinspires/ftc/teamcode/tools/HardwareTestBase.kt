@@ -107,12 +107,14 @@ abstract class HardwareTestBase : LinearOpMode() {
             }
 
             override fun testIt() {
-                if (producer() != originValue) pass()
+                val p = producer()
+                if (p != originValue) pass()
+                reason = p.toString()
             }
         }
     }
 
-    fun fallingEdge(producer: () -> Boolean): Task<*> {
+    fun fallingEdge(producer: () -> Boolean): Task.Anonymous {
         return object: Task.Anonymous() {
             var stage = false
             override fun onTick(): Boolean {
