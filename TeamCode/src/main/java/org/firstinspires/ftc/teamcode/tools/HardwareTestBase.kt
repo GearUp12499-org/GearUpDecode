@@ -65,7 +65,9 @@ abstract class HardwareTestBase : LinearOpMode() {
                 throw e
             } catch (e: Exception) {
                 e.printStackTrace()
-                fail(e.toString())
+                if (result == Result.NO_RESULT)
+                    fail(e.toString())
+                else throw e
                 // should be unreachable
                 throw TaskStopException()
             }

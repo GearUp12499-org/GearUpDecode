@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.tools
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark.TaskStopException
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -22,7 +23,7 @@ class HardwareTestCompBot : HardwareTestBase() {
         telemetry.update()
     }
 
-    private fun testPinpointSetup() = object: TestableAction("pinpoint") {
+    private fun testPinpointSetup() = object: TestableAction("pinpoint status") {
         override fun onStart() {
             super.onStart()
             val p = hardware.pinpoint
@@ -33,24 +34,27 @@ class HardwareTestCompBot : HardwareTestBase() {
             val p = hardware.pinpoint
             p.update()
             reason = "${p.deviceStatus}"
-            if (p.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY)
+            if (p.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY) try {
                 pass("Device ready")
+            } catch (e: TaskStopException) {
+                throw e
+            }
         }
     }
 
-    private fun testPinpointPosition() = watchForChanges("pinpoint pos") {
+    private fun testPinpointPosition() = watchForChanges("pinpoint XYZ") {
         val p = hardware.pinpoint
         p.update()
         p.position
     }
 
-    private fun testPinpointHeading() = watchForChanges("pinpoint pos") {
+    private fun testPinpointHeading() = watchForChanges("pinpoint H") {
         val p = hardware.pinpoint
         p.update()
         p.getHeading(AngleUnit.RADIANS)
     }
 
-    private fun testPinpointVel() = watchForChanges("pinpoint pos") {
+    private fun testPinpointVel() = watchForChanges("pinpoint vXY") {
         val p = hardware.pinpoint
         p.update()
         Pair(p.getVelX(DistanceUnit.INCH), p.getVelY(DistanceUnit.INCH))
