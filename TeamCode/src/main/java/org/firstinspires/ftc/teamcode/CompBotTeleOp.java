@@ -34,10 +34,6 @@ public class CompBotTeleOp extends LinearOpMode {
     public void runOpMode() {
         hardware = new CompBotHardware(hardwareMap);
 
-
-        hardware.pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
-        hardware.pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        hardware.pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
         hardware.pinpoint.recalibrateIMU();
 
 
