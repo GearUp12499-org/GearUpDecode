@@ -120,6 +120,7 @@ public class CompBotHardware extends HardwareMapper {
     public CompBotHardware(HardwareMap map) {
         super(map);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(45.0f);
         frontColor2.setGain(45.0f);
     }

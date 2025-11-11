@@ -17,6 +17,8 @@ import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 
 @TeleOp
 class HardwareTestCompBot : HardwareTestBase() {
+    data class Quadruple<P, Q, R, S>(val p: P, val q: Q, val r: R, val s: S)
+
     var headingMessage: String? = null
     lateinit var hardware: CompBotHardware
 
@@ -71,7 +73,8 @@ class HardwareTestCompBot : HardwareTestBase() {
     }
 
     private fun testRevColorSensor(name: String, part: RevColorSensorV3) = watchForChanges(name) {
-        part.normalizedColors
+        val norm = part.normalizedColors
+        Quadruple(norm.red, norm.green, norm.blue, norm.alpha)
     }
 
     private fun alert(message: String) = VirtualGroup {
@@ -184,7 +187,16 @@ class HardwareTestCompBot : HardwareTestBase() {
                         hardware.indicator2.position = 0.0
                     })
             }
-        )
+        ).then(
+            branch("Test indexer?") {
+                add(OneShot {
+                    hardware.indexer.power = 0.75
+                    hardware.indexer.velocity = 250.0
+                })
+                    .then(put(testYesNo("indexer", "Is the indexer moving?")))
+                    .then(OneShot { hardware.indexer.velocity = 0.0 })
+            }
+        ).then(OneShot { headingMessage = "all done" })
 
         while (opModeInInit()) buildTelemetry()
 

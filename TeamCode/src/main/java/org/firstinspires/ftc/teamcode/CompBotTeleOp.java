@@ -130,10 +130,10 @@ public class CompBotTeleOp extends LinearOpMode {
             if (gamepad1.start) {
                 spindexer0();
             }
-//            hardware.frontLeft.setPower(frontLeftPower);
-//            hardware.frontRight.setPower(frontRightPower);
-//            hardware.backRight.setPower(backRightPower);
-//            hardware.backLeft.setPower(backLeftPower);
+            hardware.frontLeft.setPower(frontLeftPower);
+            hardware.frontRight.setPower(frontRightPower);
+            hardware.backRight.setPower(backRightPower);
+            hardware.backLeft.setPower(backLeftPower);
 
             telemetry.addData("indexerPos", hardware.indexer.getCurrentPosition());
 
