@@ -379,4 +379,217 @@ public class CompBotTeleOp extends LinearOpMode {
             }
         }
     }
+
+
+    public void drive2Pose2(double[] xya) {
+        ArrayList<Long> Time = new ArrayList<>();
+        ArrayList<Double> VelocityX = new ArrayList<>();
+        ArrayList<Double> VelocityY = new ArrayList<>();
+
+        ArrayList<Double> FLspeed = new ArrayList<>();
+        ArrayList<Double> BLspeed = new ArrayList<>();
+        ArrayList<Double> FRspeed = new ArrayList<>();
+        ArrayList<Double> BRspeed = new ArrayList<>();
+
+        ArrayList<Double> FLpower = new ArrayList<>();
+        ArrayList<Double> BLpower = new ArrayList<>();
+        ArrayList<Double> FRpower = new ArrayList<>();
+        ArrayList<Double> BRpower = new ArrayList<>();
+
+        ArrayList<Double> LoopTime = new ArrayList<>();
+        ArrayList<Double> deltaX = new ArrayList<>();
+        ArrayList<Double> deltaY = new ArrayList<>();
+        ArrayList<Double> Angle = new ArrayList<>();
+//        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
+//        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+//        hardware.PinPoint.resetPosAndIMU();
+//        hardware.PinPoint.recalibrateIMU();
+//        hardware = new DumbledoreHardware(hardwareMap);
+
+        ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+
+        double Fkp = 0;
+        double Fkd = 0;
+        double Fki = 0;
+
+        double Skp = 0;
+        double Skd = 0;
+        double Ski = 0;
+
+        double Wkp = 0;
+        double Wkd = 0;
+        double Wki = 0;
+
+        double currenTime = runtime.time();
+        double prevTime = currenTime;
+        double prevDeltaAll = 0;
+
+
+        double tgtx = xya[0];
+        double tgty = xya[1];
+        double tgta = xya[2];
+
+        double sumF = 0;
+        double sumS = 0;
+        double sumW = 0;
+
+
+        while (true) {
+            currenTime = runtime.time();
+
+            double Timeout = timeout.time();
+
+            hardware.pinpoint.update();
+
+            double yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH);
+            double xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH);
+            double angVelocity = hardware.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS);
+
+            double speed = Math.sqrt((yVelocity * yVelocity) + (xVelocity * xVelocity));
+
+            Pose2D currentPose = hardware.pinpoint.getPosition();
+
+            double currentx = currentPose.getX(DistanceUnit.INCH);
+            double currenty = currentPose.getY(DistanceUnit.INCH);
+            double currentTheta = currentPose.getHeading(AngleUnit.RADIANS);
+
+            double deltax = tgtx - currentx;
+            double deltay = tgty - currenty;
+            double deltaA = tgta - currentTheta;
+            deltaA = deltaA % (2 * (Math.PI));
+            if (deltaA > Math.PI) {
+                deltaA -= 2 * Math.PI;
+            } else if (deltaA < -Math.PI) {
+                deltaA += 2* Math.PI;
+            }
+
+            if ((Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 24 && speed < 10) || Timeout > 1) {
+                hardware.frontLeft.setPower(0);
+                hardware.backLeft.setPower(0);
+                hardware.frontRight.setPower(0);
+                hardware.backRight.setPower(0);
+                break;
+            }
+
+            double R = 9.375;
+            double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
+            double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
+            double W = R * deltaA;
+
+            double vF = Math.cos(currentTheta) * xVelocity + Math.sin(currentTheta) * yVelocity; //velocity in the F direction
+            double vS = Math.sin(currentTheta) * xVelocity - Math.cos(currentTheta) * yVelocity; //velocity in the S direction
+            double vW = R * angVelocity;
+
+            sumF += F; //the errors for the i term
+            sumS += S;
+            sumW += W;
+
+            double PF = Fkp*F + Fki*sumF - Fkd*vF; //using velocity instead of (currentF-prevF)/deltaT because loop times varied a lot when we were recording them. idk if it'll make any difference
+            double PS = Skp*S + Ski*sumS - Skd*vS;
+            double PW = Wkp*W + Wki*sumW - Wkd*vW;
+
+            double deltaAll = Math.sqrt((F * F) + (S * S) + (W * W));
+
+            if (Math.abs(deltaAll - prevDeltaAll) > 0.5) {
+                timeout.reset();
+            }
+
+            double PFL = PF + PS - PW;
+            double PBL = PF - PS - PW;
+            double PFR = PF - PS + PW;
+            double PBR = PF + PS + PW;
+
+            //rescale the four speeds if one is larger than abs(1)
+
+            double tempMax1 = Math.max(Math.abs(PFL), Math.abs(PBL));
+            double tempMax2 = Math.max(Math.abs(PFR), Math.abs(PBR));
+            double scale = Math.max(tempMax1, tempMax2);
+
+
+            if (scale>1) {
+                PFL /= scale;
+                PBL /= scale;
+                PFR /= scale;
+                PBR /= scale;
+                sumF = 0; //if you're so far that you need to scale the powers down, don't start adding up errors for i
+                sumS = 0;
+                sumW = 0;
+            }
+
+
+            hardware.frontLeft.setPower(PFL);
+            hardware.backLeft.setPower(PBL);
+            hardware.frontRight.setPower(PFR);
+            hardware.backRight.setPower(PBR);
+
+            Time.add(System.nanoTime());
+            VelocityY.add(yVelocity);
+            VelocityX.add(xVelocity);
+            FLspeed.add(PFL);
+            FRspeed.add(PFR);
+            BLspeed.add(PBL);
+            BRspeed.add(PBR);
+
+            FLpower.add(PFL);
+            FRpower.add(PFR);
+            BLpower.add(PBL);
+            BRpower.add(PBR);
+
+            LoopTime.add(currenTime - prevTime);
+            deltaX.add(currentx);
+            deltaY.add(currenty);
+            Angle.add(currentTheta);
+
+            telemetry.addData("pinpointa", currentTheta);
+            telemetry.addData("pinpointx", currentx);
+            telemetry.addData("pinpointy", currenty);
+            telemetry.addData("deltaY", deltay);
+            telemetry.addData("deltaX", deltax);
+            telemetry.addData("deltaA", deltaA);
+//            telemetry.addData("DFL",DFL);
+//            telemetry.addData("DFR",DFR);
+//            telemetry.addData("DBL",DBL);
+//            telemetry.addData("DBR",DBR);
+            telemetry.update();
+
+            prevDeltaAll = deltaAll;
+            prevTime = currenTime;
+        }
+
+        File f = FileUtil.getfile();
+        RobotLog.i("Writing file to " + f);
+        try (FileOutputStream fos = new FileOutputStream(f);
+             OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)
+        ) {
+            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR,LoopTime,deltaX,deltaY,Angle\n");
+            for (int i = 0; i < Time.size(); i++) {
+                writer.write(String.format(
+                        Locale.ROOT,
+                        "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+                        Time.get(i),
+                        VelocityX.get(i),
+                        VelocityY.get(i),
+                        FLspeed.get(i),
+                        FRspeed.get(i),
+                        BLspeed.get(i),
+                        BRspeed.get(i),
+                        FLpower.get(i),
+                        FRpower.get(i),
+                        BLpower.get(i),
+                        BRpower.get(i),
+                        LoopTime.get(i),
+                        deltaX.get(i),
+                        deltaY.get(i),
+                        Angle.get(i)
+
+                ));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }
