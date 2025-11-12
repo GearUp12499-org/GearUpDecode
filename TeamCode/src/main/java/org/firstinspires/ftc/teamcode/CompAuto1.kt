@@ -8,6 +8,7 @@ import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStartPose
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver.EncoderDirection
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD
@@ -27,7 +28,7 @@ class CompAuto1 : LinearOpMode() {
             EncoderDirection.REVERSED,
             EncoderDirection.FORWARD
         )
-        hw.pinpoint.position = redFarStartPose
+        hw.pinpoint.position = redFarStart.asPose2D
         hw.pinpoint.recalibrateIMU()
 
         val scheduler = FastScheduler()

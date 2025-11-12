@@ -12,21 +12,22 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
 
-    public static final double[] redFarStart = {-63, -16, 0};
+    public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, 0);
     public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, Math.PI);
 
-    public static final double[] shootPos = {12, -12, 3 * Math.PI / 4};
+    public static final REmover.RobotPose shootPos = new REmover.RobotPose(12, -12, 3 * Math.PI / 4);
 
-    public static final double[] blueBase = {-38, -33, 0};
+    public static final REmover.RobotPose blueBase = new REmover.RobotPose(-38, -33, 0);
 
-    public static final double[] gateWaypoint = {0, -48, 0};
+    public static final REmover.RobotPose gateWaypoint = new REmover.RobotPose(0, -48, 0);
 
-    public static final double[] gatePos = {0, -55, 0};
+    public static final REmover.RobotPose gatePos = new REmover.RobotPose(0, -55, 0);
 
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;

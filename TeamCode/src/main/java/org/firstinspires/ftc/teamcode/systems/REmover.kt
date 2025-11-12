@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import kotlin.math.PI
 import kotlin.math.abs
@@ -15,9 +16,36 @@ import kotlin.math.sqrt
 
 @Suppress("SpellCheckingInspection")
 object REmover {
+    /**
+     * A robot pose.
+     * [x] and [y] are in inches, and [a] is in radians.
+     */
+    data class RobotPose(
+        /**
+         * inches
+         */
+        @JvmField val x: Double,
+        /**
+         * inches
+         */
+        @JvmField val y: Double,
+        /**
+         * radians
+         */
+        @JvmField val a: Double
+    ) {
+        @get:JvmName("asPose2D")
+        val asPose2D: Pose2D get() = Pose2D(DistanceUnit.INCH, x, y, AngleUnit.RADIANS, a)
+    }
+
     const val KP = 0.2
-    const val KD = 43.75
+    const val KD = 50
     const val THRESHOLD = 0.2
+
+    /**
+     * Radius of turn, inches
+     */
+    const val R = 7.66
 
     @JvmStatic
     fun speed2Power(speed: Double) = when {
@@ -28,10 +56,8 @@ object REmover {
     }
 
     @JvmStatic
-    fun drive2Pose(hardware: CompBotHardware, xya: DoubleArray): Task<*> {
-        val tgtx = xya[0]
-        val tgty = xya[1]
-        val tgta = xya[2]
+    fun drive2Pose(hardware: CompBotHardware, xya: RobotPose): Task<*> {
+        val (tgtx, tgty, tgta) = xya
 
         return object : Task.Anonymous() {
             init {
@@ -75,6 +101,8 @@ object REmover {
                 deltaA %= 2 * PI
                 if (deltaA > PI) {
                     deltaA -= 2 * PI
+                } else if (deltaA < -PI) {
+                    deltaA += 2 * PI
                 }
 
                 if (abs(deltaX) < 0.5 && abs(deltaY) < 0.5 && abs(deltaA) < Math.PI / 24 && speed < 10 || timeoutTime > 1) {
@@ -85,7 +113,7 @@ object REmover {
                     return true
                 }
 
-                val r = 9.375
+                val r = 7.66
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
                 val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
                 val w = r * deltaA

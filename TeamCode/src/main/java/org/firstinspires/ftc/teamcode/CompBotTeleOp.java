@@ -13,6 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
 import org.firstinspires.ftc.teamcode.hardware.FileUtil;
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver;
+import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -77,9 +78,9 @@ public class CompBotTeleOp extends LinearOpMode {
             double backRightPower = (rotY + rotX - rx) / denominator;
 
             if (gamepad1.x) {
-                drive2Pose(new double[]{0, -2, 0});
+                drive2Pose(new REmover.RobotPose(0, -2, 0));
                 sleep(100);
-                drive2Pose(new double[]{4,-2,0});
+                drive2Pose(new REmover.RobotPose(4, -2, 0));
             }
 
             if (gamepad1.y) {
@@ -139,7 +140,7 @@ public class CompBotTeleOp extends LinearOpMode {
     }
 
 
-    public void drive2Pose(double[] xya) {
+    public void drive2Pose(REmover.RobotPose xya) {
         ArrayList<Long> Time = new ArrayList<>();
         ArrayList<Double> VelocityX = new ArrayList<>();
         ArrayList<Double> VelocityY = new ArrayList<>();
@@ -169,8 +170,8 @@ public class CompBotTeleOp extends LinearOpMode {
 
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-        double kp = 0.2;
-        double kd = 50;
+        double kp = REmover.KP;
+        double kd = REmover.KD;
 
 
         double currenTime = runtime.time();
@@ -179,9 +180,9 @@ public class CompBotTeleOp extends LinearOpMode {
         double prevDeltaAll = 0;
 
 
-        double tgtx = xya[0];
-        double tgty = xya[1];
-        double tgta = xya[2];
+        double tgtx = xya.x;
+        double tgty = xya.y;
+        double tgta = xya.a;
 
 
         while (true) {
@@ -222,7 +223,7 @@ public class CompBotTeleOp extends LinearOpMode {
                 break;
             }
 
-            double R = 7.66;
+            double R = REmover.R;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
             double W = R * deltaA;
@@ -344,7 +345,7 @@ public class CompBotTeleOp extends LinearOpMode {
     }
 
     public double speed2Power(double speed) {
-        final double threshold = 0.2;
+        final double threshold = REmover.THRESHOLD;
 
         if (Math.abs(speed) < 0.001) {
             return 0;
@@ -377,7 +378,7 @@ public class CompBotTeleOp extends LinearOpMode {
     }
 
 
-    public void drive2Pose2(double[] xya) {
+    public void drive2Pose2(REmover.RobotPose xya) {
         ArrayList<Long> Time = new ArrayList<>();
         ArrayList<Double> VelocityX = new ArrayList<>();
         ArrayList<Double> VelocityY = new ArrayList<>();
@@ -418,14 +419,15 @@ public class CompBotTeleOp extends LinearOpMode {
         double Wkd = 0;
         double Wki = 0;
 
+        // milliseconds
         double currenTime = runtime.time();
         double prevTime = currenTime;
         double prevDeltaAll = 0;
 
 
-        double tgtx = xya[0];
-        double tgty = xya[1];
-        double tgta = xya[2];
+        double tgtx = xya.x;
+        double tgty = xya.y;
+        double tgta = xya.a;
 
         double sumF = 0;
         double sumS = 0;
