@@ -162,6 +162,8 @@ class HardwareTestCompBot : HardwareTestBase() {
         scheduler.add(put(testDigitalSensor("idxMag4", hardware.idxMag4)))
         scheduler.add(put(testRevColorSensor("frontColor1", hardware.frontColor1)))
         scheduler.add(put(testRevColorSensor("frontColor2", hardware.frontColor2)))
+        scheduler.add(put(testRevColorSensor("backColor1", hardware.backColor1)))
+        scheduler.add(put(testRevColorSensor("backColor2", hardware.backColor2)))
 
         // LIVE TEST SEQUENCE
         scheduler.add(

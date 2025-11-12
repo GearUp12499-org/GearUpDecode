@@ -12,6 +12,8 @@
             <DigitalDevice name="idxMag3" port="0" />
             <DigitalDevice name="idxMag4" port="2" />
             <RevColorSensorV3 name="frontColor2" port="0" bus="0" />
+            <RevColorSensorV3 name="backColor1" port="0" bus="1" />
+            <RevColorSensorV3 name="backColor2" port="0" bus="2" />
         </LynxModule>
         <ServoHub name="Servo Hub 3" port="3">
             <Servo name="flipper" port="0" />

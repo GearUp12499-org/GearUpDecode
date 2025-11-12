@@ -107,6 +107,12 @@ public class CompBotHardware extends HardwareMapper {
     @HardwareName("frontColor2")
     public RevColorSensorV3 frontColor2;
 
+    @HardwareName("backColor1")
+    public RevColorSensorV3 backColor1;
+
+    @HardwareName("backColor2")
+    public RevColorSensorV3 backColor2;
+
     @HardwareName("shooterHood1")
     @GoBildaExtendedServo
     public ServoImplEx shooterHood1;
