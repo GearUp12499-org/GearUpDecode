@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.HardwareMapper
 import org.firstinspires.ftc.teamcode.hardware.HardwareName
+import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 
 
 @TeleOp
@@ -63,8 +64,7 @@ class IMUComparatorTest : LinearOpMode() {
             }
         })
         setup.then(object : Task.Anonymous() {
-            private val tags = setOf(BuiltInTags.DAEMON)
-            override fun getTags(): Set<String> = tags
+            override fun getTags(): Set<String> = DAEMON_TAGS
 
             override fun onTick(): Boolean {
                 hw.pinpoint.update()

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -9,9 +10,17 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
+import org.firstinspires.ftc.teamcode.systems.Indexer
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In1
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In2
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In3
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out1
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
+import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -27,6 +36,7 @@ import kotlin.math.sin
 class TeleOp2 : LinearOpMode() {
     lateinit var hardware: CompBotHardware
     lateinit var scheduler: Scheduler
+    lateinit var indexer: Indexer
     val startFlag = SentinelTask()
 
     inner class ReportLockOwnershipTask : Task<ReportLockOwnershipTask>() {
@@ -41,7 +51,8 @@ class TeleOp2 : LinearOpMode() {
         override fun onTick(): Boolean {
             for (lock in targets) {
                 val own = scheduler?.getLockOwner(lock)
-                telemetry.addData(lock.getFriendlyName(),
+                telemetry.addData(
+                    lock.getFriendlyName(),
                     own?.describeVerbose() ?: "<free>"
                 )
             }
@@ -68,7 +79,23 @@ class TeleOp2 : LinearOpMode() {
                     pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
                 })
             waitForPinpointReady.then(startFlag)
+
+            this@TeleOp2.indexer = scheduler.add(
+                Indexer(
+                    indexerMotor = indexer,
+                    sensor1 = idxMag1,
+                    sensor2 = idxMag2,
+                    sensor3 = idxMag3,
+                    sensor4 = idxMag4,
+                    colorFront1 = hardware.frontColor1,
+                    colorFront2 = hardware.frontColor2,
+                    colorBack1 = hardware.backColor1,
+                    colorBack2 = hardware.backColor2,
+                )
+            )
         }
+
+        startFlag.then(indexer.syncPosition())
 
         scheduler.add(ReportLockOwnershipTask())
 
@@ -117,6 +144,36 @@ class TeleOp2 : LinearOpMode() {
 
     // Inputs
 
+    var wasA = false
+    var wasB = false
+
+    private fun dispColor(label: String, sensor: RevColorSensorV3) {
+        val norm = sensor.normalizedColors
+        telemetry.addData(
+            label, "%.2fmm rgb %.2f %.2f %.2f a %.2f".format(
+                sensor.getDistance(DistanceUnit.MM),
+                norm.red,
+                norm.green,
+                norm.blue,
+                norm.alpha,
+            )
+        )
+    }
+
+    private fun getNextOut(pos: Indexer.Position) = when (pos) {
+        Out1 -> Out2
+        Out2 -> Out3
+        Out3 -> Out1
+        else -> Out1
+    }
+
+    private fun getNextIn(pos: Indexer.Position) = when (pos) {
+        In1 -> In2
+        In2 -> In3
+        In3 -> In1
+        else -> In1
+    }
+
     fun driverInput() {
         driveInputs()
         if (scheduler.getLockOwner(CompBotHardware.Locks.DRIVE_MOTORS) == null) {
@@ -125,6 +182,53 @@ class TeleOp2 : LinearOpMode() {
             scheduler.stopAllWith(CompBotHardware.Locks.DRIVE_MOTORS)
             drive()
         }
+
+        dispColor("fc1", hardware.frontColor1)
+        dispColor("fc2", hardware.frontColor2)
+        dispColor("bc1", hardware.backColor1)
+        dispColor("bc2", hardware.backColor2)
+
+        telemetry.addData("idx1", hardware.idxMag1.state)
+        telemetry.addData("idx2", hardware.idxMag2.state)
+        telemetry.addData("idx3", hardware.idxMag3.state)
+        telemetry.addData("idx4", hardware.idxMag4.state)
+        telemetry.addData("slot1", indexer.slots[0])
+        telemetry.addData("slot2", indexer.slots[1])
+        telemetry.addData("slot3", indexer.slots[2])
+        telemetry.addData("ipos", indexer.lastPosition)
+        telemetry.addData("ipos", hardware.indexer.currentPosition)
+
+        val a = gamepad1.a
+        val b = gamepad1.b
+        if (a && !wasA) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(indexer.goToPosition(getNextOut(indexer.lastPosition)))
+        }
+        if (b && !wasB) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(indexer.goToPosition(getNextIn(indexer.lastPosition)))
+        }
+
+        hardware.shooter1.velocity = when {
+            gamepad1.right_bumper -> 1200.0
+            gamepad1.left_bumper -> -500.0
+            else -> 0.0
+        }
+
+        if (gamepad1.y) {
+            hardware.flipper.position = CompBotHardware.FLIPPER_UP
+        } else {
+            hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+        }
+
+        if (gamepad1.x) {
+            hardware.intake.power = 0.75
+        } else {
+            hardware.intake.power = 0.0
+        }
+
+        wasA = a
+        wasB = b
     }
 
     var gp1lStickX = 0.0f

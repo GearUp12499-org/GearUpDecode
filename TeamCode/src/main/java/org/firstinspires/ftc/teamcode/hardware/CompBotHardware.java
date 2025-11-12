@@ -130,6 +130,11 @@ public class CompBotHardware extends HardwareMapper {
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(45.0f);
         frontColor2.setGain(45.0f);
+        backColor1.setGain(45.0f);
+        backColor2.setGain(45.0f);
+
+        // FIXME: the back color sensors are positioned badly and basically useless.
+
         pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);

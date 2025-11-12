@@ -11,11 +11,11 @@ import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
+import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 
 class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Shooter>() {
     companion object {
-        private val TAGS = setOf(BuiltInTags.DAEMON)
         private val LOCK_ROOT = Lock.StrLock("shooter_impl")
 
         /**
@@ -46,11 +46,11 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
 
     override fun onFinish(completedNormally: Boolean) {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        motor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        motor.mode = RunMode.RUN_WITHOUT_ENCODER
         motor.power = 0.0
     }
 
-    override fun getTags(): Set<String> = TAGS
+    override fun getTags(): Set<String> = DAEMON_TAGS
 
     fun isAtTarget() = abs(currentVelocity - targetVelocity) < ACCEPTABLE_VELOCITY_DIFF
     fun setTarget(velo: Double) {
@@ -70,6 +70,10 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
      */
     @JvmOverloads
     fun waitForTargetHold(minimumDuration: Double = 0.5) = object : Anonymous() {
+        init {
+            require(lock)
+        }
+
         private val targetDuration = (minimumDuration * 1e9).toLong()
         private var lastMetAt = 0L
 
@@ -94,12 +98,12 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
     fun setTargetAndWait(velocity: Double, minDuration: Double = 0.5) = VirtualGroup {
         add(OneShot { setTarget(velocity) })
             .then(waitForTargetHold(minDuration))
-    }
+    }.require(lock)
 
     /**
      * Set the target velocity to 0 (as a task.)
      */
     fun stopSoft() = OneShot {
         setTarget(0.0)
-    }
+    }.require(lock)
 }
