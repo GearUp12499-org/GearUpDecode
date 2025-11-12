@@ -67,7 +67,7 @@ class TeleOp2 : LinearOpMode() {
                 scheduler.add(WaitUntil {
                     pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
                 })
-            startFlag.require(waitForPinpointReady)
+            waitForPinpointReady.then(startFlag)
         }
 
         scheduler.add(ReportLockOwnershipTask())
@@ -91,10 +91,10 @@ class TeleOp2 : LinearOpMode() {
         // holding...
         while (opModeIsActive() && startFlag.getState() != ITask.State.Finished) {
             scheduler.tick()
-            telemetry.addLine("== WAITING TO START... ==")
-            telemetry.addLine("press Start on gamepad1 to override")
+            telemetry.addLine("== ROBOT INIT IS BUSY ==")
+            telemetry.addLine("Press [1:Back] to interrupt")
             telemetry.addLine()
-            if (gamepad1.start) {
+            if (gamepad1.back) {
                 startFlag.finish()
                 continue
             }
@@ -157,8 +157,8 @@ class TeleOp2 : LinearOpMode() {
 
         val denominator = max(abs(forward) + abs(strafe) + abs(rx), 1.0)
         val flP = (forward + strafe + rx) / denominator
-        val frP = (forward - strafe + rx) / denominator
-        val blP = (forward - strafe - rx) / denominator
+        val blP = (forward - strafe + rx) / denominator
+        val frP = (forward - strafe - rx) / denominator
         val brP = (forward + strafe - rx) / denominator
 
         hardware.frontLeft.power = flP
