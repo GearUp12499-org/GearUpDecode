@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -116,6 +117,9 @@ public class CompBotHardware extends HardwareMapper {
 
     @HardwareName("Webcam 1")
     public WebcamName gsc;
+
+    @HardwareName("Limelight")
+    public Limelight3A Limelight;
 
     public CompBotHardware(HardwareMap map) {
         super(map);
