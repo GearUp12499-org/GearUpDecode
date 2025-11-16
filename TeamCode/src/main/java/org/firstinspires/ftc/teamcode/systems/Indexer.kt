@@ -63,7 +63,7 @@ class Indexer(
         const val TICKS_PER_POSITION = 426
         const val REVOLUTION = TICKS_PER_POSITION * 6
 
-        const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble() * 2
+        const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble()
         const val OPERATING_POWER = 0.7
         const val SCAN_POWER = 0.3
 

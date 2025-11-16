@@ -7,6 +7,9 @@ import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.prefabs.OneShot
+import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -21,6 +24,7 @@ import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In3
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out1
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
+import org.firstinspires.ftc.teamcode.systems.Shooter
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -37,6 +41,7 @@ class TeleOp2 : LinearOpMode() {
     lateinit var hardware: CompBotHardware
     lateinit var scheduler: Scheduler
     lateinit var indexer: Indexer
+    lateinit var shooter: Shooter
     val startFlag = SentinelTask()
 
     inner class ReportLockOwnershipTask : Task<ReportLockOwnershipTask>() {
@@ -93,6 +98,12 @@ class TeleOp2 : LinearOpMode() {
                     colorBack2 = hardware.backColor2,
                 )
             )
+            this@TeleOp2.shooter = scheduler.add(
+                Shooter(
+                    motor = shooter1,
+                    angle = shooterHood1
+                )
+            )
         }
 
         startFlag.then(indexer.syncPosition())
@@ -146,6 +157,7 @@ class TeleOp2 : LinearOpMode() {
 
     var wasA = false
     var wasB = false
+    var wasY = false
 
     private fun dispColor(label: String, sensor: RevColorSensorV3) {
         val norm = sensor.normalizedColors
@@ -209,16 +221,34 @@ class TeleOp2 : LinearOpMode() {
             scheduler.add(indexer.goToPosition(getNextIn(indexer.lastPosition)))
         }
 
-        hardware.shooter1.velocity = when {
-            gamepad1.right_bumper -> 1200.0
-            gamepad1.left_bumper -> -500.0
-            else -> 0.0
-        }
-
-        if (gamepad1.y) {
-            hardware.flipper.position = CompBotHardware.FLIPPER_UP
-        } else {
-            hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+        val y = gamepad1.y
+        if (y && !wasY) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(VirtualGroup {
+                    add(shooter.setTargetAndWait(1200.0, 1.0))
+                    add(indexer.goToPosition(Out1))
+                }).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                }).then(Wait.s(0.25)).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                }).then(VirtualGroup {
+                    add(shooter.setTargetAndWait(1200.0, 0.25))
+                    add(indexer.goToPosition(Out2))
+                }).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                }).then(Wait.s(0.25)).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                }).then(VirtualGroup {
+                    add(shooter.setTargetAndWait(1200.0, 0.25))
+                    add(indexer.goToPosition(Out3))
+                }).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                }).then(Wait.s(0.25)).then(OneShot {
+                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                    shooter.setTarget(0.0)
+                })
+            })
         }
 
         if (gamepad1.x) {
@@ -229,6 +259,7 @@ class TeleOp2 : LinearOpMode() {
 
         wasA = a
         wasB = b
+        wasY = y
     }
 
     var gp1lStickX = 0.0f
