@@ -39,13 +39,15 @@ object REmover {
     }
 
     const val KP = 0.2
-    const val KD = 50
+    const val KD = 43.75
     const val THRESHOLD = 0.2
 
     /**
      * Radius of turn, inches
      */
     const val R = 7.66
+
+    const val ROTATE_FUDGE = 1.3
 
     @JvmStatic
     fun speed2Power(speed: Double) = when {
@@ -116,7 +118,7 @@ object REmover {
                 val r = 7.66
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
                 val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
-                val w = r * deltaA
+                val w = r * deltaA * ROTATE_FUDGE
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
                 if (abs(deltaAll - prevDeltaAll) > 0.5) {

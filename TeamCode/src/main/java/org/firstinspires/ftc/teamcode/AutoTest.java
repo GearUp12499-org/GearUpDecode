@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
 import org.firstinspires.ftc.teamcode.hardware.FileUtil;
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver;
+import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -93,8 +94,8 @@ public class AutoTest extends LinearOpMode {
 
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-        double kp = 0.2;
-        double kd = 43.75;
+        double kp = REmover.KP;
+        double kd = REmover.KD;
 
 
         double currenTime = runtime.time();
@@ -107,7 +108,7 @@ public class AutoTest extends LinearOpMode {
         double tgty = xya[1];
         double tgta = xya[2];
 
-        double rotateFudge = 1.3;
+        double rotateFudge = REmover.ROTATE_FUDGE;
 
         while (true) {
             currenTime = runtime.time();
@@ -149,7 +150,7 @@ public class AutoTest extends LinearOpMode {
 
 
 
-            double R = 7.66;
+            double R = REmover.R;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
             double W = R * deltaA * rotateFudge;
