@@ -63,12 +63,12 @@ class Indexer(
         const val TICKS_PER_POSITION = 426
         const val REVOLUTION = TICKS_PER_POSITION * 6
 
-        const val SCAN_VELOCITY = 250.0
-        const val OPERATING_POWER = 0.5
+        const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble() * 2
+        const val OPERATING_POWER = 0.7
         const val SCAN_POWER = 0.3
 
-        const val NEARBY = TICKS_PER_POSITION / 2
-        const val NOT_NEARBY = TICKS_PER_POSITION * 3 / 2
+        const val NEARBY = TICKS_PER_POSITION / 4
+        const val NOT_NEARBY = TICKS_PER_POSITION / 2
 
 
         fun matchPosition(s1: Boolean, s2: Boolean, s3: Boolean, s4: Boolean) =
