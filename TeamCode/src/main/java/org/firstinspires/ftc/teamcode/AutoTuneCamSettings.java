@@ -30,7 +30,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
     private static final boolean USE_WEBCAM = true;
     private CompBotHardware hardware;
-    private Pose2D pose2D;
+    //private Pose2D pose2D;
 
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTag;
@@ -387,11 +387,14 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
                     // Optionally test a few nearby points for stability
                     for (int fineE = Math.max(exposureMin, e - 1); fineE <= Math.min(exposureMax, e + 1); fineE++) {
-                        for (int fineG = Math.max(gainMin, g - 10); fineG <= Math.min(gainMax, g + 10); fineG += 5) {
+                        for (int fineG = Math.max(gainMin, g - 10); fineG <=g ; fineG += 5) { //lower gain values work better in brighter conditions
                             exposureControl.setExposure(fineE, TimeUnit.MILLISECONDS);
                             gainControl.setGain(fineG);
                             sleep(120);
-                            checkAprilTagDetection(detectionSequence, fineE * 1000 + fineG, "Fine E/G");
+                            if(checkAprilTagDetection(detectionSequence, fineE * 1000 + fineG, "Fine E/G")){
+                                finalGain = fineG;
+                                break;
+                            }
                         }
                     }
                     break; // break gain loop
@@ -476,9 +479,9 @@ public class AutoTuneCamSettings extends LinearOpMode {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addData("Range (in)", detection.ftcPose.range);
                 telemetry.addData("Bearing (deg)", detection.ftcPose.bearing);
-                double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES))
-                        - pose2D.getHeading(AngleUnit.DEGREES));
-                telemetry.addData("Angle Error (Yaw)", angleErr);
+//                double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES))
+//                        - pose2D.getHeading(AngleUnit.DEGREES));
+//                telemetry.addData("Angle Error (Yaw)", angleErr);
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f (in)",
                         detection.robotPose.getPosition().x,
                         detection.robotPose.getPosition().y,
