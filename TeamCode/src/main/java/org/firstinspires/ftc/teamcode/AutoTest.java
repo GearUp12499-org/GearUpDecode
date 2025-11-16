@@ -148,6 +148,7 @@ public class AutoTest extends LinearOpMode {
             }
 
 
+
             double R = 7.66;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
