@@ -60,7 +60,7 @@ class Indexer(
         0 161 323 479 642 804 963
         mean delta = 160.5
          */
-        const val TICKS_PER_POSITION = 161
+        const val TICKS_PER_POSITION = 426
         const val REVOLUTION = TICKS_PER_POSITION * 6
 
         const val SCAN_VELOCITY = 250.0
