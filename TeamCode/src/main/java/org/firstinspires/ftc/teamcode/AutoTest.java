@@ -47,13 +47,13 @@ public class AutoTest extends LinearOpMode {
 
 
         while (opModeIsActive()){
-            drive2Pose(new double[] {-54.8,-13,2.76});
+            drive2Pose(new double[] {-55,-12.39,2.76});
             sleep(2000);
             drive2Pose(new double[] {-34.9,-33.3,-Math.PI/2});
             sleep(2000);
             drive2Pose(new double[] {-34.9, -50.1, -Math.PI/2});
             sleep(2000);
-            drive2Pose(new double[] {-54.8,-13,2.76});
+            drive2Pose(new double[] {-55,-12.39,2.76});
             sleep(2000);
             drive2Pose(new double[] {-10.7,-33.8,-Math.PI/2});
 
@@ -107,6 +107,7 @@ public class AutoTest extends LinearOpMode {
         double tgty = xya[1];
         double tgta = xya[2];
 
+        double rotateFudge = 1.3;
 
         while (true) {
             currenTime = runtime.time();
@@ -146,10 +147,11 @@ public class AutoTest extends LinearOpMode {
                 break;
             }
 
+
             double R = 7.66;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
-            double W = R * deltaA;
+            double W = R * deltaA * rotateFudge;
             double deltaAll = Math.sqrt((F * F) + (S * S) + (W * W));
 
             if (Math.abs(deltaAll - prevDeltaAll) > 0.5) {
