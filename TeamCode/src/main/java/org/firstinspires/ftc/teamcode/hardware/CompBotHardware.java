@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import android.util.Size;
-
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -11,24 +9,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.systems.REmover;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
 
-    public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, 0);
-    public static final Pose2D redFarStartPose = new Pose2D(DistanceUnit.INCH, -63, -16, AngleUnit.RADIANS, Math.PI);
+    public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, Math.PI);
 
     public static final REmover.RobotPose shootPos = new REmover.RobotPose(12, -12, 3 * Math.PI / 4);
 
@@ -40,7 +28,11 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
+
     public static final double SHOOT_MIDRANGE = 1200.0;
+
+    public static final long EXPOSURE = 2;
+    public static final int GAIN = 30;
 
 
     @HardwareName("frontLeft")

@@ -11,10 +11,18 @@ import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
 import org.firstinspires.ftc.teamcode.tasks.debug
 
-fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo) = VirtualGroup {
+
+private val next = mapOf(
+    Out1 to Out2,
+    Out2 to Out3,
+    Out3 to Out1
+)
+
+@JvmOverloads
+fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo, startAt: Indexer.Position = Out1) = VirtualGroup {
     add(VirtualGroup {
         add(shooter.setTargetAndWait(1200.0, 0.35))
-        add(indexer.goToPosition(Out1))
+        add(indexer.goToPosition(startAt))
     })
         .then(OneShot {
             flipper.position = CompBotHardware.FLIPPER_UP
@@ -25,7 +33,7 @@ fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo) = VirtualGrou
         })
         .then(VirtualGroup {
             add(shooter.setTargetAndWait(1200.0, 0.35))
-            add(indexer.goToPosition(Out2))
+            add(indexer.goToPosition(next[startAt]!!))
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
@@ -38,7 +46,7 @@ fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo) = VirtualGrou
         })
         .then(VirtualGroup {
             add(shooter.setTargetAndWait(1200.0, 0.35))
-            add(indexer.goToPosition(Out3))
+            add(indexer.goToPosition(next[next[startAt]]!!))
         })
         .then(OneShot {
             flipper.position = CompBotHardware.FLIPPER_UP

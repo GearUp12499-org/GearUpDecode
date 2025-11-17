@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.systems
 
 import android.util.Size
 import androidx.core.math.MathUtils
+import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
@@ -17,6 +18,12 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class AprilTag(val gsc: CameraName) {
+    enum class Obelisk {
+        GPP,
+        PGP,
+        PPG,
+    }
+
     companion object {
         val GSC_POSITION: Position = Position(
             DistanceUnit.INCH, 0.0, 8.314, 7.73, 0
@@ -25,6 +32,12 @@ class AprilTag(val gsc: CameraName) {
             AngleUnit.DEGREES, 0.0, -90.0, 0.0, 0
         )
         val GSC_RESOLUTION: Size = Size(1600, 1200)
+
+        val OBELISK = mapOf(
+            21 to Obelisk.GPP,
+            22 to Obelisk.PGP,
+            23 to Obelisk.PPG
+        )
 
         init {
             systemPackages.add(AprilTag::class.qualifiedName!!)
@@ -39,6 +52,7 @@ class AprilTag(val gsc: CameraName) {
     var minGain = 0
     var maxGain = 0
     var currentGain = 0
+    var obelisk: Obelisk? = null
 
     fun setupAprilTag(targetExposure: Long, targetGain: Int): Task<*> = object : Task.Anonymous() {
         override fun onStart() {
@@ -87,6 +101,25 @@ class AprilTag(val gsc: CameraName) {
                 currentGain = MathUtils.clamp(targetGain, minGain, maxGain)
                 it.gain = currentGain
             }
+        }
+    }
+
+    fun readObelisk(timeout: Double) = object: Task.Anonymous() {
+        val timer = ElapsedTime(ElapsedTime.Resolution.SECONDS)
+
+        override fun onStart() {
+            timer.reset()
+        }
+
+        override fun onTick(): Boolean {
+            if (timer.time() > timeout) return true
+            val detections = aprilTagProcessor!!.detections
+            for (detection in detections) {
+                if (detection.id !in OBELISK.keys) continue
+                obelisk = OBELISK[detection.id]!!
+                return true
+            }
+            return false
         }
     }
 }

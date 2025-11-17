@@ -114,20 +114,20 @@ class Indexer(
     }
 
     fun updateState() {
-        if (!lastPosition.isIntakeStep) return
-        val d1 = colorFront1.getDistance(DistanceUnit.MM)
-        val d2 = colorFront2.getDistance(DistanceUnit.MM)
-        val minDist = min(d1, d2)
-        if (minDist >= 40) {
-            slots[lastPosition.intakeSlot] = Slot.EMPTY
-        } else {
-            val color = when {
-                d1 < 40 -> colorFront1.normalizedColors
-                d2 < 40 -> colorFront2.normalizedColors
-                else -> return
-            }
-            slots[lastPosition.intakeSlot] = if (color.blue >= 0.1) Slot.PURPLE else Slot.GREEN
-        }
+//        if (!lastPosition.isIntakeStep) return
+//        val d1 = colorFront1.getDistance(DistanceUnit.MM)
+//        val d2 = colorFront2.getDistance(DistanceUnit.MM)
+//        val minDist = min(d1, d2)
+//        if (minDist >= 40) {
+//            slots[lastPosition.intakeSlot] = Slot.EMPTY
+//        } else {
+//            val color = when {
+//                d1 < 40 -> colorFront1.normalizedColors
+//                d2 < 40 -> colorFront2.normalizedColors
+//                else -> return
+//            }
+//            slots[lastPosition.intakeSlot] = if (color.blue >= 0.1) Slot.PURPLE else Slot.GREEN
+//        }
     }
 
     override fun onFinish(completedNormally: Boolean) {
