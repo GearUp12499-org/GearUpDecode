@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -27,6 +29,7 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final REmover.RobotPose gatePos = new REmover.RobotPose(0, -55, 0);
 
+    public static final double INTAKE_POWER = 0.8;
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
 

@@ -3,16 +3,19 @@ package org.firstinspires.ftc.teamcode
 import android.util.Log
 import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
+import io.github.gearup12499.taskshark.prefabs.OneShot
+import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.Indexer
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In1
@@ -26,6 +29,7 @@ import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.stopAllWith
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -33,13 +37,21 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.time.DurationUnit
 
-@TeleOp(group = "!", name = "Teleop")
-class TeleOp2 : LinearOpMode() {
+abstract class TeleOp2 : LinearOpMode() {
+    abstract val negateIfRed: Int
+    abstract val negateIfBlue: Int
+
     lateinit var hardware: CompBotHardware
     lateinit var scheduler: Scheduler
     lateinit var indexer: Indexer
     lateinit var shooter: Shooter
     lateinit var startFlag: SentinelTask
+
+    private var fieldCentricDrivePOV = 0.0
+
+    private fun setupPerAllianceValues() {
+        fieldCentricDrivePOV = PI / 2 * negateIfBlue
+    }
 
     override fun runOpMode() {
         TaskSharkAndroid.setup()
@@ -48,6 +60,7 @@ class TeleOp2 : LinearOpMode() {
         startFlag = scheduler.add(SentinelTask())
 
         // Setup
+        setupPerAllianceValues()
         with(hardware) {
             val interDuration = Lifetime.timeSinceLastActive()
             if (interDuration.toDouble(DurationUnit.SECONDS) > 15.0) {
@@ -82,6 +95,8 @@ class TeleOp2 : LinearOpMode() {
                     angle = shooterHood1
                 )
             )
+
+            flipper.position = CompBotHardware.FLIPPER_DOWN
         }
 
         startFlag.then(indexer.syncPosition())
@@ -168,12 +183,15 @@ class TeleOp2 : LinearOpMode() {
 
     fun driverInput() {
         driveInputs()
-        if (scheduler.getLockOwner(CompBotHardware.Locks.DRIVE_MOTORS) == null) {
+        if (scheduler.getLockOwner(Locks.DRIVE_MOTORS) == null) {
             drive()
         } else if (driveInputIsOverriding()) {
-            scheduler.stopAllWith(CompBotHardware.Locks.DRIVE_MOTORS)
+            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
             drive()
         }
+
+        intake()
+
 
         dispColor("fc1", hardware.frontColor1)
         dispColor("fc2", hardware.frontColor2)
@@ -207,12 +225,6 @@ class TeleOp2 : LinearOpMode() {
             scheduler.add(shootThree(shooter, indexer, hardware.flipper))
         }
 
-        if (gamepad1.x) {
-            hardware.intake.power = 1.0
-        } else {
-            hardware.intake.power = 0.0
-        }
-
         wasA = a
         wasB = b
         wasY = y
@@ -237,9 +249,7 @@ class TeleOp2 : LinearOpMode() {
         val x = gp1lStickX
         val rx = gp1rStickX
 
-        // TODO: This should really be solved by setting the pinpoint's pose.
-        // note: this call just reads a field. it does not go to hardware.
-        val heading = hardware.pinpoint.getHeading(AngleUnit.RADIANS)
+        val heading = hardware.pinpoint.getHeading(AngleUnit.RADIANS) + fieldCentricDrivePOV
         var strafe = x * cos(-heading) - y * sin(-heading)
         val forward = x * sin(-heading) + y * cos(-heading)
 
@@ -249,7 +259,7 @@ class TeleOp2 : LinearOpMode() {
         val denominator = max(abs(forward) + abs(strafe) + abs(rx), 1.0)
 
         val postFactor =
-            if (gamepad1.left_trigger > TeleOpOptions.SLOW_BUTTON_SENSITIVITY) 0.5
+            if (gamepad1.left_trigger > TeleOpOptions.SLOW_BUTTON_SENSITIVITY) TeleOpOptions.SLOW_BUTTON_MULTIPLIER
             else 1.0
 
         val finalDiv = denominator / postFactor
@@ -263,5 +273,27 @@ class TeleOp2 : LinearOpMode() {
         hardware.frontRight.power = frP
         hardware.backLeft.power = blP
         hardware.backRight.power = brP
+    }
+
+    fun intake() {
+        val enableBtn = gamepad1.right_bumper
+        val cancelBtn = gamepad1.left_bumper
+        val owned = scheduler.getLockOwner(Locks.INTAKE) != null
+        if ((enableBtn || cancelBtn) && owned) {
+            scheduler.stopAllWith(Locks.INTAKE)
+        } else if (owned) {
+            return
+        }
+
+        if (enableBtn) hardware.intake.power = CompBotHardware.INTAKE_POWER
+        if (cancelBtn) {
+            hardware.intake.power = -CompBotHardware.INTAKE_POWER
+            scheduler.add(VirtualGroup {
+                add(Wait.s(0.25))
+                    .then(OneShot {
+                        hardware.intake.power = 0.0
+                    })
+            }).require(Locks.INTAKE)
+        }
     }
 }

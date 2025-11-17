@@ -12,6 +12,10 @@ object TeleOpOptions {
      * How far to push in the trigger to activate slow driving.
      */
     const val SLOW_BUTTON_SENSITIVITY = 0.5
+    /**
+     * How much the slow button dampens movement.
+     */
+    const val SLOW_BUTTON_MULTIPLIER = 0.5
 
     //#endregion
 }
