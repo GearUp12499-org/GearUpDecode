@@ -135,9 +135,13 @@ class Auto1 : LinearOpMode() {
         startFlag.finish()
         scheduler.tick()
 
+        Lifetime.bump()
+
         while (opModeIsActive()) {
             scheduler.tick()
             telemetry.update()
         }
+
+        Lifetime.bump()
     }
 }

@@ -7,10 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
-import io.github.gearup12499.taskshark.Task
-import io.github.gearup12499.taskshark.prefabs.OneShot
-import io.github.gearup12499.taskshark.prefabs.VirtualGroup
-import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -27,17 +23,15 @@ import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
 import org.firstinspires.ftc.teamcode.systems.Shooter
 import org.firstinspires.ftc.teamcode.systems.shootThree
-import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
-import org.firstinspires.ftc.teamcode.tasks.debug
 import org.firstinspires.ftc.teamcode.tasks.stopAllWith
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.sin
+import kotlin.time.DurationUnit
 
 @TeleOp(group = "!", name = "Teleop")
 class TeleOp2 : LinearOpMode() {
@@ -47,27 +41,6 @@ class TeleOp2 : LinearOpMode() {
     lateinit var shooter: Shooter
     lateinit var startFlag: SentinelTask
 
-    inner class ReportLockOwnershipTask : Task<ReportLockOwnershipTask>() {
-        private val targets = listOf(
-            CompBotHardware.Locks.DRIVE_MOTORS,
-            CompBotHardware.Locks.INDEXER,
-            CompBotHardware.Locks.INTAKE,
-        )
-
-        override fun getTags() = DAEMON_TAGS
-
-        override fun onTick(): Boolean {
-            for (lock in targets) {
-                val own = scheduler?.getLockOwner(lock)
-                telemetry.addData(
-                    lock.getFriendlyName(),
-                    own?.describeVerbose() ?: "<free>"
-                )
-            }
-            return false
-        }
-    }
-
     override fun runOpMode() {
         TaskSharkAndroid.setup()
         hardware = CompBotHardware(hardwareMap)
@@ -76,9 +49,11 @@ class TeleOp2 : LinearOpMode() {
 
         // Setup
         with(hardware) {
-            // TODO: remove [when we add auto]
-            pinpoint.resetPosAndIMU()
-//            pinpoint.recalibrateIMU()
+            val interDuration = Lifetime.timeSinceLastActive()
+            if (interDuration.toDouble(DurationUnit.SECONDS) > 15.0) {
+                Log.i("TeleOp2", "recalibrating, $interDuration since last execute")
+                pinpoint.resetPosAndIMU()
+            }
 
             scheduler.add(PinpointUpdater(pinpoint))
 
@@ -110,8 +85,6 @@ class TeleOp2 : LinearOpMode() {
         }
 
         startFlag.then(indexer.syncPosition())
-
-        scheduler.add(ReportLockOwnershipTask())
 
         // INIT
         while (opModeInInit()) {
@@ -148,12 +121,16 @@ class TeleOp2 : LinearOpMode() {
             telemetry.update()
         }
 
+        Lifetime.bump()
+
         // RUNNING
         while (opModeIsActive()) {
             scheduler.tick()
             driverInput()
             telemetry.update()
         }
+
+        Lifetime.bump()
     }
 
     // Inputs
@@ -262,7 +239,7 @@ class TeleOp2 : LinearOpMode() {
 
         // TODO: This should really be solved by setting the pinpoint's pose.
         // note: this call just reads a field. it does not go to hardware.
-        val heading = hardware.pinpoint.getHeading(AngleUnit.RADIANS) + PI / 2
+        val heading = hardware.pinpoint.getHeading(AngleUnit.RADIANS)
         var strafe = x * cos(-heading) - y * sin(-heading)
         val forward = x * sin(-heading) + y * cos(-heading)
 
