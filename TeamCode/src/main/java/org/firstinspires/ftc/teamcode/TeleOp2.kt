@@ -228,30 +228,41 @@ class TeleOp2 : LinearOpMode() {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
                 add(VirtualGroup {
-                    add(shooter.setTargetAndWait(1200.0, 1.0))
+                    add(shooter.setTargetAndWait(1200.0, 0.35))
                     add(indexer.goToPosition(Out1))
-                }).also {
-                    Log.i("TaskSharkDebug", it.inside.toString())
-                }.then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                }).debug().then(Wait.s(0.25)).then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                }).then(VirtualGroup {
-                    add(shooter.setTargetAndWait(1200.0, 0.25))
-                    add(indexer.goToPosition(Out2))
-                }).then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                }).then(Wait.s(0.25)).then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                }).then(VirtualGroup {
-                    add(shooter.setTargetAndWait(1200.0, 0.25))
-                    add(indexer.goToPosition(Out3))
-                }).then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                }).then(Wait.s(0.25)).then(OneShot {
-                    hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                    shooter.setTarget(0.0)
                 })
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                    })
+                    .then(Wait.s(0.25))
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                    })
+                    .then(VirtualGroup {
+                        add(shooter.setTargetAndWait(1200.0, 0.35))
+                        add(indexer.goToPosition(Out2))
+                    }).also {
+                        it.inside.forEach(ITask<*>::debug)
+                    }
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                    })
+                    .then(Wait.s(0.25))
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                    })
+                    .then(VirtualGroup {
+                        add(shooter.setTargetAndWait(1200.0, 0.35))
+                        add(indexer.goToPosition(Out3))
+                    })
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
+                    })
+                    .then(Wait.s(0.25))
+                    .then(OneShot {
+                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
+                        shooter.setTarget(0.0)
+                    })
             })
         }
 
