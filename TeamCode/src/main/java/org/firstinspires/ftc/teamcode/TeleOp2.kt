@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out1
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
 import org.firstinspires.ftc.teamcode.systems.Shooter
+import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -226,48 +227,11 @@ class TeleOp2 : LinearOpMode() {
         val y = gamepad1.y
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(VirtualGroup {
-                add(VirtualGroup {
-                    add(shooter.setTargetAndWait(1200.0, 0.35))
-                    add(indexer.goToPosition(Out1))
-                })
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                    })
-                    .then(Wait.s(0.25))
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                    })
-                    .then(VirtualGroup {
-                        add(shooter.setTargetAndWait(1200.0, 0.35))
-                        add(indexer.goToPosition(Out2))
-                    }).also {
-                        it.inside.forEach(ITask<*>::debug)
-                    }
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                    })
-                    .then(Wait.s(0.25))
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                    })
-                    .then(VirtualGroup {
-                        add(shooter.setTargetAndWait(1200.0, 0.35))
-                        add(indexer.goToPosition(Out3))
-                    })
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                    })
-                    .then(Wait.s(0.25))
-                    .then(OneShot {
-                        hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
-                        shooter.setTarget(0.0)
-                    })
-            })
+            scheduler.add(shootThree(shooter, indexer, hardware.flipper))
         }
 
         if (gamepad1.x) {
-            hardware.intake.power = 0.75
+            hardware.intake.power = 1.0
         } else {
             hardware.intake.power = 0.0
         }
