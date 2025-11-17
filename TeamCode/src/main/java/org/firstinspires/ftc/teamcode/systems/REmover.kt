@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.systems
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
@@ -171,5 +172,9 @@ object REmover {
                 return false
             }
         }
+    }
+
+    init {
+        systemPackages.add(REmover::class.qualifiedName!!)
     }
 }

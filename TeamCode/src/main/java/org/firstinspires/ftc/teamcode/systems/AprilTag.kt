@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.systems
 import android.util.Size
 import androidx.core.math.MathUtils
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl
@@ -24,6 +25,10 @@ class AprilTag(val gsc: CameraName) {
             AngleUnit.DEGREES, 0.0, -90.0, 0.0, 0
         )
         val GSC_RESOLUTION: Size = Size(1600, 1200)
+
+        init {
+            systemPackages.add(AprilTag::class.qualifiedName!!)
+        }
     }
 
     var visionPortal: VisionPortal? = null

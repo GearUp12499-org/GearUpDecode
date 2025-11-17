@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
@@ -94,6 +95,10 @@ class Indexer(
                     }
                 }
             }
+
+        init {
+            systemPackages.add(Indexer::class.qualifiedName!!)
+        }
     }
 
     val lock = LOCK_ROOT.derive()

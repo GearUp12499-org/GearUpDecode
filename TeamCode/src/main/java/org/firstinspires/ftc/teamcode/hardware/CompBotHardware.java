@@ -160,6 +160,11 @@ public class CompBotHardware extends HardwareMapper {
         public static final Lock INDEXER = new Lock.StrLock("indexer");
 
         /**
+         * {@link CompBotHardware#shooter1}, {@link CompBotHardware#shooterHood1}, {@link CompBotHardware#shooterHood2}
+         */
+        public static final Lock SHOOTER = new Lock.StrLock("shooter");
+
+        /**
          * {@link CompBotHardware#intake}
          */
         public static final Lock INTAKE = new Lock.StrLock("intake");

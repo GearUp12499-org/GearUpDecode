@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.tasks
 
+import android.util.Log
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Scheduler
@@ -13,3 +14,8 @@ fun Scheduler.stopAllWith(lock: Lock) {
 }
 
 val DAEMON_TAGS = setOf(BuiltInTags.DAEMON)
+
+fun <T : ITask<*>> T.debug(): T {
+    Log.i("TaskSharkDebug", this.dependedTasks().toString())
+    return this
+}

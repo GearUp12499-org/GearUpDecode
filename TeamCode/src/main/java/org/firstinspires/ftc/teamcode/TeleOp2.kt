@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import android.util.Log
 import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
@@ -28,6 +29,7 @@ import org.firstinspires.ftc.teamcode.systems.Shooter
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
+import org.firstinspires.ftc.teamcode.tasks.debug
 import org.firstinspires.ftc.teamcode.tasks.stopAllWith
 import kotlin.math.PI
 import kotlin.math.abs
@@ -42,7 +44,7 @@ class TeleOp2 : LinearOpMode() {
     lateinit var scheduler: Scheduler
     lateinit var indexer: Indexer
     lateinit var shooter: Shooter
-    val startFlag = SentinelTask()
+    lateinit var startFlag: SentinelTask
 
     inner class ReportLockOwnershipTask : Task<ReportLockOwnershipTask>() {
         private val targets = listOf(
@@ -69,7 +71,7 @@ class TeleOp2 : LinearOpMode() {
         TaskSharkAndroid.setup()
         hardware = CompBotHardware(hardwareMap)
         scheduler = FastScheduler()
-        scheduler.add(startFlag)
+        startFlag = scheduler.add(SentinelTask())
 
         // Setup
         with(hardware) {
@@ -228,9 +230,11 @@ class TeleOp2 : LinearOpMode() {
                 add(VirtualGroup {
                     add(shooter.setTargetAndWait(1200.0, 1.0))
                     add(indexer.goToPosition(Out1))
-                }).then(OneShot {
+                }).also {
+                    Log.i("TaskSharkDebug", it.inside.toString())
+                }.then(OneShot {
                     hardware.flipper.position = CompBotHardware.FLIPPER_UP
-                }).then(Wait.s(0.25)).then(OneShot {
+                }).debug().then(Wait.s(0.25)).then(OneShot {
                     hardware.flipper.position = CompBotHardware.FLIPPER_DOWN
                 }).then(VirtualGroup {
                     add(shooter.setTargetAndWait(1200.0, 0.25))

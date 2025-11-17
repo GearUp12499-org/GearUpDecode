@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import android.util.Log
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
@@ -10,6 +11,8 @@ import io.github.gearup12499.taskshark.api.BuiltInTags
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
+import io.github.gearup12499.taskshark.systemPackages
+import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
@@ -22,13 +25,17 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
          * Encoder ticks per second.
          */
         private const val ACCEPTABLE_VELOCITY_DIFF = 50.0
+
+        init {
+            systemPackages.add(Shooter::class.qualifiedName!!)
+        }
     }
 
     var targetVelocity: Double = 0.0
     private var currentVelocity: Double = 0.0
 
     init {
-        require(CompBotHardware.Locks.INDEXER)
+        require(CompBotHardware.Locks.SHOOTER)
     }
 
     val lock = LOCK_ROOT.derive()
@@ -79,6 +86,7 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
 
         override fun onTick(): Boolean {
             val now = System.nanoTime()
+            Log.i("Shooter", "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, abs(currentVelocity - targetVelocity)))
             if (!isAtTarget()) {
                 lastMetAt = now
                 return false
