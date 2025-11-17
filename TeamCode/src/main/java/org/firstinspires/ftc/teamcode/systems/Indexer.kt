@@ -9,11 +9,9 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.sign
 
 class Indexer(
@@ -145,13 +143,16 @@ class Indexer(
         return offsetSteps * TICKS_PER_POSITION * -1
     }
 
-    fun goToPosition(target: Position) = object : Anonymous() {
+    fun goToPosition(target: Position) = goToPosition { target }
+
+    fun goToPosition(targetProvider: () -> Position) = object : Anonymous() {
         private val timer = ElapsedTime(ElapsedTime.Resolution.SECONDS)
 
         private var isInRunPos = true
         private var overshootFlip = 1
         private var targetingDirection = 1
         private var matching = false
+        private lateinit var target: Position
 
         init {
             require(lock)
@@ -160,6 +161,7 @@ class Indexer(
         var targetTicks = 0
 
         override fun onStart() {
+            this.target = targetProvider()
             lastPosition = target
             val targetRelativeTicks = target.getTicks()
             // there's probably a better way of doing this but i'm too tired atm
@@ -231,10 +233,9 @@ class Indexer(
         }
 
         fun beforeRunSensors() {
-            indexerMotor.mode = RunMode.RUN_USING_ENCODER
+            indexerMotor.mode = RunMode.RUN_WITHOUT_ENCODER
 //            indexerMotor.power = 0.0
-            indexerMotor.power = OPERATING_POWER
-            indexerMotor.velocity = indexerMotor.velocity
+            indexerMotor.power = SCAN_POWER * targetingDirection
         }
 
         fun tickRunSensors(instant: Position, error: Int) {
@@ -252,9 +253,9 @@ class Indexer(
             if (!isNow && matching) overshootFlip = -overshootFlip
 
             matching = isNow
-            indexerMotor.velocity = when {
+            indexerMotor.power = when {
                 matching -> 0.0
-                else -> SCAN_VELOCITY * overshootFlip * targetingDirection
+                else -> SCAN_POWER * overshootFlip * targetingDirection
             }
         }
 

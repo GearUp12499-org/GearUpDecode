@@ -19,6 +19,7 @@ public class CompBotHardware extends HardwareMapper {
     public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, Math.PI);
 
     public static final REmover.RobotPose shootPos = new REmover.RobotPose(12, -12, 3 * Math.PI / 4);
+    public static final REmover.RobotPose set1pos = new REmover.RobotPose(12, -33.5, -Math.PI / 2);
 
     public static final REmover.RobotPose blueBase = new REmover.RobotPose(-38, -33, 0);
 
@@ -31,8 +32,8 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final double SHOOT_MIDRANGE = 1200.0;
 
-    public static final long EXPOSURE = 2;
-    public static final int GAIN = 30;
+    public static final long EXPOSURE = 0;
+    public static final int GAIN = 50;
 
 
     @HardwareName("frontLeft")

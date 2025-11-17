@@ -19,7 +19,7 @@ private val next = mapOf(
 )
 
 @JvmOverloads
-fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo, startAt: Indexer.Position = Out1) = VirtualGroup {
+fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo, startAt: () -> Indexer.Position = { Out1 }) = VirtualGroup {
     add(VirtualGroup {
         add(shooter.setTargetAndWait(1200.0, 0.35))
         add(indexer.goToPosition(startAt))
@@ -33,7 +33,7 @@ fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo, startAt: Inde
         })
         .then(VirtualGroup {
             add(shooter.setTargetAndWait(1200.0, 0.35))
-            add(indexer.goToPosition(next[startAt]!!))
+            add(indexer.goToPosition { next[startAt()]!! })
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
@@ -46,7 +46,7 @@ fun shootThree(shooter: Shooter, indexer: Indexer, flipper: Servo, startAt: Inde
         })
         .then(VirtualGroup {
             add(shooter.setTargetAndWait(1200.0, 0.35))
-            add(indexer.goToPosition(next[next[startAt]]!!))
+            add(indexer.goToPosition { next[next[startAt()]]!! })
         })
         .then(OneShot {
             flipper.position = CompBotHardware.FLIPPER_UP

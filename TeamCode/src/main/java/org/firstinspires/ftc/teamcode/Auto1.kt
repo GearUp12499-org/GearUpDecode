@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode
 
+import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
+import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
@@ -12,6 +14,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MIDRANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set1pos
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.shootPos
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
@@ -90,21 +93,31 @@ class Auto1 : LinearOpMode() {
         val indexerReady = startFlag.then(indexer.syncPosition())
         startFlag.then(shooter.setTargetAndWait(SHOOT_MIDRANGE))
 
-        knowObelisk.then(VirtualGroup {
-            add(REmover.drive2Pose(hardware, shootPos))
-            val idxMove = add(
-                indexer.goToPosition(
-                    aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
-            ))
-            indexerReady.then(idxMove)
-        }).then(
-            shootThree(
-                shooter,
-                indexer,
-                hardware.flipper,
-                aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+        knowObelisk
+            .then(VirtualGroup {
+                add(REmover.drive2Pose(hardware, shootPos))
+                val idxMove = add(
+                    indexer.goToPosition {
+                        aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+                    })
+                add(OneShot {
+                    Log.i("April Tag read", aprilTag.obelisk.toString())
+                    Log.i(
+                        "April Tag read",
+                        (aprilTag.obelisk?.let { obeliskToIndexer[it] }
+                            ?: Indexer.Position.Out1).toString()
+                    )
+                })
+                indexerReady.then(idxMove)
+            })
+            .then(
+                shootThree(
+                    shooter,
+                    indexer,
+                    hardware.flipper
+                ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
             )
-        )
+            .then(REmover.drive2Pose(hardware, set1pos))
 
         // INIT
         while (opModeInInit()) {
