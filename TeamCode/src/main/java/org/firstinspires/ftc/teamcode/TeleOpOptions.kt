@@ -8,5 +8,10 @@ object TeleOpOptions {
      */
     const val DRIVE_PUSH_TO_OVERRIDE = 0.4
 
+    /**
+     * How far to push in the trigger to activate slow driving.
+     */
+    const val SLOW_BUTTON_SENSITIVITY = 0.5
+
     //#endregion
 }

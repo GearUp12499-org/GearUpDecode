@@ -270,10 +270,17 @@ class TeleOp2 : LinearOpMode() {
         strafe *= 1.1
 
         val denominator = max(abs(forward) + abs(strafe) + abs(rx), 1.0)
-        val flP = (forward + strafe + rx) / denominator
-        val blP = (forward - strafe + rx) / denominator
-        val frP = (forward - strafe - rx) / denominator
-        val brP = (forward + strafe - rx) / denominator
+
+        val postFactor =
+            if (gamepad1.left_trigger > TeleOpOptions.SLOW_BUTTON_SENSITIVITY) 0.5
+            else 1.0
+
+        val finalDiv = denominator / postFactor
+
+        val flP = (forward + strafe + rx) / finalDiv
+        val blP = (forward - strafe + rx) / finalDiv
+        val frP = (forward - strafe - rx) / finalDiv
+        val brP = (forward + strafe - rx) / finalDiv
 
         hardware.frontLeft.power = flP
         hardware.frontRight.power = frP

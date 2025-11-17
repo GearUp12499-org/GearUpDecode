@@ -6,11 +6,16 @@ import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.api.BuiltInTags
 
-fun Scheduler.stopAllWith(lock: Lock) {
-    tasks.values.filter {
-        it.getState() != ITask.State.Finished && it.getState() != ITask.State.Cancelled
-                && it.dependedLocks().contains(lock)
-    }.forEach(ITask<*>::stop)
+fun Scheduler.stopAllWith(lock: Lock) = stopF { it.dependedLocks().contains(lock) }
+
+inline fun Scheduler.stopF(predicate: (it: ITask<*>) -> Boolean) {
+    tasks.values.forEach {
+        when (it.getState()) {
+            ITask.State.Finished -> {}
+            ITask.State.Cancelled -> {}
+            else -> if (predicate(it)) it.stop()
+        }
+    }
 }
 
 val DAEMON_TAGS = setOf(BuiltInTags.DAEMON)
