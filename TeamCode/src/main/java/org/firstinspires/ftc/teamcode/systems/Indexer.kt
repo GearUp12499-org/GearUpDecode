@@ -34,6 +34,8 @@ class Indexer(
     private val colorFront2: RevColorSensorV3,
     private val colorBack1: RevColorSensorV3,
     private val colorBack2: RevColorSensorV3,
+    private val indicator1: Servo,
+    private val indicator2: Servo,
 ) : Task<Indexer>() {
     enum class Slot {
         EMPTY,
@@ -390,6 +392,11 @@ class Indexer(
         }
 
         private var subTask: ITask<*>? = null
+        private var done = false
+        private var slotN = -1
+        private var slotTimer = false
+        private val timer = ElapsedTime()
+        private val timer2 = ElapsedTime()
 
         override fun onStart() {
             if (slots.all { it != Slot.EMPTY }) finish()
@@ -397,13 +404,34 @@ class Indexer(
         }
 
         override fun onTick(): Boolean {
-            if (slots.all { it != Slot.EMPTY }) return true
+            if (slots.all { it != Slot.EMPTY }) {
+                if (!done) {
+                    timer.reset()
+                    done = true
+                }
+                if (timer.time() > 0.25) return true
+                return false
+            } else {
+                done = false
+            }
             val slot = slots.indexOfFirst { it == Slot.EMPTY }
             val slotPos = slotIdxToPosition[slot]!!
-            if (lastPosition != slotPos && (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)) {
-                subTask = scheduler!!.add(
-                    goToPosition(slotPos)
-                )
+            val isTaskFree = (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)
+            indicator1.position = if (isTaskFree) 0.5 else 0.8
+            indicator2.position = if (isTaskFree) 0.5 else 0.8
+            if (slot != slotN) {
+                if (!slotTimer) {
+                    timer2.reset()
+                    slotTimer = true
+                }
+                if (timer2.time() > 0.1) {
+                    if (lastPosition != slotPos && isTaskFree) {
+                        slotTimer = false
+                        subTask = scheduler!!.add(
+                            goToPosition(slotPos)
+                        )
+                    }
+                }
             }
 
             return false
@@ -414,6 +442,8 @@ class Indexer(
                 if (it.getState() == ITask.State.Ticking) it.stop()
             }
             intakeMotor.power = 0.0
+            indicator1.position = 0.0
+            indicator2.position = 0.0
         }
     }
 }

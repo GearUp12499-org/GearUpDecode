@@ -73,6 +73,8 @@ class Auto1 : LinearOpMode() {
                     colorFront2 = hardware.frontColor2,
                     colorBack1 = hardware.backColor1,
                     colorBack2 = hardware.backColor2,
+                    indicator1 = hardware.indicator1,
+                    indicator2 = hardware.indicator2,
                 )
             )
 

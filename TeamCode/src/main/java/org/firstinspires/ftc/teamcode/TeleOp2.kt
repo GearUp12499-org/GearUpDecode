@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
+import io.github.gearup12499.taskshark.prefabs.OneShot
+import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -21,6 +23,7 @@ import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In3
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out1
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out2
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.Out3
+import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.Shooter
 import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
@@ -86,6 +89,8 @@ abstract class TeleOp2 : LinearOpMode() {
                     colorFront2 = hardware.frontColor2,
                     colorBack1 = hardware.backColor1,
                     colorBack2 = hardware.backColor2,
+                    indicator1 = hardware.indicator1,
+                    indicator2 = hardware.indicator2,
                 )
             )
             this@TeleOp2.shooter = scheduler.add(
@@ -135,16 +140,12 @@ abstract class TeleOp2 : LinearOpMode() {
             telemetry.update()
         }
 
-        Lifetime.bump()
-
         // RUNNING
         while (opModeIsActive()) {
             scheduler.tick()
             driverInput()
             telemetry.update()
         }
-
-        Lifetime.bump()
     }
 
     // Inputs
@@ -152,6 +153,7 @@ abstract class TeleOp2 : LinearOpMode() {
     var wasA = false
     var wasB = false
     var wasY = false
+    var wasY2 = false
 
     private fun dispColor(label: String, sensor: RevColorSensorV3) {
         val norm = sensor.normalizedColors
@@ -190,22 +192,24 @@ abstract class TeleOp2 : LinearOpMode() {
         }
 
         intake()
+        recoveryIntake()
+        resetOrientation()
+        rehome()
 
-
-        dispColor("fc1", hardware.frontColor1)
-        dispColor("fc2", hardware.frontColor2)
-        dispColor("bc1", hardware.backColor1)
-        dispColor("bc2", hardware.backColor2)
-
-        telemetry.addData("idx1", hardware.idxMag1.state)
-        telemetry.addData("idx2", hardware.idxMag2.state)
-        telemetry.addData("idx3", hardware.idxMag3.state)
-        telemetry.addData("idx4", hardware.idxMag4.state)
+//        dispColor("fc1", hardware.frontColor1)
+//        dispColor("fc2", hardware.frontColor2)
+//        dispColor("bc1", hardware.backColor1)
+//        dispColor("bc2", hardware.backColor2)
+//
+//        telemetry.addData("idx1", hardware.idxMag1.state)
+//        telemetry.addData("idx2", hardware.idxMag2.state)
+//        telemetry.addData("idx3", hardware.idxMag3.state)
+//        telemetry.addData("idx4", hardware.idxMag4.state)
         telemetry.addData("slot1", indexer.slots[0])
         telemetry.addData("slot2", indexer.slots[1])
         telemetry.addData("slot3", indexer.slots[2])
-        telemetry.addData("ipos", indexer.lastPosition)
-        telemetry.addData("ipos", hardware.indexer.currentPosition)
+//        telemetry.addData("ipos", indexer.lastPosition)
+//        telemetry.addData("ipos", hardware.indexer.currentPosition)
 
         val a = gamepad1.a
         val b = gamepad1.b
@@ -220,6 +224,13 @@ abstract class TeleOp2 : LinearOpMode() {
 
         val y = gamepad1.y
         if (y && !wasY) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(REmover.drive2Pose(hardware, CompBotHardware.shootPos))
+                .then(shootThree(1200.0, shooter, indexer))
+        }
+
+        val y2 = gamepad2.y
+        if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(shootThree(1200.0, shooter, indexer))
         }
@@ -241,7 +252,7 @@ abstract class TeleOp2 : LinearOpMode() {
 
     fun driveInputIsOverriding() =
         hypot(gp1lStickX, gp1lStickY) > DRIVE_PUSH_TO_OVERRIDE
-                || gp1rStickX > DRIVE_PUSH_TO_OVERRIDE
+                || abs(gp1rStickX) > DRIVE_PUSH_TO_OVERRIDE
 
     fun drive() {
         val y = -gp1lStickY
@@ -293,5 +304,74 @@ abstract class TeleOp2 : LinearOpMode() {
 
         wasEnable = enableBtn
         wasCancel = cancelBtn
+    }
+
+    var wasUsingManualCtrl = false
+
+    fun recoveryIntake() {
+        val button1 = gamepad2.right_bumper
+        val button2 = gamepad2.left_bumper
+        if (button1 || button2) {
+            scheduler.stopAllWith(Locks.INTAKE)
+
+            hardware.intake.power = if (button1) 1.0 else -1.0
+            wasUsingManualCtrl = true
+        } else if (wasUsingManualCtrl) {
+            wasUsingManualCtrl = false
+            hardware.intake.power = 0.0
+        }
+    }
+
+    private var wasResetOrientation = false
+    private var wasResetIdx = false
+
+    fun resetOrientation() {
+        val button = gamepad2.back
+        if (button && !wasResetOrientation) {
+            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
+            scheduler.add(VirtualGroup {
+                val flag = add(OneShot {
+                    hardware.frontLeft.power = 0.0
+                    hardware.frontRight.power = 0.0
+                    hardware.backLeft.power = 0.0
+                    hardware.backRight.power = 0.0
+                    hardware.indicator1.position = 0.4
+                    hardware.indicator2.position = 0.4
+                }).then(WaitUntil {
+                    val vel = hypot(
+                        hardware.pinpoint.getVelX(DistanceUnit.INCH),
+                        hardware.pinpoint.getVelY(DistanceUnit.INCH)
+                    )
+                    vel < 0.5
+                }).then(OneShot {
+                    hardware.pinpoint.recalibrateIMU()
+                }).then(WaitUntil {
+                    hardware.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
+                }).then(OneShot {
+                    hardware.indicator1.position = 0.0
+                    hardware.indicator2.position = 0.0
+                })
+            }).require(Locks.DRIVE_MOTORS)
+        }
+        wasResetOrientation = button
+    }
+
+    fun rehome() {
+        val button = gamepad1.back
+        if (button && !wasResetIdx) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(OneShot {
+                    hardware.indicator1.position = 0.37
+                    hardware.indicator2.position = 0.37
+                }).then(
+                    indexer.syncPosition()
+                ).then(OneShot {
+                    hardware.indicator1.position = 0.0
+                    hardware.indicator2.position = 0.0
+                })
+            })
+        }
+        wasResetIdx = button
     }
 }
