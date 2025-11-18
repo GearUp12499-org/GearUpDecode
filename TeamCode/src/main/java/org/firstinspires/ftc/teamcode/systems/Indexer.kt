@@ -1,21 +1,27 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import android.graphics.Color
 import android.util.Log
 import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DigitalChannel
+import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.systemPackages
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 import kotlin.math.sign
+import kotlin.time.Duration.Companion.seconds
 
 class Indexer(
     private val indexerMotor: DcMotorEx,
+    private val flipper: Servo,
     private val sensor1: DigitalChannel,
     private val sensor2: DigitalChannel,
     private val sensor3: DigitalChannel,
@@ -35,14 +41,14 @@ class Indexer(
     enum class Position(
         val rotationSteps: Int,
         val isIntakeStep: Boolean,
-        val intakeSlot: Int = -1
+        val slot: Int = -1
     ) {
-        In1(0, true, intakeSlot = 0),
-        In2(2, true, intakeSlot = 1),
-        In3(4, true, intakeSlot = 2),
-        Out1(3, false),
-        Out2(5, false),
-        Out3(1, false),
+        In1(0, true, slot = 0),
+        In2(2, true, slot = 1),
+        In3(4, true, slot = 2),
+        Out1(3, false, slot = 0),
+        Out2(5, false, slot = 1),
+        Out3(1, false, slot = 2),
         None(-1, false),
         Invalid(-2, false)
     }
@@ -51,6 +57,8 @@ class Indexer(
 
     var lastPosition: Position = Position.None
     var resetPosition: Position = Position.None
+
+    private val positionHeldFor = ElapsedTime(ElapsedTime.Resolution.SECONDS)
 
     companion object {
         private val LOCK_ROOT = Lock.StrLock("indexer_impl")
@@ -108,24 +116,77 @@ class Indexer(
     override fun getTags(): Set<String> = DAEMON_TAGS
 
     override fun onTick(): Boolean {
+        updateState()
         return false
     }
 
+    private fun resetStateCounter() {
+        positionHeldFor.reset()
+    }
+
     fun updateState() {
-//        if (!lastPosition.isIntakeStep) return
-//        val d1 = colorFront1.getDistance(DistanceUnit.MM)
-//        val d2 = colorFront2.getDistance(DistanceUnit.MM)
-//        val minDist = min(d1, d2)
-//        if (minDist >= 40) {
-//            slots[lastPosition.intakeSlot] = Slot.EMPTY
-//        } else {
-//            val color = when {
-//                d1 < 40 -> colorFront1.normalizedColors
-//                d2 < 40 -> colorFront2.normalizedColors
-//                else -> return
-//            }
-//            slots[lastPosition.intakeSlot] = if (color.blue >= 0.1) Slot.PURPLE else Slot.GREEN
-//        }
+        val currentPosition =
+            matchPosition(!sensor1.state, !sensor2.state, !sensor3.state, !sensor4.state)
+        when (currentPosition) {
+            Position.None -> {
+                resetStateCounter(); return
+            }
+
+            Position.Invalid -> {
+                resetStateCounter(); return
+            }
+
+            else -> if (!currentPosition.isIntakeStep) {
+                resetStateCounter(); return
+            }
+        }
+        if (positionHeldFor.time() < 0.25) return
+        val f1 = colorFront1.normalizedColors
+        val f2 = colorFront2.normalizedColors
+        val f1Hsv = FloatArray(3)
+        val f2Hsv = FloatArray(3)
+        Color.RGBToHSV(
+            (f1.red * 255).toInt(),
+            (f1.green * 255).toInt(),
+            (f1.blue * 255).toInt(),
+            f1Hsv
+        )
+        Color.RGBToHSV(
+            (f2.red * 255).toInt(),
+            (f2.green * 255).toInt(),
+            (f2.blue * 255).toInt(),
+            f2Hsv
+        )
+        val d1 = colorFront1.getDistance(DistanceUnit.MM)
+        val d2 = colorFront2.getDistance(DistanceUnit.MM)
+
+        if (d1 < 15 || (d1 < 40 && d2 >= 40)) {
+            // use d1
+            slots[currentPosition.slot] = Slot.PURPLE
+        } else if (d2 < 40) {
+            // use d2
+            slots[currentPosition.slot] = Slot.PURPLE
+        } else {
+            // nothing
+            slots[currentPosition.slot] = Slot.EMPTY
+        }
+    }
+
+    fun deleteCurrent() {
+        slots[lastPosition.slot] = Slot.EMPTY
+    }
+
+    fun shoot() = object : Wait(0.25.seconds) {
+        override fun onStart() {
+            super.onStart()
+            flipper.position = CompBotHardware.FLIPPER_UP
+        }
+
+        override fun onFinish(completedNormally: Boolean) {
+            super.onFinish(completedNormally)
+            flipper.position = CompBotHardware.FLIPPER_DOWN
+            deleteCurrent()
+        }
     }
 
     override fun onFinish(completedNormally: Boolean) {
@@ -264,7 +325,6 @@ class Indexer(
                 indexerMotor.mode = RunMode.STOP_AND_RESET_ENCODER
                 indexerMotor.power = 0.0
                 resetPosition = target
-                updateState()
             }
         }
     }
@@ -284,7 +344,6 @@ class Indexer(
             indexerMotor.power = 0.0
             indexerMotor.mode = RunMode.STOP_AND_RESET_ENCODER
             indexerMotor.mode = RunMode.RUN_USING_ENCODER
-            updateState()
         }
 
         override fun onTick(): Boolean {

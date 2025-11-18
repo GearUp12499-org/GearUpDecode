@@ -10,8 +10,8 @@ import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.EXPOSURE
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GAIN
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MIDRANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set1pos
@@ -63,6 +63,7 @@ class Auto1 : LinearOpMode() {
             this@Auto1.indexer = scheduler.add(
                 Indexer(
                     indexerMotor = indexer,
+                    flipper = hardware.flipper,
                     sensor1 = idxMag1,
                     sensor2 = idxMag2,
                     sensor3 = idxMag3,
@@ -81,7 +82,7 @@ class Auto1 : LinearOpMode() {
                 )
             )
             this@Auto1.aprilTag = AprilTag(gsc)
-            val aprilTagSetup = scheduler.add(aprilTag.setupAprilTag(EXPOSURE, GAIN))
+            val aprilTagSetup = scheduler.add(aprilTag.setupAprilTag(GSC_EXPOSURE, GSC_GAIN))
             aprilTagSetup.then(startFlag)
         }
         indexer.slots[0] = Indexer.Slot.PURPLE
@@ -113,8 +114,7 @@ class Auto1 : LinearOpMode() {
             .then(
                 shootThree(
                     shooter,
-                    indexer,
-                    hardware.flipper
+                    indexer
                 ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
             )
             .then(REmover.drive2Pose(hardware, set1pos))

@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import androidx.annotation.NonNull;
-
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -29,14 +27,16 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final REmover.RobotPose gatePos = new REmover.RobotPose(0, -55, 0);
 
-    public static final double INTAKE_POWER = 0.8;
+    public static final double INTAKE_POWER = 0.9;
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
 
     public static final double SHOOT_MIDRANGE = 1200.0;
 
-    public static final long EXPOSURE = 0;
-    public static final int GAIN = 50;
+    public static final long GSC_EXPOSURE = 0;
+    public static final int GSC_GAIN = 50;
+
+    public static final float COLOR_FRONT_GAIN = 15.0f;
 
 
     @HardwareName("frontLeft")
@@ -133,8 +133,8 @@ public class CompBotHardware extends HardwareMapper {
         super(map);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontColor1.setGain(45.0f);
-        frontColor2.setGain(45.0f);
+        frontColor1.setGain(COLOR_FRONT_GAIN);
+        frontColor2.setGain(COLOR_FRONT_GAIN);
         backColor1.setGain(45.0f);
         backColor2.setGain(45.0f);
 

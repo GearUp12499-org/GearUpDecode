@@ -79,6 +79,7 @@ abstract class TeleOp2 : LinearOpMode() {
             this@TeleOp2.indexer = scheduler.add(
                 Indexer(
                     indexerMotor = indexer,
+                    flipper = hardware.flipper,
                     sensor1 = idxMag1,
                     sensor2 = idxMag2,
                     sensor3 = idxMag3,
@@ -222,7 +223,7 @@ abstract class TeleOp2 : LinearOpMode() {
         val y = gamepad1.y
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(shootThree(shooter, indexer, hardware.flipper))
+            scheduler.add(shootThree(shooter, indexer))
         }
 
         wasA = a
