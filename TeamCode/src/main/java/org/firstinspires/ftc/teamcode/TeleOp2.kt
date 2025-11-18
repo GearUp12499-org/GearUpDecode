@@ -221,7 +221,7 @@ abstract class TeleOp2 : LinearOpMode() {
         val y = gamepad1.y
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(shootThree(shooter, indexer))
+            scheduler.add(shootThree(1200.0, shooter, indexer))
         }
 
         wasA = a

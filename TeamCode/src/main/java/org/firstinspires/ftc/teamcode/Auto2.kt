@@ -114,6 +114,7 @@ class Auto2 : LinearOpMode() {
             })
             .then(
                 shootThree(
+                    1460.0,
                     shooter,
                     indexer
                 ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }

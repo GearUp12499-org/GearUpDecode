@@ -16,21 +16,21 @@ private val next = mapOf(
 )
 
 @JvmOverloads
-fun shootThree(shooter: Shooter, indexer: Indexer, startAt: () -> Indexer.Position = { Out1 }) = VirtualGroup {
+fun shootThree(speed: Double, shooter: Shooter, indexer: Indexer, startAt: () -> Indexer.Position = { Out1 }) = VirtualGroup {
     add(VirtualGroup {
-        add(shooter.setTargetAndWait(1460.0, 0.35))
+        add(shooter.setTargetAndWait(speed, 0.35))
         add(indexer.goToPosition(startAt))
     })
         .then(indexer.shoot())
         .then(VirtualGroup {
-            add(shooter.setTargetAndWait(1460.0, 0.35))
+            add(shooter.setTargetAndWait(speed, 0.35))
             add(indexer.goToPosition { next[startAt()]!! })
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
         .then(indexer.shoot())
         .then(VirtualGroup {
-            add(shooter.setTargetAndWait(1460.0, 0.35))
+            add(shooter.setTargetAndWait(speed, 0.35))
             add(indexer.goToPosition { next[next[startAt()]]!! })
         })
         .then(indexer.shoot())
