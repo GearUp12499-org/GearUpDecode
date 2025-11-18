@@ -18,8 +18,17 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, Math.PI);
 
+    public static final REmover.RobotPose redGoalStart = new REmover.RobotPose(54.33,-51.34,2.19);
+
+    public static final  REmover.RobotPose redReadAT = new REmover.RobotPose(46.92, -11.92, -2.55);
+
     public static final REmover.RobotPose shootPos = new REmover.RobotPose(12, -12, 3 * Math.PI / 4);
+
+    public static final REmover.RobotPose redOffLineShoot = new REmover.RobotPose(66.55, -10.48, 1.59);
+
+    public static final REmover.RobotPose redFarShoot = new REmover.RobotPose(-55,-12.39,2.76);
     public static final REmover.RobotPose set1pos = new REmover.RobotPose(12, -33.5, -Math.PI / 2);
+    public static final REmover.RobotPose set2pos = new REmover.RobotPose(-36, -33.5, -Math.PI / 2);
 
     public static final REmover.RobotPose blueBase = new REmover.RobotPose(-38, -33, 0);
 
@@ -32,6 +41,8 @@ public class CompBotHardware extends HardwareMapper {
     public static final double FLIPPER_UP = 0.900;
 
     public static final double SHOOT_MIDRANGE = 1200.0;
+
+    public static final double SHOOT_FARRANGE = 1460.0;
 
     public static final long GSC_EXPOSURE = 0;
     public static final int GSC_GAIN = 50;
