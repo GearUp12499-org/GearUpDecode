@@ -7,17 +7,15 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.Servo
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
-import io.github.gearup12499.taskshark.api.BuiltInTags
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark.systemPackages
-import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 
-class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Shooter>() {
+class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, private val indicator2: Servo) : Task<Shooter>() {
     companion object {
         private val LOCK_ROOT = Lock.StrLock("shooter_impl")
 
@@ -86,7 +84,11 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
 
         override fun onTick(): Boolean {
             val now = System.nanoTime()
-            Log.i("Shooter", "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, abs(currentVelocity - targetVelocity)))
+            val delta = currentVelocity - targetVelocity
+            val pct = delta / 500 + 0.5
+            indicator1.position = pct
+            indicator2.position = pct
+            Log.i("Shooter", "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta))
             if (!isAtTarget()) {
                 lastMetAt = now
                 return false

@@ -63,25 +63,26 @@ class Auto2 : LinearOpMode() {
             this@Auto2.indexer = scheduler.add(
                 Indexer(
                     indexerMotor = indexer,
-                    flipper = hardware.flipper,
-                    intakeMotor = hardware.intake,
+                    flipper = flipper,
+                    intakeMotor = intake,
                     sensor1 = idxMag1,
                     sensor2 = idxMag2,
                     sensor3 = idxMag3,
                     sensor4 = idxMag4,
-                    colorFront1 = hardware.frontColor1,
-                    colorFront2 = hardware.frontColor2,
-                    colorBack1 = hardware.backColor1,
-                    colorBack2 = hardware.backColor2,
-                    indicator1 = hardware.indicator1,
-                    indicator2 = hardware.indicator2,
+                    colorFront1 = frontColor1,
+                    colorFront2 = frontColor2,
+                    colorBack1 = backColor1,
+                    colorBack2 = backColor2,
+                    indicator1 = indicator1,
+                    indicator2 = indicator2,
                 )
             )
 
             this@Auto2.shooter = scheduler.add(
                 Shooter(
                     motor = shooter1,
-                    angle = shooterHood1
+                    indicator1 = indicator1,
+                    indicator2 = indicator2
                 )
             )
             this@Auto2.aprilTag = AprilTag(gsc)

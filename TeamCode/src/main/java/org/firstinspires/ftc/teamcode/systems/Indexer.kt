@@ -424,7 +424,7 @@ class Indexer(
                     timer2.reset()
                     slotTimer = true
                 }
-                if (timer2.time() > 0.1) {
+                if (timer2.time() > 0.2) {
                     if (lastPosition != slotPos && isTaskFree) {
                         slotTimer = false
                         subTask = scheduler!!.add(
