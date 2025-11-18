@@ -24,7 +24,7 @@ class Shooter(private val motor: DcMotorEx, private val angle: Servo) : Task<Sho
         /**
          * Encoder ticks per second.
          */
-        private const val ACCEPTABLE_VELOCITY_DIFF = 50.0
+        private const val ACCEPTABLE_VELOCITY_DIFF = 20.0
 
         init {
             systemPackages.add(Shooter::class.qualifiedName!!)

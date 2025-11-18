@@ -6,9 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
-import io.github.gearup12499.taskshark.prefabs.OneShot
-import io.github.gearup12499.taskshark.prefabs.VirtualGroup
-import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -80,6 +77,7 @@ abstract class TeleOp2 : LinearOpMode() {
                 Indexer(
                     indexerMotor = indexer,
                     flipper = hardware.flipper,
+                    intakeMotor = hardware.intake,
                     sensor1 = idxMag1,
                     sensor2 = idxMag2,
                     sensor3 = idxMag3,
@@ -276,25 +274,24 @@ abstract class TeleOp2 : LinearOpMode() {
         hardware.backRight.power = brP
     }
 
+    private var intakeTask: ITask<*>? = null
+    private var wasEnable = false
+    private var wasCancel = false
+
     fun intake() {
         val enableBtn = gamepad1.right_bumper
         val cancelBtn = gamepad1.left_bumper
-        val owned = scheduler.getLockOwner(Locks.INTAKE) != null
-        if ((enableBtn || cancelBtn) && owned) {
-            scheduler.stopAllWith(Locks.INTAKE)
-        } else if (owned) {
-            return
+
+        val enable = enableBtn && !wasEnable
+        val cancel = cancelBtn && !wasCancel
+        if (enable || cancel) {
+            intakeTask?.let {
+                if (it.getState() == ITask.State.Ticking) it.stop()
+            }
+            intakeTask = if (enable) scheduler.add(indexer.intake()) else null
         }
 
-        if (enableBtn) hardware.intake.power = CompBotHardware.INTAKE_POWER
-        if (cancelBtn) {
-            hardware.intake.power = -CompBotHardware.INTAKE_POWER
-            scheduler.add(VirtualGroup {
-                add(Wait.s(0.25))
-                    .then(OneShot {
-                        hardware.intake.power = 0.0
-                    })
-            }).require(Locks.INTAKE)
-        }
+        wasEnable = enableBtn
+        wasCancel = cancelBtn
     }
 }

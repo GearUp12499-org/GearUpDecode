@@ -3,17 +3,20 @@ package org.firstinspires.ftc.teamcode.systems
 import android.graphics.Color
 import android.util.Log
 import com.qualcomm.hardware.rev.RevColorSensorV3
+import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
+import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 import kotlin.math.sign
@@ -22,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 class Indexer(
     private val indexerMotor: DcMotorEx,
     private val flipper: Servo,
+    private val intakeMotor: DcMotor,
     private val sensor1: DigitalChannel,
     private val sensor2: DigitalChannel,
     private val sensor3: DigitalChannel,
@@ -76,6 +80,12 @@ class Indexer(
 
         const val NEARBY = TICKS_PER_POSITION / 4
         const val NOT_NEARBY = TICKS_PER_POSITION / 2
+
+        val slotIdxToPosition = mapOf(
+            0 to Position.In1,
+            1 to Position.In2,
+            2 to Position.In3
+        )
 
 
         fun matchPosition(s1: Boolean, s2: Boolean, s3: Boolean, s4: Boolean) =
@@ -371,6 +381,39 @@ class Indexer(
 
         init {
             require(lock)
+        }
+    }
+
+    fun intake() = object : Anonymous() {
+        init {
+            require(Locks.INTAKE)
+        }
+
+        private var subTask: ITask<*>? = null
+
+        override fun onStart() {
+            if (slots.all { it != Slot.EMPTY }) finish()
+            intakeMotor.power = CompBotHardware.INTAKE_POWER
+        }
+
+        override fun onTick(): Boolean {
+            if (slots.all { it != Slot.EMPTY }) return true
+            val slot = slots.indexOfFirst { it == Slot.EMPTY }
+            val slotPos = slotIdxToPosition[slot]!!
+            if (lastPosition != slotPos && (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)) {
+                subTask = scheduler!!.add(
+                    goToPosition(slotPos)
+                )
+            }
+
+            return false
+        }
+
+        override fun onFinish(completedNormally: Boolean) {
+            subTask?.let {
+                if (it.getState() == ITask.State.Ticking) it.stop()
+            }
+            intakeMotor.power = 0.0
         }
     }
 }

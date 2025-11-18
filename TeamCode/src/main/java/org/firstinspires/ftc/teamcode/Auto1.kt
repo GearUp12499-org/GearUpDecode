@@ -64,6 +64,7 @@ class Auto1 : LinearOpMode() {
                 Indexer(
                     indexerMotor = indexer,
                     flipper = hardware.flipper,
+                    intakeMotor = hardware.intake,
                     sensor1 = idxMag1,
                     sensor2 = idxMag2,
                     sensor3 = idxMag3,
