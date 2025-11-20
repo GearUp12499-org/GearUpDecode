@@ -116,8 +116,9 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
                 shootThree(
                     SHOOT_FAR_RANGE,
                     shooter,
-                    indexer
-                ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                    indexer,
+                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                )
             )
             .then(REmover.drive2Pose(hardware, poseSet.set2pos))
 

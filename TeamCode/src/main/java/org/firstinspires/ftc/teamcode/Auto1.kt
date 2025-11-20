@@ -11,6 +11,7 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
@@ -95,7 +96,7 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
         val indexerReady = startFlag.then(indexer.syncPosition())
         startFlag.then(shooter.setTargetAndWait(SHOOT_MID_RANGE))
 
-        knowObelisk
+        val firstSet = knowObelisk
             .then(VirtualGroup {
                 add(REmover.drive2Pose(hardware, poseSet.midShoot))
                 val idxMove = add(
@@ -116,10 +117,40 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
                 shootThree(
                     SHOOT_MID_RANGE,
                     shooter,
-                    indexer
-                ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                    indexer,
+                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
+                    false
+                )
             )
-            .then(REmover.drive2Pose(hardware, poseSet.set1pos))
+
+        firstSet.then(VirtualGroup {
+            add(REmover.drive2Pose(hardware, poseSet.set1pos))
+                .then(OneShot {
+                    hardware.frontLeft.power = 0.2
+                    hardware.frontRight.power = 0.2
+                    hardware.backLeft.power = 0.2
+                    hardware.backRight.power = 0.2
+                })
+            val intake = add(indexer.intake())
+        }).then(OneShot {
+            hardware.frontLeft.power = 0.0
+            hardware.frontRight.power = 0.0
+            hardware.backLeft.power = 0.0
+            hardware.backRight.power = 0.0
+        }).then(VirtualGroup {
+            add(REmover.drive2Pose(hardware, poseSet.midShoot))
+            add(indexer.goToPosition {
+                aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+            })
+        }).then(
+            shootThree(
+                SHOOT_MID_RANGE,
+                shooter,
+                indexer,
+                { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
+                true
+            )
+        )
 
         // INIT
         while (opModeInInit()) {

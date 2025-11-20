@@ -17,7 +17,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val closeShoot: RobotPose = RobotPose(60.0, -10.48, 0.55 * Math.PI)
         private val midShoot: RobotPose = RobotPose(12.0, -12.0, 3 * Math.PI / 4)
         private val farShoot: RobotPose = RobotPose(-55.0, -12.39, 2.76)
-        private val set1pos: RobotPose = RobotPose(12.0, -33.5, -Math.PI / 2)
+        private val set1pos: RobotPose = RobotPose(12.0, -21.5, -Math.PI / 2)
         private val set2pos: RobotPose = RobotPose(-36.0, -33.5, -Math.PI / 2)
         private val blueBase: RobotPose = RobotPose(-38.0, -33.0, 0.0)
         private val gateWaypoint: RobotPose = RobotPose(0.0, -48.0, 0.0)

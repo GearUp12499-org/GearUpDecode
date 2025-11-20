@@ -16,7 +16,7 @@ private val next = mapOf(
 )
 
 @JvmOverloads
-fun shootThree(speed: Double, shooter: Shooter, indexer: Indexer, startAt: () -> Indexer.Position = { Out1 }) = VirtualGroup {
+fun shootThree(speed: Double, shooter: Shooter, indexer: Indexer, startAt: (() -> Indexer.Position) = { Out1 }, shutDownAtEnd: Boolean = true) = VirtualGroup {
     add(VirtualGroup {
         add(shooter.setTargetAndWait(speed, 0.35))
         add(indexer.goToPosition(startAt))
@@ -35,6 +35,7 @@ fun shootThree(speed: Double, shooter: Shooter, indexer: Indexer, startAt: () ->
         })
         .then(indexer.shoot())
         .then(OneShot {
-            shooter.setTarget(0.0)
+            if (shutDownAtEnd)
+                shooter.setTarget(0.0)
         })
 }

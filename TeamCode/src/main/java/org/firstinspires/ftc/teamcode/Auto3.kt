@@ -115,8 +115,9 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
                 shootThree(
                     SHOOT_CLOSE_RANGE,
                     shooter,
-                    indexer
-                ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                    indexer,
+                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                )
             )
 
         // INIT
