@@ -89,7 +89,7 @@ public class CompBotTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a) {
-                drive2Pose(CompBotHardware.midShoot);
+                drive2Pose(PoseSet.RED.midShoot);
             }
 
             if (gamepad1.b) {

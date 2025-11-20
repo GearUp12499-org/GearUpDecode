@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
@@ -13,9 +12,6 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set1pos
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.midShoot
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -25,8 +21,7 @@ import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 
-@Autonomous
-class Auto1 : LinearOpMode() {
+abstract class Auto1 : LinearOpMode() {
     companion object {
         val obeliskToIndexer = mapOf(
             AprilTag.Obelisk.GPP to Indexer.Position.Out3,
@@ -34,6 +29,9 @@ class Auto1 : LinearOpMode() {
             AprilTag.Obelisk.PPG to Indexer.Position.Out1,
         )
     }
+
+    abstract val isRed: Boolean
+    val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var shooter: Shooter
     private lateinit var indexer: Indexer
@@ -49,7 +47,7 @@ class Auto1 : LinearOpMode() {
         startFlag = scheduler.add(SentinelTask())
 
         with(hardware) {
-            pinpoint.position = redFarStart.asPose2D
+            pinpoint.position = poseSet.farStart.asPose2D
             pinpoint.recalibrateIMU()
 
             scheduler.add(PinpointUpdater(pinpoint))
@@ -100,7 +98,7 @@ class Auto1 : LinearOpMode() {
 
         knowObelisk
             .then(VirtualGroup {
-                add(REmover.drive2Pose(hardware, midShoot))
+                add(REmover.drive2Pose(hardware, poseSet.midShoot))
                 val idxMove = add(
                     indexer.goToPosition {
                         aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
@@ -122,7 +120,7 @@ class Auto1 : LinearOpMode() {
                     indexer
                 ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
             )
-            .then(REmover.drive2Pose(hardware, set1pos))
+            .then(REmover.drive2Pose(hardware, poseSet.set1pos))
 
         // INIT
         while (opModeInInit()) {

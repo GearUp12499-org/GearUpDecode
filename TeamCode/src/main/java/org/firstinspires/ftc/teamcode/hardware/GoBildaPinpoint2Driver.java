@@ -206,12 +206,12 @@ public class GoBildaPinpoint2Driver extends I2cDeviceSynchDevice<I2cDeviceSynchS
 
     public enum EncoderDirection{
         FORWARD,
-        REVERSED;
+        REVERSED
     }
 
     public enum GoBildaOdometryPods {
         goBILDA_SWINGARM_POD,
-        goBILDA_4_BAR_POD;
+        goBILDA_4_BAR_POD
     }
 
     /**

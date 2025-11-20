@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.IMU
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
-import io.github.gearup12499.taskshark.api.BuiltInTags
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
@@ -30,8 +29,6 @@ class IMUComparatorTest : LinearOpMode() {
         @HardwareName("imu")
         lateinit var builtInIMU: IMU
 
-        init {
-        }
     }
 
     override fun runOpMode() {

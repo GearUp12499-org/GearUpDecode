@@ -122,7 +122,7 @@ class Indexer(
     val lock = LOCK_ROOT.derive()
 
     init {
-        require(CompBotHardware.Locks.INDEXER)
+        require(Locks.INDEXER)
     }
 
     override fun getTags(): Set<String> = DAEMON_TAGS

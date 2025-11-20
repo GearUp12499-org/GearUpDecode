@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode
 
-import com.google.gson.Gson
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler

@@ -10,30 +10,10 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
-
-    public static final REmover.RobotPose redFarStart = new REmover.RobotPose(-63, -16, Math.PI);
-
-    public static final REmover.RobotPose redGoalStart = new REmover.RobotPose(54.33,-51.34,2.19);
-
-    public static final  REmover.RobotPose redReadAT = new REmover.RobotPose(46.92, -11.92, -2.55);
-
-    public static final REmover.RobotPose closeShoot = new REmover.RobotPose(60.0, -10.48, 0.55 * Math.PI);
-    public static final REmover.RobotPose midShoot = new REmover.RobotPose(12, -12, 3 * Math.PI / 4);
-    public static final REmover.RobotPose farShoot = new REmover.RobotPose(-55,-12.39,2.76);
-    public static final REmover.RobotPose set1pos = new REmover.RobotPose(12, -33.5, -Math.PI / 2);
-    public static final REmover.RobotPose set2pos = new REmover.RobotPose(-36, -33.5, -Math.PI / 2);
-
-    public static final REmover.RobotPose blueBase = new REmover.RobotPose(-38, -33, 0);
-
-    public static final REmover.RobotPose gateWaypoint = new REmover.RobotPose(0, -48, 0);
-
-    public static final REmover.RobotPose gatePos = new REmover.RobotPose(0, -55, 0);
-
     public static final double INTAKE_POWER = 0.7;
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;

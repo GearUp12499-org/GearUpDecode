@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
@@ -13,11 +12,6 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_CLOSE_RANGE
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set2pos
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.closeShoot
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redGoalStart
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -27,8 +21,7 @@ import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 
-@Autonomous
-class Auto3 : LinearOpMode() {
+abstract class Auto3 : LinearOpMode() {
     companion object {
         val obeliskToIndexer = mapOf(
             AprilTag.Obelisk.GPP to Indexer.Position.Out3,
@@ -36,6 +29,9 @@ class Auto3 : LinearOpMode() {
             AprilTag.Obelisk.PPG to Indexer.Position.Out1,
         )
     }
+
+    abstract val isRed: Boolean
+    val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var shooter: Shooter
     private lateinit var indexer: Indexer
@@ -51,7 +47,7 @@ class Auto3 : LinearOpMode() {
         startFlag = scheduler.add(SentinelTask())
 
         with(hardware) {
-            pinpoint.position = redGoalStart.asPose2D
+            pinpoint.position = poseSet.goalStart.asPose2D
             pinpoint.recalibrateIMU()
 
             scheduler.add(PinpointUpdater(pinpoint))
@@ -101,7 +97,7 @@ class Auto3 : LinearOpMode() {
         startFlag.then(shooter.setTargetAndWait(SHOOT_CLOSE_RANGE))
 
         startFlag.then(VirtualGroup {
-                add(REmover.drive2Pose(hardware, closeShoot))
+                add(REmover.drive2Pose(hardware, poseSet.closeShoot))
                 val idxMove = add(
                     indexer.goToPosition {
                         aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1

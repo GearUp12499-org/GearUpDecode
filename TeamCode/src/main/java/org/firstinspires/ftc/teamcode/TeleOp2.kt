@@ -40,8 +40,10 @@ import kotlin.math.sin
 import kotlin.time.DurationUnit
 
 abstract class TeleOp2 : LinearOpMode() {
-    abstract val negateIfRed: Int
-    abstract val negateIfBlue: Int
+    abstract val isRed: Boolean
+    val negateIfRed = if (isRed) -1 else 1
+    val negateIfBlue = if (isRed) 1 else -1
+    val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
     lateinit var hardware: CompBotHardware
     lateinit var scheduler: Scheduler
@@ -230,7 +232,7 @@ abstract class TeleOp2 : LinearOpMode() {
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, CompBotHardware.midShoot))
+                add(REmover.drive2Pose(hardware, poseSet.midShoot))
                 add(OneShot {
                     shooter.setTarget(SHOOT_MID_RANGE)
                 })
@@ -241,7 +243,7 @@ abstract class TeleOp2 : LinearOpMode() {
         if (x && !wasX) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, CompBotHardware.closeShoot))
+                add(REmover.drive2Pose(hardware, poseSet.closeShoot))
                 add(OneShot {
                     shooter.setTarget(SHOOT_CLOSE_RANGE)
                 })

@@ -84,8 +84,8 @@ class AprilTag(val gsc: CameraName) {
         fun setUpControls() {
             val visionPortal = visionPortal!!
 
-            val exposure = visionPortal.getCameraControl(ExposureControl::class.java);
-            val gain = visionPortal.getCameraControl(GainControl::class.java);
+            val exposure = visionPortal.getCameraControl(ExposureControl::class.java)
+            val gain = visionPortal.getCameraControl(GainControl::class.java)
 
             exposure?.let {
                 it.mode = ExposureControl.Mode.Manual
