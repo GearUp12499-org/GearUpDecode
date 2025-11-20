@@ -15,7 +15,7 @@ import io.github.gearup12499.taskshark.Lock;
 
 public class CompBotHardware extends HardwareMapper {
     public static final double INTAKE_POWER = 0.7;
-    public static final double FLIPPER_DOWN = 0.515;
+    public static final double FLIPPER_DOWN = 0.500;
     public static final double FLIPPER_UP = 0.900;
 
     public static final double SHOOT_CLOSE_RANGE = 1160.0;
