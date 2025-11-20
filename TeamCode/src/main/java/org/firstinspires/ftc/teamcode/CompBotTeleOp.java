@@ -12,7 +12,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
 import org.firstinspires.ftc.teamcode.hardware.FileUtil;
-import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import java.io.File;
@@ -90,7 +89,7 @@ public class CompBotTeleOp extends LinearOpMode {
             }
 
             if (gamepad1.a) {
-                drive2Pose(CompBotHardware.shootPos);
+                drive2Pose(CompBotHardware.midShoot);
             }
 
             if (gamepad1.b) {

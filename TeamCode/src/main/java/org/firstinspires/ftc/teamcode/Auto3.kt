@@ -12,10 +12,12 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_CLOSE_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set2pos
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.farShoot
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.closeShoot
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redGoalStart
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -26,7 +28,7 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 
 @Autonomous
-class Auto2 : LinearOpMode() {
+class Auto3 : LinearOpMode() {
     companion object {
         val obeliskToIndexer = mapOf(
             AprilTag.Obelisk.GPP to Indexer.Position.Out3,
@@ -49,7 +51,7 @@ class Auto2 : LinearOpMode() {
         startFlag = scheduler.add(SentinelTask())
 
         with(hardware) {
-            pinpoint.position = redFarStart.asPose2D
+            pinpoint.position = redGoalStart.asPose2D
             pinpoint.recalibrateIMU()
 
             scheduler.add(PinpointUpdater(pinpoint))
@@ -60,7 +62,7 @@ class Auto2 : LinearOpMode() {
                 })
             waitForPinpointReady.then(startFlag)
 
-            this@Auto2.indexer = scheduler.add(
+            this@Auto3.indexer = scheduler.add(
                 Indexer(
                     indexerMotor = indexer,
                     flipper = flipper,
@@ -78,14 +80,14 @@ class Auto2 : LinearOpMode() {
                 )
             )
 
-            this@Auto2.shooter = scheduler.add(
+            this@Auto3.shooter = scheduler.add(
                 Shooter(
                     motor = shooter1,
                     indicator1 = indicator1,
                     indicator2 = indicator2
                 )
             )
-            this@Auto2.aprilTag = AprilTag(gsc)
+            this@Auto3.aprilTag = AprilTag(gsc)
             val aprilTagSetup = scheduler.add(aprilTag.setupAprilTag(GSC_EXPOSURE, GSC_GAIN))
             aprilTagSetup.then(startFlag)
         }
@@ -94,13 +96,12 @@ class Auto2 : LinearOpMode() {
         indexer.slots[2] = Indexer.Slot.GREEN
 
 
-        val knowObelisk = startFlag.then(aprilTag.readObelisk(1.0))
+//        val knowObelisk = startFlag.then(aprilTag.readObelisk(1.0))
         val indexerReady = startFlag.then(indexer.syncPosition())
-        startFlag.then(shooter.setTargetAndWait(SHOOT_FAR_RANGE))
+        startFlag.then(shooter.setTargetAndWait(SHOOT_CLOSE_RANGE))
 
-        knowObelisk
-            .then(VirtualGroup {
-                add(REmover.drive2Pose(hardware, farShoot))
+        startFlag.then(VirtualGroup {
+                add(REmover.drive2Pose(hardware, closeShoot))
                 val idxMove = add(
                     indexer.goToPosition {
                         aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
@@ -117,12 +118,11 @@ class Auto2 : LinearOpMode() {
             })
             .then(
                 shootThree(
-                    SHOOT_FAR_RANGE,
+                    SHOOT_CLOSE_RANGE,
                     shooter,
                     indexer
                 ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
             )
-            .then(REmover.drive2Pose(hardware, set2pos))
 
         // INIT
         while (opModeInInit()) {

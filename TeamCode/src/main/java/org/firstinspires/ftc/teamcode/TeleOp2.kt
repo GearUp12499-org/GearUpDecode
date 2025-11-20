@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.Indexer
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In1
@@ -227,17 +228,17 @@ abstract class TeleOp2 : LinearOpMode() {
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, CompBotHardware.shootPos))
+                add(REmover.drive2Pose(hardware, CompBotHardware.midShoot))
                 add(OneShot {
-                    shooter.setTarget(1200.0)
+                    shooter.setTarget(SHOOT_MID_RANGE)
                 })
-            }).then(shootThree(1200.0, shooter, indexer))
+            }).then(shootThree(SHOOT_MID_RANGE, shooter, indexer))
         }
 
         val y2 = gamepad2.y
         if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(shootThree(1200.0, shooter, indexer))
+            scheduler.add(shootThree(SHOOT_MID_RANGE, shooter, indexer))
         }
 
         wasA = a

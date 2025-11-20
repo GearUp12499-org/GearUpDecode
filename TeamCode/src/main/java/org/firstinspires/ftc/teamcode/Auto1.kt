@@ -12,10 +12,10 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MIDRANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.redFarStart
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.set1pos
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.shootPos
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.midShoot
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -96,11 +96,11 @@ class Auto1 : LinearOpMode() {
 
         val knowObelisk = startFlag.then(aprilTag.readObelisk(1.0))
         val indexerReady = startFlag.then(indexer.syncPosition())
-        startFlag.then(shooter.setTargetAndWait(SHOOT_MIDRANGE))
+        startFlag.then(shooter.setTargetAndWait(SHOOT_MID_RANGE))
 
         knowObelisk
             .then(VirtualGroup {
-                add(REmover.drive2Pose(hardware, shootPos))
+                add(REmover.drive2Pose(hardware, midShoot))
                 val idxMove = add(
                     indexer.goToPosition {
                         aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
@@ -117,7 +117,7 @@ class Auto1 : LinearOpMode() {
             })
             .then(
                 shootThree(
-                    1200.0,
+                    SHOOT_MID_RANGE,
                     shooter,
                     indexer
                 ) { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
