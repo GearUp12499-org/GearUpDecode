@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 
-abstract class Auto2 : LinearOpMode() {
+abstract class Auto2(isRed: Boolean) : LinearOpMode() {
     companion object {
         val obeliskToIndexer = mapOf(
             AprilTag.Obelisk.GPP to Indexer.Position.Out3,
@@ -30,7 +30,6 @@ abstract class Auto2 : LinearOpMode() {
         )
     }
     
-    abstract val isRed: Boolean
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var shooter: Shooter

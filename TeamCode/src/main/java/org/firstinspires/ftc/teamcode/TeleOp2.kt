@@ -39,8 +39,7 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.time.DurationUnit
 
-abstract class TeleOp2 : LinearOpMode() {
-    abstract val isRed: Boolean
+abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
     val negateIfRed = if (isRed) -1 else 1
     val negateIfBlue = if (isRed) 1 else -1
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
