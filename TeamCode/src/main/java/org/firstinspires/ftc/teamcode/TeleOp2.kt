@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_CLOSE_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -155,6 +156,7 @@ abstract class TeleOp2 : LinearOpMode() {
     var wasA = false
     var wasB = false
     var wasY = false
+    var wasX = false
     var wasY2 = false
 
     private fun dispColor(label: String, sensor: RevColorSensorV3) {
@@ -213,8 +215,8 @@ abstract class TeleOp2 : LinearOpMode() {
 //        telemetry.addData("ipos", indexer.lastPosition)
 //        telemetry.addData("ipos", hardware.indexer.currentPosition)
 
-        val a = gamepad1.a
-        val b = gamepad1.b
+        val a = gamepad2.a
+        val b = gamepad2.b
         if (a && !wasA) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(indexer.goToPosition(getNextOut(indexer.lastPosition)))
@@ -233,6 +235,17 @@ abstract class TeleOp2 : LinearOpMode() {
                     shooter.setTarget(SHOOT_MID_RANGE)
                 })
             }).then(shootThree(SHOOT_MID_RANGE, shooter, indexer))
+        }
+
+        val x = gamepad1.x
+        if (x && !wasX) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(REmover.drive2Pose(hardware, CompBotHardware.closeShoot))
+                add(OneShot {
+                    shooter.setTarget(SHOOT_CLOSE_RANGE)
+                })
+            }).then(shootThree(SHOOT_CLOSE_RANGE, shooter, indexer))
         }
 
         val y2 = gamepad2.y
