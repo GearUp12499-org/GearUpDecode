@@ -32,7 +32,7 @@ class StandaloneReadAprilTag : LinearOpMode() {
             telemetry.addData("# AprilTags Detected", detections.size)
 
             for (detection in detections) {
-                if (detection.metadata != null && detection.metadata.name.contains("Obelisk")) {
+                if (detection.metadata != null) {
                     telemetry.addLine(
                         String.format(
                             "\n==== (ID %d) %s",

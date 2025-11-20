@@ -468,17 +468,18 @@ public class AutoTuneCamSettings extends LinearOpMode {
         telemetry.addData("# AprilTags Detected", detections.size());
 
         for (AprilTagDetection detection : detections) {
-            if (detection.metadata != null && !detection.metadata.name.contains("Obelisk")) {
+            if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addData("Range (in)", detection.ftcPose.range);
                 telemetry.addData("Bearing (deg)", detection.ftcPose.bearing);
 //                double angleErr = Math.abs(Math.abs(detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES))
 //                        - pose2D.getHeading(AngleUnit.DEGREES));
 //                telemetry.addData("Angle Error (Yaw)", angleErr);
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f (in)",
-                        detection.robotPose.getPosition().x,
-                        detection.robotPose.getPosition().y,
-                        detection.robotPose.getPosition().z));
+                if (!detection.metadata.name.contains("Obelisk"))
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f (in)",
+                            detection.robotPose.getPosition().x,
+                            detection.robotPose.getPosition().y,
+                            detection.robotPose.getPosition().z));
             }
         }
 
