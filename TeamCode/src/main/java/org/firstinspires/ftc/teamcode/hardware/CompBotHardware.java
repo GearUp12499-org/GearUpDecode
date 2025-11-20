@@ -36,7 +36,7 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final REmover.RobotPose gatePos = new REmover.RobotPose(0, -55, 0);
 
-    public static final double INTAKE_POWER = 1.0;
+    public static final double INTAKE_POWER = 0.7;
     public static final double FLIPPER_DOWN = 0.515;
     public static final double FLIPPER_UP = 0.900;
 

@@ -301,6 +301,8 @@ abstract class TeleOp2 : LinearOpMode() {
         val enable = enableBtn && !wasEnable
         val cancel = cancelBtn && !wasCancel
         if (enable || cancel) {
+            shooter.stopSoft()
+            scheduler.stopAllWith(indexer.lock)
             intakeTask?.let {
                 if (it.getState() == ITask.State.Ticking) it.stop()
             }

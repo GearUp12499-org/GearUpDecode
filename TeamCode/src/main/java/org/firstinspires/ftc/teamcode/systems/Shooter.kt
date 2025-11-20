@@ -13,6 +13,7 @@ import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
+import org.firstinspires.ftc.teamcode.tasks.stopAllWith
 import kotlin.math.abs
 
 class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, private val indicator2: Servo) : Task<Shooter>() {
@@ -111,9 +112,10 @@ class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, priva
     }.require(lock)
 
     /**
-     * Set the target velocity to 0 (as a task.)
+     * stop it
      */
-    fun stopSoft() = OneShot {
+    fun stopSoft() {
+        scheduler?.stopAllWith(lock)
         setTarget(0.0)
-    }.require(lock)
+    }
 }
