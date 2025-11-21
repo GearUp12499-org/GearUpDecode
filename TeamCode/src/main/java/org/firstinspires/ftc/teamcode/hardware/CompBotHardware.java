@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
@@ -121,6 +122,7 @@ public class CompBotHardware extends HardwareMapper {
     public CompBotHardware(HardwareMap map) {
         super(map);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(1000,3,0,0));
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(COLOR_FRONT_GAIN);
         frontColor2.setGain(COLOR_FRONT_GAIN);
