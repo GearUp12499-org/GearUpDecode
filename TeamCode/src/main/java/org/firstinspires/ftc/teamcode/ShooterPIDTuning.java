@@ -65,6 +65,7 @@ public class ShooterPIDTuning extends LinearOpMode {
 
         telemetry.update();
 
+
         while (opModeIsActive()) {
 
             if (gamepad1.left_bumper){
