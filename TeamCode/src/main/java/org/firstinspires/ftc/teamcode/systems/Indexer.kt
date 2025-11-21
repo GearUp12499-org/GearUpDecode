@@ -301,6 +301,7 @@ class Indexer(
         }
 
         fun tickRunToPos(instant: Position, error: Int) {
+            indexerMotor.power = OPERATING_POWER
             if (error < NEARBY) {
                 isInRunPos = false
                 beforeRunSensors()
