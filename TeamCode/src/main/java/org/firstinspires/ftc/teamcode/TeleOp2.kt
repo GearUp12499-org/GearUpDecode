@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
-import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
@@ -16,6 +15,7 @@ import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_CLOSE_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -154,24 +154,12 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
 
     // Inputs
 
-    var wasA = false
-    var wasB = false
+    var wasA2 = false
+    var wasB2 = false
     var wasY = false
     var wasX = false
+    var wasA = false
     var wasY2 = false
-
-    private fun dispColor(label: String, sensor: RevColorSensorV3) {
-        val norm = sensor.normalizedColors
-        telemetry.addData(
-            label, "%.2fmm rgb %.2f %.2f %.2f a %.2f".format(
-                sensor.getDistance(DistanceUnit.MM),
-                norm.red,
-                norm.green,
-                norm.blue,
-                norm.alpha,
-            )
-        )
-    }
 
     private fun getNextOut(pos: Indexer.Position) = when (pos) {
         Out1 -> Out2
@@ -201,28 +189,17 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         resetOrientation()
         rehome()
 
-//        dispColor("fc1", hardware.frontColor1)
-//        dispColor("fc2", hardware.frontColor2)
-//        dispColor("bc1", hardware.backColor1)
-//        dispColor("bc2", hardware.backColor2)
-//
-//        telemetry.addData("idx1", hardware.idxMag1.state)
-//        telemetry.addData("idx2", hardware.idxMag2.state)
-//        telemetry.addData("idx3", hardware.idxMag3.state)
-//        telemetry.addData("idx4", hardware.idxMag4.state)
-        telemetry.addData("slot1", indexer.slots[0])
-        telemetry.addData("slot2", indexer.slots[1])
-        telemetry.addData("slot3", indexer.slots[2])
-//        telemetry.addData("ipos", indexer.lastPosition)
-//        telemetry.addData("ipos", hardware.indexer.currentPosition)
+        telemetry.addData("Slot 1", indexer.slots[0])
+        telemetry.addData("Slot 2", indexer.slots[1])
+        telemetry.addData("Slot 3", indexer.slots[2])
 
-        val a = gamepad2.a
-        val b = gamepad2.b
-        if (a && !wasA) {
+        val a2 = gamepad2.a
+        val b2 = gamepad2.b
+        if (a2 && !wasA2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(indexer.goToPosition(getNextOut(indexer.lastPosition)))
         }
-        if (b && !wasB) {
+        if (b2 && !wasB2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(indexer.goToPosition(getNextIn(indexer.lastPosition)))
         }
@@ -249,14 +226,26 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             }).then(shootThree(SHOOT_CLOSE_RANGE, shooter, indexer))
         }
 
+        val a = gamepad1.a
+        if (a && !wasA2) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(REmover.drive2Pose(hardware, poseSet.farShoot))
+                add(OneShot {
+                    shooter.setTarget(SHOOT_FAR_RANGE)
+                })
+            }).then(shootThree(SHOOT_FAR_RANGE, shooter, indexer))
+        }
+
         val y2 = gamepad2.y
         if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(shootThree(SHOOT_MID_RANGE, shooter, indexer))
         }
 
+        wasA2 = a2
         wasA = a
-        wasB = b
+        wasB2 = b2
         wasY = y
     }
 
