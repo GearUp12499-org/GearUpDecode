@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
+import org.firstinspires.ftc.teamcode.mock.InlineTelemetry
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
 import org.firstinspires.ftc.teamcode.systems.REmover
@@ -31,6 +32,9 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             AprilTag.Obelisk.PPG to Indexer.Position.Out1,
         )
     }
+
+    @Suppress("PROPERTY_HIDES_JAVA_FIELD")
+    private val telemetry = InlineTelemetry(super.telemetry)
 
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
