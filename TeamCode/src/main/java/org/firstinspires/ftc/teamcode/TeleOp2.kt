@@ -107,7 +107,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             flipper.position = CompBotHardware.FLIPPER_DOWN
         }
 
-        startFlag.then(indexer.syncPosition())
+        startFlag.then(indexer.syncPosition(true))
 
         // INIT
         while (opModeInInit()) {

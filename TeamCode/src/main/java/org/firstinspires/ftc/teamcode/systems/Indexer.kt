@@ -345,9 +345,16 @@ class Indexer(
         }
     }
 
-    fun syncPosition() = object : Anonymous() {
+    @JvmOverloads
+    fun syncPosition(uninterruptible: Boolean = false) = object : Anonymous() {
         private val timer = ElapsedTime(ElapsedTime.Resolution.SECONDS)
         private var lastPos = Position.None
+
+        private val tags = if (uninterruptible) setOf("nointerrupt") else setOf()
+
+        override fun getTags(): Set<String> {
+            return tags
+        }
 
         override fun onStart() {
             indexerMotor.mode = RunMode.RUN_USING_ENCODER
