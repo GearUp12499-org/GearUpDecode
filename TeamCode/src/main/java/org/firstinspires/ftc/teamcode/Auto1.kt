@@ -132,17 +132,10 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
         firstSet.then(VirtualGroup {
             add(REmover.drive2Pose(hardware, poseSet.set1pos))
                 .then(REmover.drive2Pose(hardware, poseSet.set1out, maxSpeed = 0.1))
-            val intake = add(indexer.intake())
-        }).then(OneShot {
-            hardware.frontLeft.power = 0.0
-            hardware.frontRight.power = 0.0
-            hardware.backLeft.power = 0.0
-            hardware.backRight.power = 0.0
-        }).then(VirtualGroup {
-            add(REmover.drive2Pose(hardware, poseSet.midShoot))
-            add(indexer.goToPosition {
-                aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
-            })
+                .then(REmover.drive2Pose(hardware, poseSet.midShoot))
+            val intake = add(indexer.intake(8.0))
+        }).then(indexer.goToPosition {
+            aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
         }).then(
             shootThree(
                 SHOOT_MID_RANGE,

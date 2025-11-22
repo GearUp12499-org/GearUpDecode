@@ -390,7 +390,10 @@ class Indexer(
         }
     }
 
-    fun intake() = object : Anonymous() {
+    @JvmOverloads
+    fun intake(timeout: Double = -1.0) = object : Anonymous() {
+        private val hasTimeout = timeout > 0
+
         init {
             require(Locks.INTAKE)
         }
@@ -401,13 +404,16 @@ class Indexer(
         private var slotTimer = false
         private val timer = ElapsedTime()
         private val timer2 = ElapsedTime()
+        private val timerTotal = ElapsedTime()
 
         override fun onStart() {
             if (slots.all { it != Slot.EMPTY }) finish()
-            intakeMotor.power = CompBotHardware.INTAKE_POWER
+            intakeMotor.power = INTAKE_POWER
+            timerTotal.reset()
         }
 
         override fun onTick(): Boolean {
+            if (hasTimeout && timerTotal.time() > timeout) return true
             if (slots.all { it != Slot.EMPTY }) {
                 if (!done) {
                     timer.reset()
