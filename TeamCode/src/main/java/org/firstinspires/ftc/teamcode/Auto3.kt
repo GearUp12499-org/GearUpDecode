@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.OneShot
@@ -22,6 +23,8 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 
 abstract class Auto3(isRed: Boolean) : LinearOpMode() {
+    val timeToWait = 21.0 // seconds
+
     companion object {
         val obeliskToIndexer = mapOf(
             AprilTag.Obelisk.GPP to Indexer.Position.Out3,
@@ -40,6 +43,8 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
     private lateinit var hardware: CompBotHardware
 
     override fun runOpMode() {
+        val timer = ElapsedTime()
+        var stopAt: Double? = null
         TaskSharkAndroid.setup()
         hardware = CompBotHardware(hardwareMap)
         scheduler = FastScheduler()
@@ -93,24 +98,26 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
 
 //        val knowObelisk = startFlag.then(aprilTag.readObelisk(1.0))
         val indexerReady = startFlag.then(indexer.syncPosition())
-        startFlag.then(shooter.setTargetAndWait(SHOOT_CLOSE_RANGE))
+        startFlag.then(WaitUntil { timer.time() > timeToWait - 6.0 })
+            .then(shooter.setTargetAndWait(SHOOT_CLOSE_RANGE))
 
         startFlag.then(VirtualGroup {
-                add(REmover.drive2Pose(hardware, poseSet.closeShoot))
-                val idxMove = add(
-                    indexer.goToPosition {
-                        aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
-                    })
-                add(OneShot {
-                    Log.i("April Tag read", aprilTag.obelisk.toString())
-                    Log.i(
-                        "April Tag read",
-                        (aprilTag.obelisk?.let { obeliskToIndexer[it] }
-                            ?: Indexer.Position.Out1).toString()
-                    )
+            add(REmover.drive2Pose(hardware, poseSet.closeShoot))
+            val idxMove = add(
+                indexer.goToPosition {
+                    aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
                 })
-                indexerReady.then(idxMove)
+            add(OneShot {
+                Log.i("April Tag read", aprilTag.obelisk.toString())
+                Log.i(
+                    "April Tag read",
+                    (aprilTag.obelisk?.let { obeliskToIndexer[it] }
+                        ?: Indexer.Position.Out1).toString()
+                )
             })
+            indexerReady.then(idxMove)
+        })
+            .then(WaitUntil { timer.time() >= timeToWait })
             .then(
                 shootThree(
                     SHOOT_CLOSE_RANGE,
@@ -118,7 +125,9 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
                     indexer,
                     { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
                 )
-            )
+            ).then(OneShot {
+                stopAt = timer.time()
+            })
 
         // INIT
         while (opModeInInit()) {
@@ -132,6 +141,8 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
             telemetry.update()
         }
 
+        timer.reset()
+
         // TRANSITION TO START
         startFlag.finish()
         scheduler.tick()
@@ -142,6 +153,15 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
             scheduler.tick()
             telemetry.update()
         }
+
+        val time = stopAt ?: timer.time()
+        val minutes = (time / 60.0).toInt()
+        val seconds = time % 60.0
+        Log.i("Timing", buildString {
+            append("======== TIMING REPORT ========\n")
+            append("OpMode timer %dm%.2fs\n".format(minutes, seconds))
+            append("======== END TIMING REPORT ========")
+        })
 
         Lifetime.bump()
     }
