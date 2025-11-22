@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode
 
 import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.ElapsedTime.Resolution
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.OneShot
@@ -12,6 +14,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Indexer
@@ -28,6 +31,11 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             AprilTag.Obelisk.PGP to Indexer.Position.Out2,
             AprilTag.Obelisk.PPG to Indexer.Position.Out1,
         )
+        val obeliskToIndexer2 = mapOf(
+            AprilTag.Obelisk.GPP to Indexer.Position.Out1,
+            AprilTag.Obelisk.PGP to Indexer.Position.Out3,
+            AprilTag.Obelisk.PPG to Indexer.Position.Out2,
+        )
     }
     
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
@@ -40,6 +48,8 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
     private lateinit var hardware: CompBotHardware
 
     override fun runOpMode() {
+        val timer = ElapsedTime(Resolution.SECONDS)
+        var stopAt: Double? = null
         TaskSharkAndroid.setup()
         hardware = CompBotHardware(hardwareMap)
         scheduler = FastScheduler()
@@ -117,10 +127,30 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
                     SHOOT_FAR_RANGE,
                     shooter,
                     indexer,
-                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
+                    false
                 )
             )
-            .then(REmover.drive2Pose(hardware, poseSet.set3pos))
+            .then(VirtualGroup {
+                add(REmover.drive2Pose(hardware, poseSet.set3pos))
+                    .then(REmover.drive2Pose(hardware, poseSet.set3out, maxSpeed = 0.1))
+                    .then(REmover.drive2Pose(hardware, poseSet.farShoot))
+                val intake = add(indexer.intake(8.0))
+            }).then(indexer.goToPosition {
+                aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1
+            }).then(
+                shootThree(
+                    SHOOT_FAR_RANGE,
+                    shooter,
+                    indexer,
+                    { aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1 },
+                    true
+                )
+            ).then(
+                REmover.drive2Pose(hardware, poseSet.set2pos)
+            ).then(OneShot {
+                stopAt = timer.time()
+            })
 
         // INIT
         while (opModeInInit()) {
@@ -134,6 +164,8 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             telemetry.update()
         }
 
+        timer.reset()
+
         // TRANSITION TO START
         startFlag.finish()
         scheduler.tick()
@@ -144,6 +176,15 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             scheduler.tick()
             telemetry.update()
         }
+
+        val time = stopAt ?: timer.time()
+        val minutes = (time / 60.0).toInt()
+        val seconds = time % 60.0
+        Log.i("Timing", buildString {
+            append("======== TIMING REPORT ========\n")
+            append("OpMode timer %dm%.2fs\n".format(minutes, seconds))
+            append("======== END TIMING REPORT ========")
+        })
 
         Lifetime.bump()
     }

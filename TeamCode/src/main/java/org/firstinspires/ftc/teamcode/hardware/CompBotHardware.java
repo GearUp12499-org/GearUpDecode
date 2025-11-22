@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -122,6 +124,7 @@ public class CompBotHardware extends HardwareMapper {
     public CompBotHardware(HardwareMap map) {
         super(map);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        Log.i("Hardware", shooter1.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
 //        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(1000,3,0,0));
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(COLOR_FRONT_GAIN);
