@@ -120,7 +120,7 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
                     { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
                 )
             )
-            .then(REmover.drive2Pose(hardware, poseSet.set2pos))
+            .then(REmover.drive2Pose(hardware, poseSet.set3pos))
 
         // INIT
         while (opModeInInit()) {

@@ -59,8 +59,13 @@ object REmover {
     }
 
     @JvmStatic
-    fun drive2Pose(hardware: CompBotHardware, xya: RobotPose): Task<*> {
-        val (tgtx, tgty, tgta) = xya
+    @JvmOverloads
+    fun drive2Pose(
+        hardware: CompBotHardware,
+        pose: RobotPose,
+        maxSpeed: Double = 1.0
+    ): Task<*> {
+        val (tgtx, tgty, tgta) = pose
 
         return object : Task.Anonymous() {
             init {
@@ -136,7 +141,7 @@ object REmover {
                 var scale = max(
                     max(abs(dfl), abs(dbl)),
                     max(abs(dfr), abs(dbr))
-                )
+                ) / maxSpeed
 
                 if (scale < 0.01) {
                     scale = 0.01

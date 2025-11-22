@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode
 
 import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.ElapsedTime.Resolution
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.OneShot
@@ -11,7 +13,6 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_EXPOSURE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.GSC_GAIN
-import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.systems.AprilTag
@@ -41,10 +42,13 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
     private lateinit var hardware: CompBotHardware
 
     override fun runOpMode() {
+        val timer = ElapsedTime(Resolution.SECONDS)
         TaskSharkAndroid.setup()
         hardware = CompBotHardware(hardwareMap)
         scheduler = FastScheduler()
         startFlag = scheduler.add(SentinelTask())
+
+        var stopAt: Double? = null
 
         with(hardware) {
             pinpoint.position = poseSet.farStart.asPose2D
@@ -94,7 +98,9 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
 
         val knowObelisk = startFlag.then(aprilTag.readObelisk(1.0))
         val indexerReady = startFlag.then(indexer.syncPosition())
-        startFlag.then(shooter.setTargetAndWait(SHOOT_MID_RANGE))
+        startFlag.then(OneShot {
+            shooter.setTarget(SHOOT_MID_RANGE)
+        })
 
         val firstSet = knowObelisk
             .then(VirtualGroup {
@@ -125,12 +131,7 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
 
         firstSet.then(VirtualGroup {
             add(REmover.drive2Pose(hardware, poseSet.set1pos))
-                .then(OneShot {
-                    hardware.frontLeft.power = 0.2
-                    hardware.frontRight.power = 0.2
-                    hardware.backLeft.power = 0.2
-                    hardware.backRight.power = 0.2
-                })
+                .then(REmover.drive2Pose(hardware, poseSet.set1out, maxSpeed = 0.1))
             val intake = add(indexer.intake())
         }).then(OneShot {
             hardware.frontLeft.power = 0.0
@@ -150,7 +151,11 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
                 { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
                 true
             )
-        )
+        ).then(
+            REmover.drive2Pose(hardware, poseSet.set2pos)
+        ).then(OneShot {
+            stopAt = timer.time()
+        })
 
         // INIT
         while (opModeInInit()) {
@@ -164,6 +169,8 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             telemetry.update()
         }
 
+        timer.reset()
+
         // TRANSITION TO START
         startFlag.finish()
         scheduler.tick()
@@ -174,6 +181,15 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             scheduler.tick()
             telemetry.update()
         }
+
+        val time = stopAt ?: timer.time()
+        val minutes = (time / 60.0).toInt()
+        val seconds = time % 60.0
+        Log.i("Timing", buildString {
+            append("======== TIMING REPORT ========\n")
+            append("OpMode timer %dm%.2fs\n".format(minutes, seconds))
+            append("======== END TIMING REPORT ========")
+        })
 
         Lifetime.bump()
     }

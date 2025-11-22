@@ -83,6 +83,11 @@ class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, priva
         private val targetDuration = (minimumDuration * 1e9).toLong()
         private var lastMetAt = 0L
 
+        override fun onStart() {
+            val now = System.nanoTime()
+            lastMetAt = now
+        }
+
         override fun onTick(): Boolean {
             val now = System.nanoTime()
             val delta = currentVelocity - targetVelocity
