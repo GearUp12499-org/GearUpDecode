@@ -26,7 +26,7 @@ public class CompBotHardware extends HardwareMapper {
     public static final double SHOOT_FAR_RANGE = 1460.0;
 
     public static final long GSC_EXPOSURE = 0;
-    public static final int GSC_GAIN = 50;
+    public static final int GSC_GAIN = 100;
 
     public static final float COLOR_FRONT_GAIN = 15.0f;
 
