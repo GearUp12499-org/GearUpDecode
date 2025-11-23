@@ -11,11 +11,12 @@ class PoseSet private constructor(val invert: Boolean) {
         ) else this
 
     companion object {
-        private val farStart: RobotPose = RobotPose(-63.0, -16.0, Math.PI)
+        private val farStart: RobotPose = RobotPose(-63.0,
+            -16.0, Math.PI)
         private val goalStart: RobotPose = RobotPose(54.33, -51.34, 2.19)
         private val readAT: RobotPose = RobotPose(46.92, -11.92, -2.55)
         private val closeShoot: RobotPose = RobotPose(60.0, -10.48, 0.55 * Math.PI)
-        private val midShoot: RobotPose = RobotPose(12.5, -12.5, 3 * Math.PI / 4)
+        private val midShoot: RobotPose = RobotPose(12.5, -14.0, 3 * Math.PI / 4)
         private val farShoot: RobotPose = RobotPose(-55.0, -12.39, 2.76)
         private val set1pos: RobotPose = RobotPose(12.0, -30.375, -Math.PI / 2)
         private val set1out: RobotPose = RobotPose(12.0, -55.625, -Math.PI / 2)
