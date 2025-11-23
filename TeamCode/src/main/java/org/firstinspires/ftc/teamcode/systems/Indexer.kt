@@ -23,7 +23,6 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 import kotlin.math.sign
-import kotlin.time.Duration.Companion.seconds
 
 class Indexer(
     private val indexerMotor: DcMotorEx,
@@ -191,17 +190,16 @@ class Indexer(
         slots[lastPosition.slot] = Slot.EMPTY
     }
 
-    fun shoot() = object : Wait(0.25.seconds) {
-        override fun onStart() {
-            super.onStart()
+    fun shoot() = VirtualGroup {
+        add(OneShot {
             flipper.position = CompBotHardware.FLIPPER_UP
-        }
-
-        override fun onFinish(completedNormally: Boolean) {
-            super.onFinish(completedNormally)
-            flipper.position = CompBotHardware.FLIPPER_DOWN
-            deleteCurrent()
-        }
+        })
+            .then(Wait.s(0.25))
+            .then(OneShot {
+                flipper.position = CompBotHardware.FLIPPER_DOWN
+                deleteCurrent()
+            })
+            .then(Wait.s(0.15))
     }
 
     override fun onFinish(completedNormally: Boolean) {
@@ -433,7 +431,8 @@ class Indexer(
             }
             val slot = slots.indexOfFirst { it == Slot.EMPTY }
             val slotPos = slotIdxToPosition[slot]!!
-            val isTaskFree = (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)
+            val isTaskFree =
+                (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)
             indicator1.position = if (isTaskFree) 0.5 else 0.8
             indicator2.position = if (isTaskFree) 0.5 else 0.8
             if (slot != slotN) {
