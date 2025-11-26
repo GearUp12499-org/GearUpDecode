@@ -475,13 +475,15 @@ public class CompBotTeleOp extends LinearOpMode {
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
             double W = R * deltaA;
 
+            double deltaTime = currenTime - prevTime;
+
             double vF = Math.cos(currentTheta) * xVelocity + Math.sin(currentTheta) * yVelocity; //velocity in the F direction
             double vS = Math.sin(currentTheta) * xVelocity - Math.cos(currentTheta) * yVelocity; //velocity in the S direction
             double vW = R * angVelocity;
 
-            sumF += F; //the errors for the i term
-            sumS += S;
-            sumW += W;
+            sumF += F*deltaTime; //the errors for the i term
+            sumS += S*deltaTime;
+            sumW += W*deltaTime;
 
             double PF = Fkp*F + Fki*sumF - Fkd*vF; //using velocity instead of (currentF-prevF)/deltaT because loop times varied a lot when we were recording them. idk if it'll make any difference
             double PS = Skp*S + Ski*sumS - Skd*vS;
