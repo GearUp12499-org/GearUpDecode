@@ -80,7 +80,10 @@ public class CompBotTeleOp extends LinearOpMode {
 
 
             if (gamepad1.x){
-                drive2Pose2(PoseSet.RED.farShoot);
+                drive2Pose2(new REmover.RobotPose(-15,-16,-Math.PI));
+            }
+            if (gamepad1.y) {
+                drive2Pose2(new REmover.RobotPose(0,0,0));
             }
 //            if (gamepad1.x) {
 //                drive2Pose(new REmover.RobotPose(0, -2, 0));
@@ -88,11 +91,11 @@ public class CompBotTeleOp extends LinearOpMode {
 //                drive2Pose(new REmover.RobotPose(4, -2, 0));
 //            }
 
-            if (gamepad1.y) {
-                hardware.intake.setPower(1);
-            } else {
-                hardware.intake.setPower(0);
-            }
+//            if (gamepad1.y) {
+//                hardware.intake.setPower(1);
+//            } else {
+//                hardware.intake.setPower(0);
+//            }
 
             if (gamepad1.a) {
                 drive2Pose(PoseSet.RED.midShoot);
@@ -414,11 +417,11 @@ public class CompBotTeleOp extends LinearOpMode {
 
         double Fkp = 0.2;
         double Fkd = 0.04;
-        double Fki = 0;
+        double Fki = 0.00001;
 
         double Skp = 0.2;
         double Skd = 0.04;
-        double Ski = 0;
+        double Ski = 0.00001;
 
         double Wkp = 0.5;
         double Wkd = 0.025;
@@ -487,13 +490,13 @@ public class CompBotTeleOp extends LinearOpMode {
             double vS = Math.sin(currentTheta) * xVelocity - Math.cos(currentTheta) * yVelocity; //velocity in the S direction
             double vW = R * angVelocity;
 
-            if (F > 6) {
+            if (F > 1) {
                 sumF = 0;
             } else {
                 sumF += F*deltaTime;
             }
 
-            if (S > 6) {
+            if (S > 1) {
                 sumS = 0;
             } else {
                 sumS += S*deltaTime;
@@ -533,6 +536,11 @@ public class CompBotTeleOp extends LinearOpMode {
                 PFR /= scale;
                 PBR /= scale;
             }
+
+//            PFL = speed2Power(PFL);
+//            PBL = speed2Power(PBL);
+//            PFR = speed2Power(PFR);
+//            PBR = speed2Power(PBR);
 
 
             hardware.frontLeft.setPower(PFL);
