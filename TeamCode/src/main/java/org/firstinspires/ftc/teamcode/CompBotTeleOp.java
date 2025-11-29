@@ -12,12 +12,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
 import org.firstinspires.ftc.teamcode.hardware.FileUtil;
+import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.systems.REmover;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.Buffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -76,11 +78,15 @@ public class CompBotTeleOp extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            if (gamepad1.x) {
-                drive2Pose(new REmover.RobotPose(0, -2, 0));
-                sleep(100);
-                drive2Pose(new REmover.RobotPose(4, -2, 0));
+
+            if (gamepad1.x){
+                drive2Pose2(PoseSet.RED.farShoot);
             }
+//            if (gamepad1.x) {
+//                drive2Pose(new REmover.RobotPose(0, -2, 0));
+//                sleep(100);
+//                drive2Pose(new REmover.RobotPose(4, -2, 0));
+//            }
 
             if (gamepad1.y) {
                 hardware.intake.setPower(1);
@@ -378,24 +384,24 @@ public class CompBotTeleOp extends LinearOpMode {
 
 
     public void drive2Pose2(REmover.RobotPose xya) {
-        ArrayList<Long> Time = new ArrayList<>();
-        ArrayList<Double> VelocityX = new ArrayList<>();
-        ArrayList<Double> VelocityY = new ArrayList<>();
-
-        ArrayList<Double> FLspeed = new ArrayList<>();
-        ArrayList<Double> BLspeed = new ArrayList<>();
-        ArrayList<Double> FRspeed = new ArrayList<>();
-        ArrayList<Double> BRspeed = new ArrayList<>();
-
-        ArrayList<Double> FLpower = new ArrayList<>();
-        ArrayList<Double> BLpower = new ArrayList<>();
-        ArrayList<Double> FRpower = new ArrayList<>();
-        ArrayList<Double> BRpower = new ArrayList<>();
-
-        ArrayList<Double> LoopTime = new ArrayList<>();
-        ArrayList<Double> deltaX = new ArrayList<>();
-        ArrayList<Double> deltaY = new ArrayList<>();
-        ArrayList<Double> Angle = new ArrayList<>();
+//        ArrayList<Long> Time = new ArrayList<>();
+//        ArrayList<Double> VelocityX = new ArrayList<>();
+//        ArrayList<Double> VelocityY = new ArrayList<>();
+//
+//        ArrayList<Double> FLspeed = new ArrayList<>();
+//        ArrayList<Double> BLspeed = new ArrayList<>();
+//        ArrayList<Double> FRspeed = new ArrayList<>();
+//        ArrayList<Double> BRspeed = new ArrayList<>();
+//
+//        ArrayList<Double> FLpower = new ArrayList<>();
+//        ArrayList<Double> BLpower = new ArrayList<>();
+//        ArrayList<Double> FRpower = new ArrayList<>();
+//        ArrayList<Double> BRpower = new ArrayList<>();
+//
+//        ArrayList<Double> LoopTime = new ArrayList<>();
+//        ArrayList<Double> deltaX = new ArrayList<>();
+//        ArrayList<Double> deltaY = new ArrayList<>();
+//        ArrayList<Double> Angle = new ArrayList<>();
 //        hardware.PinPoint.setOffsets(3.4,1, DistanceUnit.INCH);
 //        hardware.PinPoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 //        hardware.PinPoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
@@ -406,16 +412,16 @@ public class CompBotTeleOp extends LinearOpMode {
 
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-        double Fkp = 0;
-        double Fkd = 0;
+        double Fkp = 0.2;
+        double Fkd = 0.04;
         double Fki = 0;
 
-        double Skp = 0;
-        double Skd = 0;
+        double Skp = 0.2;
+        double Skd = 0.04;
         double Ski = 0;
 
-        double Wkp = 0;
-        double Wkd = 0;
+        double Wkp = 0.5;
+        double Wkd = 0.025;
         double Wki = 0;
 
         // milliseconds
@@ -461,8 +467,8 @@ public class CompBotTeleOp extends LinearOpMode {
             } else if (deltaA < -Math.PI) {
                 deltaA += 2* Math.PI;
             }
-
-            if ((Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 24 && speed < 10) || Timeout > 1) {
+//if x pos, y pos, and angle are close enough, and if x vel, y vel, and angle vel are slow enough, or when you time out (stuck for too long), exit the loop
+            if ((Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 48 && speed < 10) && Math.abs(angVelocity) < Math.PI/4|| Timeout > 1) {
                 hardware.frontLeft.setPower(0);
                 hardware.backLeft.setPower(0);
                 hardware.frontRight.setPower(0);
@@ -470,7 +476,7 @@ public class CompBotTeleOp extends LinearOpMode {
                 break;
             }
 
-            double R = 9.375;
+            double R = 7.66;
             double F = Math.cos(currentTheta) * deltax + Math.sin(currentTheta) * deltay;
             double S = Math.sin(currentTheta) * deltax - Math.cos(currentTheta) * deltay;
             double W = R * deltaA;
@@ -481,9 +487,23 @@ public class CompBotTeleOp extends LinearOpMode {
             double vS = Math.sin(currentTheta) * xVelocity - Math.cos(currentTheta) * yVelocity; //velocity in the S direction
             double vW = R * angVelocity;
 
-            sumF += F*deltaTime; //the errors for the i term
-            sumS += S*deltaTime;
-            sumW += W*deltaTime;
+            if (F > 6) {
+                sumF = 0;
+            } else {
+                sumF += F*deltaTime;
+            }
+
+            if (S > 6) {
+                sumS = 0;
+            } else {
+                sumS += S*deltaTime;
+            }
+
+            if (W < 3) {
+                sumW = 0;
+            } else {
+                sumW += W*deltaTime;
+            }
 
             double PF = Fkp*F + Fki*sumF - Fkd*vF; //using velocity instead of (currentF-prevF)/deltaT because loop times varied a lot when we were recording them. idk if it'll make any difference
             double PS = Skp*S + Ski*sumS - Skd*vS;
@@ -512,9 +532,6 @@ public class CompBotTeleOp extends LinearOpMode {
                 PBL /= scale;
                 PFR /= scale;
                 PBR /= scale;
-                sumF = 0; //if you're so far that you need to scale the powers down, don't start adding up errors for i
-                sumS = 0;
-                sumW = 0;
             }
 
 
@@ -523,23 +540,23 @@ public class CompBotTeleOp extends LinearOpMode {
             hardware.frontRight.setPower(PFR);
             hardware.backRight.setPower(PBR);
 
-            Time.add(System.nanoTime());
-            VelocityY.add(yVelocity);
-            VelocityX.add(xVelocity);
-            FLspeed.add(PFL);
-            FRspeed.add(PFR);
-            BLspeed.add(PBL);
-            BRspeed.add(PBR);
-
-            FLpower.add(PFL);
-            FRpower.add(PFR);
-            BLpower.add(PBL);
-            BRpower.add(PBR);
-
-            LoopTime.add(currenTime - prevTime);
-            deltaX.add(currentx);
-            deltaY.add(currenty);
-            Angle.add(currentTheta);
+//            Time.add(System.nanoTime());
+//            VelocityY.add(yVelocity);
+//            VelocityX.add(xVelocity);
+//            FLspeed.add(PFL);
+//            FRspeed.add(PFR);
+//            BLspeed.add(PBL);
+//            BRspeed.add(PBR);
+//
+//            FLpower.add(PFL);
+//            FRpower.add(PFR);
+//            BLpower.add(PBL);
+//            BRpower.add(PBR);
+//
+//            LoopTime.add(currenTime - prevTime);
+//            deltaX.add(currentx);
+//            deltaY.add(currenty);
+//            Angle.add(currentTheta);
 
             telemetry.addData("pinpointa", currentTheta);
             telemetry.addData("pinpointx", currentx);
@@ -557,38 +574,38 @@ public class CompBotTeleOp extends LinearOpMode {
             prevTime = currenTime;
         }
 
-        File f = FileUtil.getfile();
-        RobotLog.i("Writing file to " + f);
-        try (FileOutputStream fos = new FileOutputStream(f);
-             OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)
-        ) {
-            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR,LoopTime,deltaX,deltaY,Angle\n");
-            for (int i = 0; i < Time.size(); i++) {
-                writer.write(String.format(
-                        Locale.ROOT,
-                        "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-                        Time.get(i),
-                        VelocityX.get(i),
-                        VelocityY.get(i),
-                        FLspeed.get(i),
-                        FRspeed.get(i),
-                        BLspeed.get(i),
-                        BRspeed.get(i),
-                        FLpower.get(i),
-                        FRpower.get(i),
-                        BLpower.get(i),
-                        BRpower.get(i),
-                        LoopTime.get(i),
-                        deltaX.get(i),
-                        deltaY.get(i),
-                        Angle.get(i)
-
-                ));
+//        File f = FileUtil.getfile();
+//        RobotLog.i("Writing file to " + f);
+//        try (FileOutputStream fos = new FileOutputStream(f);
+//             OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)
+//        ) {
+//            writer.write("time,velx,vely,SFL,SFR,SBL,SBR,PFL,PFR,PBL,PBR,LoopTime,deltaX,deltaY,Angle\n");
+//            for (int i = 0; i < Time.size(); i++) {
+//                writer.write(String.format(
+//                        Locale.ROOT,
+//                        "%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+//                        Time.get(i),
+//                        VelocityX.get(i),
+//                        VelocityY.get(i),
+//                        FLspeed.get(i),
+//                        FRspeed.get(i),
+//                        BLspeed.get(i),
+//                        BRspeed.get(i),
+//                        FLpower.get(i),
+//                        FRpower.get(i),
+//                        BLpower.get(i),
+//                        BRpower.get(i),
+//                        LoopTime.get(i),
+//                        deltaX.get(i),
+//                        deltaY.get(i),
+//                        Angle.get(i)
+//
+//                ));
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
 
-}
+
