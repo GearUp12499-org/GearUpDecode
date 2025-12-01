@@ -16,6 +16,8 @@ import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import kotlin.math.PI
+import kotlin.math.absoluteValue
 
 class AprilTag(val gsc: CameraName) {
     enum class Obelisk {
@@ -26,10 +28,10 @@ class AprilTag(val gsc: CameraName) {
 
     companion object {
         val GSC_POSITION: Position = Position(
-            DistanceUnit.INCH, 0.0, 8.314, 7.73, 0
+            DistanceUnit.INCH, -5.15625, -7.34375, 0.0, 0
         )
         val GSC_ORIENTATION: YawPitchRollAngles = YawPitchRollAngles(
-            AngleUnit.DEGREES, 0.0, -90.0, 0.0, 0
+            AngleUnit.DEGREES, 180.0, -90.0, 0.0, 0
         )
         val GSC_RESOLUTION: Size = Size(1600, 1200)
 
@@ -39,8 +41,21 @@ class AprilTag(val gsc: CameraName) {
             23 to Obelisk.PPG
         )
 
+        val GOAL_TAGS = setOf(
+            20, // blue
+            24, // red
+        )
+
+        val BEARING_TOO_BIG = 30 //deg
+
         init {
             systemPackages.add(AprilTag::class.qualifiedName!!)
+        }
+
+        private fun Double.wrapAngle() = when {
+            this > PI -> this - 2 * PI
+            this < -PI -> this + 2 * PI
+            else -> this
         }
     }
 
@@ -121,5 +136,23 @@ class AprilTag(val gsc: CameraName) {
             }
             return false
         }
+    }
+
+    fun readPosition(): REmover.RobotPose? {
+        val detections = aprilTagProcessor?.detections ?: return null
+        val detection = detections.filter {
+            it.id in GOAL_TAGS && it.ftcPose.bearing.absoluteValue < BEARING_TOO_BIG
+        }.minByOrNull {
+            it.ftcPose.range
+        } ?: return null
+
+        val xyz = detection.robotPose.position
+        val pry = detection.robotPose.orientation
+
+        return REmover.RobotPose(
+            x = -xyz.x,
+            y = -xyz.y,
+            a = (pry.getYaw(AngleUnit.RADIANS) - PI / 2).wrapAngle()
+        )
     }
 }
