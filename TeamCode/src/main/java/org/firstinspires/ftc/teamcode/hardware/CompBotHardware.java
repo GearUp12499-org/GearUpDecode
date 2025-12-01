@@ -7,12 +7,15 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.systems.REmover;
+import org.firstinspires.ftc.teamcode.tools.GearUpMath;
 
 import io.github.gearup12499.taskshark.Lock;
 
@@ -135,6 +138,31 @@ public class CompBotHardware extends HardwareMapper {
         pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
+    }
+
+    public void integratePositionData(REmover.RobotPose pose) {
+        Pose2D current = pinpoint.getPosition();
+        Log.i(
+                "gearup",
+                String.format(
+                        "Integrating new pose data.\nPinpoint: %.2f %.2f in %.1f deg\nAprilTag: %.2f %.2f in %.1f deg",
+                        current.getX(DistanceUnit.INCH),
+                        current.getY(DistanceUnit.INCH),
+                        current.getHeading(AngleUnit.DEGREES),
+                        pose.x,
+                        pose.y,
+                        Math.toDegrees(pose.a)
+                )
+        );
+        Pose2D newPose = new Pose2D(
+                DistanceUnit.INCH,
+                (current.getX(DistanceUnit.INCH) + pose.x) / 2.0,
+                (current.getY(DistanceUnit.INCH) + pose.y) / 2.0,
+                AngleUnit.RADIANS,
+                GearUpMath.wrapAngle((current.getHeading(AngleUnit.RADIANS) + pose.a) / 2.0)
+        );
+        // slow!
+        pinpoint.setPosition(newPose);
     }
 
     public static class Locks {

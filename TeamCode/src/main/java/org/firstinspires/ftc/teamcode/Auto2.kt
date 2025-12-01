@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.mock.InlineTelemetry
 import org.firstinspires.ftc.teamcode.systems.AprilTag
+import org.firstinspires.ftc.teamcode.systems.Bundle
 import org.firstinspires.ftc.teamcode.systems.Indexer
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.Shooter
@@ -43,6 +44,7 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
     
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
+    private lateinit var bundle: Bundle
     private lateinit var shooter: Shooter
     private lateinit var indexer: Indexer
     private lateinit var aprilTag: AprilTag
@@ -99,6 +101,14 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             val aprilTagSetup = scheduler.add(aprilTag.setupAprilTag(GSC_EXPOSURE, GSC_GAIN))
             aprilTagSetup.then(startFlag)
         }
+
+        bundle = Bundle(
+            aprilTag = aprilTag,
+            indexer = indexer,
+            shooter = shooter,
+            hw = hardware
+        )
+
         indexer.slots[0] = Indexer.Slot.PURPLE
         indexer.slots[1] = Indexer.Slot.PURPLE
         indexer.slots[2] = Indexer.Slot.GREEN
@@ -128,8 +138,7 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             .then(
                 shootThree(
                     SHOOT_FAR_RANGE,
-                    shooter,
-                    indexer,
+                    bundle,
                     { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
                     false
                 )
@@ -144,10 +153,8 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             }).then(
                 shootThree(
                     SHOOT_FAR_RANGE,
-                    shooter,
-                    indexer,
-                    { aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1 },
-                    true
+                    bundle,
+                    { aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1 }
                 )
             ).then(
                 REmover.drive2Pose(hardware, poseSet.set2pos)

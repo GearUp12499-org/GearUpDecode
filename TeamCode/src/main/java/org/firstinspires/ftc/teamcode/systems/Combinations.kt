@@ -16,26 +16,29 @@ private val next = mapOf(
 )
 
 @JvmOverloads
-fun shootThree(speed: Double, shooter: Shooter, indexer: Indexer, startAt: (() -> Indexer.Position) = { Out1 }, shutDownAtEnd: Boolean = true) = VirtualGroup {
+fun shootThree(speed: Double, b: Bundle, startAt: (() -> Indexer.Position) = { Out1 }, shutDownAtEnd: Boolean = true) = VirtualGroup {
     add(VirtualGroup {
-        add(shooter.setTargetAndWait(speed, 0.35))
-        add(indexer.goToPosition(startAt))
+        add(b.shooter.setTargetAndWait(speed, 0.35))
+        add(b.indexer.goToPosition(startAt))
     })
-        .then(indexer.shoot())
+        .then(OneShot {
+            b.aprilTag.readPosition()?.let(b.hw!!::integratePositionData)
+        })
+        .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(shooter.setTargetAndWait(speed, 0.35))
-            add(indexer.goToPosition { next[startAt()]!! })
+            add(b.shooter.setTargetAndWait(speed, 0.35))
+            add(b.indexer.goToPosition { next[startAt()]!! })
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
-        .then(indexer.shoot())
+        .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(shooter.setTargetAndWait(speed, 0.35))
-            add(indexer.goToPosition { next[next[startAt()]]!! })
+            add(b.shooter.setTargetAndWait(speed, 0.35))
+            add(b.indexer.goToPosition { next[next[startAt()]]!! })
         })
-        .then(indexer.shoot())
+        .then(b.indexer.shoot())
         .then(OneShot {
             if (shutDownAtEnd)
-                shooter.setTarget(0.0)
+                b.shooter.setTarget(0.0)
         })
 }

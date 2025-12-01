@@ -12,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
+import org.firstinspires.ftc.teamcode.tools.wrapAngle
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
@@ -27,36 +28,36 @@ class AprilTag(val gsc: CameraName) {
     }
 
     companion object {
+        @JvmField
         val GSC_POSITION: Position = Position(
             DistanceUnit.INCH, -5.15625, -7.34375, 0.0, 0
         )
+        @JvmField
         val GSC_ORIENTATION: YawPitchRollAngles = YawPitchRollAngles(
             AngleUnit.DEGREES, 180.0, -90.0, 0.0, 0
         )
+        @JvmField
         val GSC_RESOLUTION: Size = Size(1600, 1200)
 
+        @JvmField
         val OBELISK = mapOf(
             21 to Obelisk.GPP,
             22 to Obelisk.PGP,
             23 to Obelisk.PPG
         )
 
+        @JvmField
         val GOAL_TAGS = setOf(
             20, // blue
             24, // red
         )
 
-        val BEARING_TOO_BIG = 30 //deg
+        const val BEARING_TOO_BIG = 30 //deg
 
         init {
             systemPackages.add(AprilTag::class.qualifiedName!!)
         }
 
-        private fun Double.wrapAngle() = when {
-            this > PI -> this - 2 * PI
-            this < -PI -> this + 2 * PI
-            else -> this
-        }
     }
 
     var visionPortal: VisionPortal? = null
