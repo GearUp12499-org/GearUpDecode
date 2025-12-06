@@ -6,6 +6,7 @@ import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import kotlin.math.PI
 import kotlin.math.abs
@@ -42,6 +43,18 @@ object REmover {
     const val KP = 0.2
     const val KD = 43.75
     const val THRESHOLD = 0.2
+
+    const val FKP: Double = 0.2
+    const val FKD: Double = 0.04
+    const val FKI: Double = 0.00001
+
+    const val SKP: Double = 0.2
+    const val SKD: Double = 0.04
+    const val SKI: Double = 0.00001
+
+    const val WKP: Double = 0.5
+    const val WKD: Double = 0.025
+    const val WKI: Double = 0.0
 
     /**
      * Radius of turn, inches
@@ -174,10 +187,157 @@ object REmover {
                 hardware.frontRight.power = pfr
                 hardware.backRight.power = pbr
 
+                prevDeltaAll = deltaAll
+                prevTime = currentTime
+
                 return false
             }
         }
     }
+
+
+    @JvmStatic
+    @JvmOverloads
+    fun drive2Pose2(
+        hardware: CompBotHardware,
+        pose: RobotPose,
+        maxPower: Double = 1.0
+    ): Task<*> {
+        val (tgtx, tgty, tgta) = pose
+
+        return object : Task.Anonymous() {
+            init {
+                require(CompBotHardware.Locks.DRIVE_MOTORS)
+            }
+
+            lateinit var timeout: ElapsedTime
+            lateinit var runtime: ElapsedTime
+            var deltaTime = 0.0
+            var currentTime = 0.0
+            var prevTime = 0.0
+            var prevDeltaAll = 0.0
+
+            var sumF = 0.0;
+            var sumS = 0.0;
+            var sumW = 0.0;
+
+            override fun onStart() {
+                timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)
+                runtime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
+                currentTime = runtime.time()
+                prevTime = runtime.time()
+            }
+
+            override fun onTick(): Boolean {
+                currentTime = runtime.time()
+
+                val timeoutTime = timeout.time()
+
+                hardware.pinpoint.update()
+
+                val yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH)
+                val xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH)
+                val angVelocity = hardware.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
+
+                val speed = hypot(xVelocity, yVelocity)
+
+                val currentPose = hardware.pinpoint.position
+
+                val currentX = currentPose.getX(DistanceUnit.INCH)
+                val currentY = currentPose.getY(DistanceUnit.INCH)
+                val currentTheta = currentPose.getHeading(AngleUnit.RADIANS)
+
+                val deltaX = tgtx - currentX
+                val deltaY = tgty - currentY
+                var deltaA = tgta - currentTheta
+                deltaA %= 2 * PI
+                if (deltaA > PI) {
+                    deltaA -= 2 * PI
+                } else if (deltaA < -PI) {
+                    deltaA += 2 * PI
+                }
+
+                if (abs(deltaX) < 0.5 && abs(deltaY) < 0.5 && abs(deltaA) < Math.PI / 48 && speed < 10 && Math.abs(angVelocity) < Math.PI/4|| timeoutTime > 1) {
+                    hardware.frontLeft.power = 0.0
+                    hardware.frontRight.power = 0.0
+                    hardware.backLeft.power = 0.0
+                    hardware.backRight.power = 0.0
+                    return true
+                }
+
+
+                val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
+                val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
+                val w = R * deltaA
+
+                deltaTime = max(currentTime - prevTime, 0.001)
+
+                val vF = cos(currentTheta) * xVelocity + sin(currentTheta) * yVelocity;
+                val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity;
+                val vW = R * angVelocity
+
+                if (abs(f) > 1) {
+                    sumF = 0.0
+                } else {
+                    sumF += f * deltaTime
+                }
+
+                if (abs(s) > 1) {
+                    sumS = 0.0
+                } else {
+                    sumS += s * deltaTime
+                }
+
+//                if (W < 3) {
+//                    sumW = 0.0
+//                } else {
+//                    sumW += W * deltaTime
+//                }
+
+                val pf: Double = FKP * f + FKI * sumF - FKD * vF
+                val ps: Double = SKP * s + SKI * sumS - SKD * vS
+                val pw: Double = WKP * w + WKI * sumW - WKD * vW
+
+                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+
+                if (abs(deltaAll - prevDeltaAll) > 0.5) {
+                    timeout.reset()
+                }
+
+
+                var pfl = pf + ps - pw
+                var pbl = pf - ps - pw
+                var pfr = pf - ps + pw
+                var pbr = pf + ps + pw
+
+
+                //rescale the four speeds so the largest is +/- 1
+                val greatestPower = max(
+                    max(abs(pfl), abs(pbl)),
+                    max(abs(pfr), abs(pbr))
+                )
+
+                if (greatestPower > maxPower) {
+                    val scale = greatestPower / maxPower
+                    pfl /= scale
+                    pbl /= scale
+                    pfr /= scale
+                    pbr /= scale
+                }
+
+                hardware.frontLeft.power = pfl
+                hardware.backLeft.power = pbl
+                hardware.frontRight.power = pfr
+                hardware.backRight.power = pbr
+
+                prevDeltaAll = deltaAll
+                prevTime = currentTime
+
+                return false
+            }
+        }
+    }
+
 
     init {
         systemPackages.add(REmover::class.qualifiedName!!)

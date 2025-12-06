@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -72,7 +74,7 @@ public class CompBotTeleOp extends LinearOpMode {
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+            double denominator = Math.max(abs(rotY) + abs(rotX) + abs(rx), 1);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
             double backLeftPower = (rotY - rotX + rx) / denominator;
             double frontRightPower = (rotY - rotX - rx) / denominator;
@@ -80,10 +82,10 @@ public class CompBotTeleOp extends LinearOpMode {
 
 
             if (gamepad1.x){
-                drive2Pose2(new REmover.RobotPose(-15,-16,-Math.PI));
+                drive2Pose2(new REmover.RobotPose(-15,-16,-Math.PI), 1);
             }
             if (gamepad1.y) {
-                drive2Pose2(new REmover.RobotPose(0,0,0));
+                drive2Pose2(new REmover.RobotPose(0,0,0), 1);
             }
 //            if (gamepad1.x) {
 //                drive2Pose(new REmover.RobotPose(0, -2, 0));
@@ -223,7 +225,7 @@ public class CompBotTeleOp extends LinearOpMode {
 
             telemetry.addData("delta A", deltaA);
 
-            if (Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 24 && speed < 10 || Timeout > 1) {
+            if (abs(deltax) < 0.5 && abs(deltay) < 0.5 && abs(deltaA) < Math.PI / 24 && speed < 10 || Timeout > 1) {
                 hardware.frontLeft.setPower(0);
                 hardware.backLeft.setPower(0);
                 hardware.frontRight.setPower(0);
@@ -237,7 +239,7 @@ public class CompBotTeleOp extends LinearOpMode {
             double W = R * deltaA;
             double deltaAll = Math.sqrt((F * F) + (S * S) + (W * W));
 
-            if (Math.abs(deltaAll - prevDeltaAll) > 0.5) {
+            if (abs(deltaAll - prevDeltaAll) > 0.5) {
                 timeout.reset();
             }
 
@@ -247,8 +249,8 @@ public class CompBotTeleOp extends LinearOpMode {
             double DBR = F + S + W;
 
             //rescale the four speeds so the largest is +/- 1
-            double tempMax1 = Math.max(Math.abs(DFL), Math.abs(DBL));
-            double tempMax2 = Math.max(Math.abs(DFR), Math.abs(DBR));
+            double tempMax1 = Math.max(abs(DFL), abs(DBL));
+            double tempMax2 = Math.max(abs(DFR), abs(DBR));
             double scale = Math.max(tempMax1, tempMax2);
 
             if (scale < 0.01) {
@@ -268,7 +270,7 @@ public class CompBotTeleOp extends LinearOpMode {
             double pid = kp * deltaAll + kd * (deltaAll - prevDeltaAll) / deltaTime;
 
             //if pid<1, rescale so fastest speed is +/- pid
-            if (Math.abs(pid) < 1) {
+            if (abs(pid) < 1) {
                 DFL *= pid;
                 DBL *= pid;
                 DFR *= pid;
@@ -355,7 +357,7 @@ public class CompBotTeleOp extends LinearOpMode {
     public double speed2Power(double speed) {
         final double threshold = REmover.THRESHOLD;
 
-        if (Math.abs(speed) < 0.001) {
+        if (abs(speed) < 0.001) {
             return 0;
         }
 
@@ -386,7 +388,7 @@ public class CompBotTeleOp extends LinearOpMode {
     }
 
 
-    public void drive2Pose2(REmover.RobotPose xya) {
+    public void drive2Pose2(REmover.RobotPose xya, double maxPower) {
 //        ArrayList<Long> Time = new ArrayList<>();
 //        ArrayList<Double> VelocityX = new ArrayList<>();
 //        ArrayList<Double> VelocityY = new ArrayList<>();
@@ -413,19 +415,23 @@ public class CompBotTeleOp extends LinearOpMode {
 //        hardware.PinPoint.recalibrateIMU();
 //        hardware = new DumbledoreHardware(hardwareMap);
 
+        if (maxPower > 1) {
+            maxPower = 1;
+        }
+
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-        double Fkp = 0.2;
-        double Fkd = 0.04;
-        double Fki = 0.00001;
+        double Fkp = REmover.FKP;
+        double Fkd = REmover.FKD;
+        double Fki = REmover.FKI;
 
-        double Skp = 0.2;
-        double Skd = 0.04;
-        double Ski = 0.00001;
+        double Skp = REmover.SKP;
+        double Skd = REmover.SKD;
+        double Ski = REmover.SKI;
 
-        double Wkp = 0.5;
-        double Wkd = 0.025;
-        double Wki = 0;
+        double Wkp = REmover.WKP;
+        double Wkd = REmover.WKD;
+        double Wki = REmover.WKI;
 
         // milliseconds
         double currenTime = runtime.time();
@@ -471,7 +477,7 @@ public class CompBotTeleOp extends LinearOpMode {
                 deltaA += 2* Math.PI;
             }
 //if x pos, y pos, and angle are close enough, and if x vel, y vel, and angle vel are slow enough, or when you time out (stuck for too long), exit the loop
-            if ((Math.abs(deltax) < 0.5 && Math.abs(deltay) < 0.5 && Math.abs(deltaA) < Math.PI / 48 && speed < 10) && Math.abs(angVelocity) < Math.PI/4|| Timeout > 1) {
+            if ((abs(deltax) < 0.5 && abs(deltay) < 0.5 && abs(deltaA) < Math.PI / 48 && speed < 10) && abs(angVelocity) < Math.PI/4|| Timeout > 1) {
                 hardware.frontLeft.setPower(0);
                 hardware.backLeft.setPower(0);
                 hardware.frontRight.setPower(0);
@@ -490,19 +496,19 @@ public class CompBotTeleOp extends LinearOpMode {
             double vS = Math.sin(currentTheta) * xVelocity - Math.cos(currentTheta) * yVelocity; //velocity in the S direction
             double vW = R * angVelocity;
 
-            if (F > 1) {
+            if (Math.abs(F) > 1) {
                 sumF = 0;
             } else {
                 sumF += F*deltaTime;
             }
 
-            if (S > 1) {
+            if (Math.abs(S) > 1) {
                 sumS = 0;
             } else {
                 sumS += S*deltaTime;
             }
 
-            if (W < 3) {
+            if (Math.abs(W) < 3) {
                 sumW = 0;
             } else {
                 sumW += W*deltaTime;
@@ -514,7 +520,7 @@ public class CompBotTeleOp extends LinearOpMode {
 
             double deltaAll = Math.sqrt((F * F) + (S * S) + (W * W));
 
-            if (Math.abs(deltaAll - prevDeltaAll) > 0.5) {
+            if (abs(deltaAll - prevDeltaAll) > 0.5) {
                 timeout.reset();
             }
 
@@ -525,12 +531,24 @@ public class CompBotTeleOp extends LinearOpMode {
 
             //rescale the four speeds if one is larger than abs(1)
 
-            double tempMax1 = Math.max(Math.abs(PFL), Math.abs(PBL));
-            double tempMax2 = Math.max(Math.abs(PFR), Math.abs(PBR));
-            double scale = Math.max(tempMax1, tempMax2);
+//            double tempMax1 = Math.max(Math.abs(PFL), Math.abs(PBL));
+//            double tempMax2 = Math.max(Math.abs(PFR), Math.abs(PBR));
+//            double scale = Math.max(tempMax1, tempMax2);
+//
+//
+//            if (scale>1) {
+//                PFL /= (scale/maxSpeed);
+//                PBL /= scale;
+//                PFR /= scale;
+//                PBR /= scale;
+//            }
 
+            double tempMax1 = Math.max(abs(PFL), abs(PBL));
+            double tempMax2 = Math.max(abs(PFR), abs(PBR));
+            double greatestPower = Math.max(tempMax1, tempMax2);
 
-            if (scale>1) {
+            if (greatestPower>maxPower) {
+                double scale = greatestPower/maxPower;
                 PFL /= scale;
                 PBL /= scale;
                 PFR /= scale;
