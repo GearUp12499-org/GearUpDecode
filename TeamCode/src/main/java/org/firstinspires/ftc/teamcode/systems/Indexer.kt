@@ -34,8 +34,6 @@ class Indexer(
     private val sensor4: DigitalChannel,
     private val colorFront1: RevColorSensorV3,
     private val colorFront2: RevColorSensorV3,
-    private val colorBack1: RevColorSensorV3,
-    private val colorBack2: RevColorSensorV3,
     private val indicator1: Servo,
     private val indicator2: Servo,
 ) : Task<Indexer>() {

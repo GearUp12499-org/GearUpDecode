@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
@@ -104,12 +103,6 @@ public class CompBotHardware extends HardwareMapper {
     @HardwareName("frontColor2")
     public RevColorSensorV3 frontColor2;
 
-    @HardwareName("backColor1")
-    public RevColorSensorV3 backColor1;
-
-    @HardwareName("backColor2")
-    public RevColorSensorV3 backColor2;
-
     @HardwareName("shooterHood1")
     @GoBildaExtendedServo
     public ServoImplEx shooterHood1;
@@ -129,8 +122,6 @@ public class CompBotHardware extends HardwareMapper {
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(COLOR_FRONT_GAIN);
         frontColor2.setGain(COLOR_FRONT_GAIN);
-        backColor1.setGain(45.0f);
-        backColor2.setGain(45.0f);
 
         pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
