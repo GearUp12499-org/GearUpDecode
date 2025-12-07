@@ -44,12 +44,12 @@ object REmover {
     const val KD = 43.75
     const val THRESHOLD = 0.2
 
-    const val FKP: Double = 0.2
-    const val FKD: Double = 0.04
+    const val FKP: Double = 0.4
+    const val FKD: Double = 0.07
     const val FKI: Double = 0.00001
 
-    const val SKP: Double = 0.2
-    const val SKD: Double = 0.04
+    const val SKP: Double = 0.4
+    const val SKD: Double = 0.07
     const val SKI: Double = 0.00001
 
     const val WKP: Double = 0.5
