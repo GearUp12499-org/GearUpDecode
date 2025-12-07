@@ -146,9 +146,26 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
                 { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
                 true
             )
-        ).then(
-            REmover.drive2Pose2(hardware, poseSet.set2pos)
-        ).then(OneShot {
+        )
+            .then(VirtualGroup {
+                add(REmover.drive2Pose2(hardware, poseSet.set2pos))
+                    .then(REmover.drive2Pose2(hardware, poseSet.set2out, maxPower = 0.3))
+                    .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
+                val intake = add(indexer.intake(8.0))
+            }).then(indexer.goToPosition {
+                aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+            }).then(
+                shootThree(
+                    SHOOT_MID_RANGE,
+                    shooter,
+                    indexer,
+                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
+                    true
+                )
+            ).then(
+                REmover.drive2Pose2(hardware, poseSet.set2pos)
+            )
+            .then(OneShot {
             stopAt = timer.time()
         })
 
