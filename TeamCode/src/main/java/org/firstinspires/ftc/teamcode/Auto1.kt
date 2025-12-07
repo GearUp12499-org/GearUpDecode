@@ -151,7 +151,8 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             shootThree(
                 SHOOT_MID_RANGE,
                 bundle,
-                { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 }
+                { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
+                 false
             )
         )
             .then(VirtualGroup {
@@ -164,8 +165,7 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             }).then(
                 shootThree(
                     SHOOT_MID_RANGE,
-                    shooter,
-                    indexer,
+                    bundle,
                     { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
                     true
                 )
