@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.Exposur
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware;
+import org.firstinspires.ftc.teamcode.systems.AprilTag;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.*;
 
@@ -102,7 +103,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
                 .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
                 .setTagLibrary(AprilTagGameDatabase.getDecodeTagLibrary())
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-                .setCameraPose(cameraPosition, cameraOrientation)
+                .setCameraPose(AprilTag.GSC_POSITION, AprilTag.GSC_ORIENTATION)
                 .build();
 
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -111,7 +112,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
         else
             builder.setCamera(BuiltinCameraDirection.BACK);
 
-        builder.setCameraResolution(new Size(1600, 1200));
+        builder.setCameraResolution(AprilTag.GSC_RESOLUTION);
         builder.addProcessor(aprilTag);
         visionPortal = builder.build();
     }

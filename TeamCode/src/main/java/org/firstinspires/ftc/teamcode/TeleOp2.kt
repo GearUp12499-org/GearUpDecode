@@ -18,6 +18,8 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_CLOSE_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.GoBildaPinpoint2Driver
+import org.firstinspires.ftc.teamcode.systems.AprilTag
+import org.firstinspires.ftc.teamcode.systems.Bundle
 import org.firstinspires.ftc.teamcode.systems.Indexer
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In1
 import org.firstinspires.ftc.teamcode.systems.Indexer.Position.In2
@@ -44,10 +46,12 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
     val negateIfBlue = if (isRed) 1 else -1
     val poseSet = if (isRed) PoseSet.RED else PoseSet.BLUE
 
+    lateinit var bundle: Bundle
     lateinit var hardware: CompBotHardware
     lateinit var scheduler: Scheduler
     lateinit var indexer: Indexer
     lateinit var shooter: Shooter
+    lateinit var aprilTag: AprilTag
     lateinit var startFlag: SentinelTask
 
     private var fieldCentricDrivePOV = 0.0
@@ -101,9 +105,21 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
                     indicator2 = indicator2
                 )
             )
+            this@TeleOp2.aprilTag = AprilTag(gsc)
+
+            scheduler.add(aprilTag.setupAprilTag(
+                CompBotHardware.GSC_EXPOSURE, CompBotHardware.GSC_GAIN
+            )).then(startFlag)
 
             flipper.position = CompBotHardware.FLIPPER_DOWN
         }
+
+        bundle = Bundle(
+            aprilTag = aprilTag,
+            indexer = indexer,
+            shooter = shooter,
+            hw = hardware
+        )
 
         startFlag.then(indexer.syncPosition(true))
 
@@ -190,6 +206,10 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         telemetry.addData("Slot 1", indexer.slots[0])
         telemetry.addData("Slot 2", indexer.slots[1])
         telemetry.addData("Slot 3", indexer.slots[2])
+        telemetry.addData("XYA", hardware.pinpoint.position.let {
+            "%.2f %.2f in %.1f deg".format(it.getX(DistanceUnit.INCH), it.getY(DistanceUnit.INCH), it.getHeading(
+                AngleUnit.DEGREES))
+        })
 
         val a2 = gamepad2.a
         val b2 = gamepad2.b
@@ -207,10 +227,13 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
                 add(REmover.drive2Pose(hardware, poseSet.midShoot))
+                    .then(OneShot {
+                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+                    })
                 add(OneShot {
                     shooter.setTarget(SHOOT_MID_RANGE)
                 })
-            }).then(shootThree(SHOOT_MID_RANGE, shooter, indexer))
+            }).then(shootThree(SHOOT_MID_RANGE, bundle))
         }
 
         val x = gamepad1.x
@@ -221,7 +244,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
                 add(OneShot {
                     shooter.setTarget(SHOOT_CLOSE_RANGE)
                 })
-            }).then(shootThree(SHOOT_CLOSE_RANGE, shooter, indexer))
+            }).then(shootThree(SHOOT_CLOSE_RANGE, bundle))
         }
 
         val a = gamepad1.a
@@ -229,16 +252,19 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
                 add(REmover.drive2Pose(hardware, poseSet.farShoot))
+                    .then(OneShot {
+                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+                    })
                 add(OneShot {
                     shooter.setTarget(SHOOT_FAR_RANGE)
                 })
-            }).then(shootThree(SHOOT_FAR_RANGE, shooter, indexer))
+            }).then(shootThree(SHOOT_FAR_RANGE, bundle))
         }
 
         val y2 = gamepad2.y
         if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(shootThree(SHOOT_MID_RANGE, shooter, indexer))
+            scheduler.add(shootThree(SHOOT_MID_RANGE, bundle))
         }
 
         wasA2 = a2

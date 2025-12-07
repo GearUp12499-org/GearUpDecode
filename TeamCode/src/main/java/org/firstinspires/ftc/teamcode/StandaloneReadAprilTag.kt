@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import android.annotation.SuppressLint
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -11,6 +12,7 @@ import kotlin.math.abs
 
 @TeleOp
 class StandaloneReadAprilTag : LinearOpMode() {
+    @SuppressLint("DefaultLocale")
     override fun runOpMode() {
         val hw = CompBotHardware(hardwareMap)
         val aprilTag = AprilTag(hw.gsc)
@@ -27,6 +29,19 @@ class StandaloneReadAprilTag : LinearOpMode() {
         waitForStart()
         while (opModeIsActive()) {
             sch.tick()
+
+            val pose = aprilTag.readPosition()
+            if (pose == null) {
+                telemetry.addLine("No pose detected")
+            } else {
+                telemetry.addLine("Pinpoint pose from AprilTag")
+                telemetry.addLine()
+                telemetry.addLine("XY %.2fin %.2fin A %.1fdeg".format(
+                    pose.x,
+                    pose.y,
+                    Math.toDegrees(pose.a)
+                ))
+            }
 
             val detections: MutableList<AprilTagDetection> = aprilTag.aprilTagProcessor!!.detections
             telemetry.addData("# AprilTags Detected", detections.size)
@@ -54,6 +69,14 @@ class StandaloneReadAprilTag : LinearOpMode() {
                             detection.robotPose.position.x,
                             detection.robotPose.position.y,
                             detection.robotPose.position.z
+                        )
+                    )
+                    telemetry.addLine(
+                        String.format(
+                            "PRY %6.1f %6.1f %6.1f (deg)",
+                            detection.robotPose.orientation.getPitch(AngleUnit.DEGREES),
+                            detection.robotPose.orientation.getRoll(AngleUnit.DEGREES),
+                            detection.robotPose.orientation.getYaw(AngleUnit.DEGREES)
                         )
                     )
                 }
