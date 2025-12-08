@@ -33,6 +33,9 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final float COLOR_FRONT_GAIN = 15.0f;
 
+    public static final double HOOD_UP = 1.0;
+    public static final double HOOD_DOWN = 0.7;
+
 
     @HardwareName("frontLeft")
     @Reversed
@@ -126,6 +129,8 @@ public class CompBotHardware extends HardwareMapper {
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(COLOR_FRONT_GAIN);
         frontColor2.setGain(COLOR_FRONT_GAIN);
+
+        shooterHood1.setPosition(HOOD_UP);
 
         pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);

@@ -17,7 +17,7 @@ class ServoSteper : LinearOpMode() {
     }
 
     override fun runOpMode() {
-        val theServo: Servo = fromHardwareCls { flipper }
+        val theServo: Servo = fromHardwareCls { shooterHood1 }
 //        val theServo: Servo = fromName("flipper")
 
         waitForStart()
