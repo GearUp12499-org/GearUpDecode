@@ -32,6 +32,11 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             AprilTag.Obelisk.PGP to Indexer.Position.Out2,
             AprilTag.Obelisk.PPG to Indexer.Position.Out1,
         )
+        val obeliskToIndexer2 = mapOf(
+            AprilTag.Obelisk.GPP to Indexer.Position.Out2,
+            AprilTag.Obelisk.PGP to Indexer.Position.Out1,
+            AprilTag.Obelisk.PPG to Indexer.Position.Out3,
+        )
     }
 
     @Suppress("PROPERTY_HIDES_JAVA_FIELD")
@@ -144,37 +149,32 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             add(REmover.drive2Pose2(hardware, poseSet.set1pos))
                 .then(REmover.drive2Pose2(hardware, poseSet.set1out, maxPower = 0.3))
                 .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
-            val intake = add(indexer.intake(8.0))
-        }).then(indexer.goToPosition {
-            aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+            val intake = add(indexer.intake(6.0))
         }).then(
             shootThree(
                 SHOOT_MID_RANGE,
                 bundle,
                 { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
-                 false
+                false
             )
+        ).then(VirtualGroup {
+            add(REmover.drive2Pose2(hardware, poseSet.set2pos))
+                .then(REmover.drive2Pose2(hardware, poseSet.set2out, maxPower = 0.3))
+                .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
+            val intake = add(indexer.intake(6.0))
+        }).then(
+            shootThree(
+                SHOOT_MID_RANGE,
+                bundle,
+                { aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1 },
+                true
+            )
+        ).then(
+            REmover.drive2Pose2(hardware, poseSet.set2pos)
         )
-            .then(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.set2pos))
-                    .then(REmover.drive2Pose2(hardware, poseSet.set2out, maxPower = 0.3))
-                    .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
-                val intake = add(indexer.intake(8.0))
-            }).then(indexer.goToPosition {
-                aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
-            }).then(
-                shootThree(
-                    SHOOT_MID_RANGE,
-                    bundle,
-                    { aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1 },
-                    true
-                )
-            ).then(
-                REmover.drive2Pose2(hardware, poseSet.set2pos)
-            )
             .then(OneShot {
-            stopAt = timer.time()
-        })
+                stopAt = timer.time()
+            })
 
         // INIT
         while (opModeInInit()) {
