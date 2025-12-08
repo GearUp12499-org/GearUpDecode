@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
@@ -125,7 +126,11 @@ public class CompBotHardware extends HardwareMapper {
         super(map);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Log.i("Hardware", shooter1.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
-//        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(1000,3,0,0));
+        /*
+         * these GOATED PID coefficients courtesy of 19075 Clockworks
+         * https://youtu.be/phrrq8zaOAU
+         */
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
         indexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontColor1.setGain(COLOR_FRONT_GAIN);
         frontColor2.setGain(COLOR_FRONT_GAIN);
