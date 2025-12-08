@@ -78,7 +78,7 @@ class Indexer(
 
         const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble()
         const val OPERATING_POWER = 0.7
-        const val SCAN_POWER = 0.3
+        const val SCAN_POWER = 0.2
 
         const val NEARBY = TICKS_PER_POSITION / 4
         const val NOT_NEARBY = TICKS_PER_POSITION / 2

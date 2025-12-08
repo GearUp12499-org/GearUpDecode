@@ -38,8 +38,8 @@ public class AutoTuneCamSettings extends LinearOpMode {
     private int finalGain;
 
     private List<String> detectionSequence = new ArrayList<>();
-
-    private Position cameraPosition = new Position(DistanceUnit.INCH, 0, 8.315, 7.73, 0);
+    private String motifOrder;
+    private Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
     private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
     @Override
@@ -59,10 +59,8 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
         // Run auto-tuning before starting main loop
         autoTuneExposureAndGain();
-        //autoTuneExposureAndGainMultiStage(false);
-        //quickTuneExposureAndGain();
 
-        // Set to chosen values before starting loop
+        // Set to chosen values before starting loop (given through above autoTune method)
         currentExposure = finalExposure;
         currentGain = finalGain;
         if (exposureControl != null) exposureControl.setExposure(currentExposure, TimeUnit.MILLISECONDS);
@@ -87,7 +85,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
             telemetryAprilTag();
             handleCameraControls();
 
-            telemetry.addData("Detection Sequence", detectionSequence.toString());
+            telemetry.addData("Detection Sequence: ", detectionSequence.toString());
             telemetry.update();
             sleep(20);
         }
@@ -143,7 +141,7 @@ public class AutoTuneCamSettings extends LinearOpMode {
         if (gainControl != null) {
             minGain = gainControl.getMinGain();
             maxGain = gainControl.getMaxGain();
-            currentGain = 15;
+            currentGain = 20;
             gainControl.setGain(currentGain);
         }
 
@@ -151,205 +149,11 @@ public class AutoTuneCamSettings extends LinearOpMode {
         telemetry.update();
     }
 
-    private void autoTuneExposureAndGainMultiStage(boolean isBright) {
-        // =====================
-        // CONFIGURABLE VARIABLES
-        // =====================
-        int exposureMin = 0;      // minimum exposure in ms
-        int exposureMax = 6;      // maximum exposure in ms
-        int gainMin = 0;          // minimum gain
-        int gainMax = 60;        // maximum gain
-        int exposureStep = 1;     // coarse sweep step for exposure
-        int gainStep = 20;        // coarse sweep step for gain
-        int fineStep = 5;         // fine tuning step for gain
-        int sleepTime = 120;      // ms to wait for camera to stabilize
-        int defaultExposure = 3;  // fallback exposure
-        int defaultGain = 15;     // fallback gain
-        // =====================
-
-        telemetry.addLine("Camera online — starting multi-stage auto-tune...");
-        telemetry.update();
-
-        // ---------------------
-        // 1. COARSE SWEEP STAGE 1
-        // ---------------------
-        List<int[]> coarseHits = new ArrayList<>();
-        for (int e = exposureMin; e <= exposureMax; e += exposureStep) {
-            for (int g = gainMin; g <= gainMax; g += gainStep) {
-                exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                gainControl.setGain(g);
-                sleep(sleepTime);
-
-                boolean detected = checkAprilTagDetection(detectionSequence, e*1000 + g, "Coarse 1");
-                if (detected) {
-                    coarseHits.add(new int[]{e, g});
-                }
-            }
-        }
-
-        // Choose the "best coarse point" (lowest exposure/gain detected, or fallback)
-        int bestCoarseE, bestCoarseG;
-        if (!coarseHits.isEmpty()) {
-            bestCoarseE = coarseHits.get(0)[0];
-            bestCoarseG = coarseHits.get(0)[1];
-        } else {
-            bestCoarseE = exposureMin;
-            bestCoarseG = gainMin;
-        }
-
-        telemetry.addData("Coarse Stage 1", "Selected E=%d G=%d", bestCoarseE, bestCoarseG);
-        telemetry.update();
-
-        // ---------------------
-        // 2. COARSE SWEEP STAGE 2 (around best coarse point)
-        // ---------------------
-        List<int[]> coarse2Hits = new ArrayList<>();
-        int[] exposureRange = new int[]{Math.max(exposureMin, bestCoarseE-1), bestCoarseE, Math.min(exposureMax, bestCoarseE+1)};
-        int[] gainRange = new int[]{Math.max(gainMin, bestCoarseG-10), bestCoarseG, Math.min(gainMax, bestCoarseG+10)};
-
-        for (int e : exposureRange) {
-            for (int g : gainRange) {
-                exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                gainControl.setGain(g);
-                sleep(sleepTime);
-
-                boolean detected = checkAprilTagDetection(detectionSequence, e*1000 + g, "Coarse2");
-                if (detected) {
-                    coarse2Hits.add(new int[]{e, g});
-                }
-            }
-        }
-
-        // Pick best intermediate point
-        int bestIntermediateE, bestIntermediateG;
-        if (!coarse2Hits.isEmpty()) {
-            bestIntermediateE = coarse2Hits.get(0)[0];
-            bestIntermediateG = coarse2Hits.get(0)[1];
-        } else {
-            bestIntermediateE = bestCoarseE;
-            bestIntermediateG = bestCoarseG;
-        }
-
-        telemetry.addData("Coarse Stage 2", "Selected E=%d G=%d", bestIntermediateE, bestIntermediateG);
-        telemetry.update();
-
-        // ---------------------
-        // 3. FINE TUNING (around best intermediate point)
-        // ---------------------
-        boolean finalDetected = false;
-        int[] fineExposureRange = new int[]{Math.max(exposureMin, bestIntermediateE-1), bestIntermediateE, Math.min(exposureMax, bestIntermediateE+1)};
-        int[] fineGainRange = new int[]{
-                Math.max(gainMin, bestIntermediateG - fineStep),
-                bestIntermediateG,
-                Math.min(gainMax, bestIntermediateG + fineStep)
-        };
-
-        for (int e : fineExposureRange) {
-            for (int g : fineGainRange) {
-                exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-                gainControl.setGain(g);
-                sleep(sleepTime);
-
-                boolean detected = checkAprilTagDetection(detectionSequence, e*1000 + g, "FineTune");
-                if (detected) {
-                    finalExposure = e;
-                    finalGain = g;
-                    finalDetected = true;
-                    break;
-                }
-            }
-            if (finalDetected) break;
-        }
-
-        // ---------------------
-        // 4. FALLBACK DEFAULT
-        // ---------------------
-        if (!finalDetected) {
-            finalExposure = defaultExposure;
-            finalGain = defaultGain;
-        }
-
-        telemetry.addLine("Multi-stage auto-tuning complete");
-        telemetry.addData("Final Exposure", finalExposure);
-        telemetry.addData("Final Gain", finalGain);
-        telemetry.addData("Detection Sequence", detectionSequence.toString());
-        telemetry.update();
-    }
-
-    private void quickTuneExposureAndGain() {
-        // === USER-CONFIGURABLE VARIABLES ===
-        int exposureStart = 0;      // Starting exposure value in milliseconds (lower = darker)
-        int exposureEnd = 5;        // Maximum exposure to test (higher = brighter)
-        int exposureStep = 1;       // How much to increase exposure per step
-
-        int gainStart = 0;         // Starting analog gain (lower = less bright)
-        int gainEnd = 60;          // Maximum gain to test
-        int gainStep = 20;          // Step size for gain increase
-
-        int stabilityChecks = 2;    // Number of frames per test so it gives the camera a chance to detect(use 1-3)
-        int delayBetweenTests = 100; // Time in ms to wait after changing settings (100–150 ms)
-        int detectionThreshold = 1; // Minimum number of detections to consider it successful
-
-        // === INTERNAL VARIABLES ===
-        int bestExposure = exposureStart;
-        int bestGain = gainStart;
-        boolean found = false;
-
-        telemetry.addLine("Starting quick tuning...");
-        telemetry.update();
-
-        long startTime = System.currentTimeMillis();
-
-        // Loop through exposure/gain combinations quickly
-        outerLoop:
-        for (int e = exposureStart; e <= exposureEnd; e += exposureStep) {
-            exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-
-            for (int g = gainStart; g <= gainEnd; g += gainStep) {
-                gainControl.setGain(g);
-                sleep(delayBetweenTests);
-
-                int detections = 0;
-                for (int i = 0; i < stabilityChecks; i++) {
-                    if (checkAprilTagDetection(null, e * 1000 + g, "QuickTune")) {
-                        detections++;
-                        telemetry.addLine("Detected");
-                    }
-                }
-
-                if (detections >= detectionThreshold) {
-                    bestExposure = e;
-                    bestGain = g;
-                    found = true;
-                    telemetry.addData("Found Detection", "Exposure: %d, Gain: %d", e, g);
-                    telemetry.update();
-                    break outerLoop; // Stop as soon as a detection works
-                }
-
-                // Safety check to ensure we don't exceed 2 seconds total
-                if (System.currentTimeMillis() - startTime > 2000) {
-                    telemetry.addLine("Quick tune timeout");
-                    telemetry.update();
-                    break outerLoop;
-                }
-            }
-        }
-
-        // Apply best found values
-        exposureControl.setExposure(bestExposure, TimeUnit.MILLISECONDS);
-        gainControl.setGain(bestGain);
-
-        telemetry.addLine("Quick tuning complete");
-        telemetry.addData("Best Exposure", bestExposure);
-        telemetry.addData("Best Gain", bestGain);
-        telemetry.addData("Detection Found", found);
-        telemetry.update();
-    }
-
     private void autoTuneExposureAndGain() {
         telemetry.addLine("Camera online — beginning auto-tune sequence...");
         telemetry.update();
 
+        //Gain starts at 20 (look at above in the if statement)
         int exposureMin = 0;
         int exposureMax = 5;
         int gainMin = 0;
@@ -361,18 +165,18 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
         for (int e = exposureMin; e <= exposureMax; e += exposureStep) {
             exposureControl.setExposure(e, TimeUnit.MILLISECONDS);
-            sleep(150);
+            sleep(140);
 
             for (int g = gainMin; g <= gainMax; g += gainStep) {
                 gainControl.setGain(g);
                 sleep(120);
-
+                //print for testing
                 telemetry.addData("Testing", "Exposure=%d | Gain=%d", e, g);
                 telemetry.update();
 
-                boolean detected = checkAprilTagDetection(detectionSequence, e * 1000 + g, "E/G");
+                boolean detected = checkAprilTagDetection(detectionSequence, e * 1000, g, "E/G");
                 if (detected) {
-                    telemetry.addData("Detection", "Found tag at Exposure=%d | Gain=%d", e, g);
+                    telemetry.addData("Detection", "Found tag at Exposure=%d | Gain=%d ", e, g);
                     telemetry.update();
 
                     finalExposure = e;
@@ -381,12 +185,13 @@ public class AutoTuneCamSettings extends LinearOpMode {
 
                     // Optionally test a few nearby points for stability
                     for (int fineE = Math.max(exposureMin, e - 1); fineE <= Math.min(exposureMax, e + 1); fineE++) {
-                        for (int fineG = Math.max(gainMin, g - 10); fineG <=g ; fineG += 5) { //lower gain values work better in brighter conditions
+                        for (int fineG = Math.max(gainMin, g - 15); fineG <=g ; fineG += 5) { //lower gain values work better in brighter conditions
                             exposureControl.setExposure(fineE, TimeUnit.MILLISECONDS);
                             gainControl.setGain(fineG);
                             sleep(120);
-                            if(checkAprilTagDetection(detectionSequence, fineE * 1000 + fineG, "Fine E/G")){
+                            if(checkAprilTagDetection(detectionSequence, fineE * 1000, fineG, "Fine E/G")){
                                 finalGain = fineG;
+                                telemetry.addLine(motifOrder);
                                 break;
                             }
                         }
@@ -415,18 +220,25 @@ public class AutoTuneCamSettings extends LinearOpMode {
         telemetry.update();
     }
 
-    private boolean checkAprilTagDetection(List<String> detectionSequence, int value, String mode) {
+    private boolean checkAprilTagDetection(List<String> detectionSequence, int exp, int gain, String mode) {
         List<AprilTagDetection> detections = aprilTag.getDetections();
         boolean detected = false;
         for (AprilTagDetection detection : detections) {
             if (detection.metadata != null && detection.metadata.name.contains("Obelisk")) {
-                detectionSequence.add(String.format("%s: %d detected at ID %d", mode, value, detection.id));
+                detectionSequence.add(String.format("%s: %d, #d detected at ID %d |", mode, exp, gain, detection.id));
+                if(detection.id == 21){
+                    motifOrder = "GPP";
+                } else if(detection.id == 22){
+                    motifOrder = "PGP";
+                } else{
+                    motifOrder = "PPG"; //ID = 23
+                }
                 detected = true;
                 break;
             }
         }
         if (!detected) {
-            detectionSequence.add(String.format("%s: %d no detection", mode, value));
+            detectionSequence.add(String.format("%s: %d, %d no detection |", mode, exp, gain));
         }
         return detected;
     }
