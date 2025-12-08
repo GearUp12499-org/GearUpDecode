@@ -237,7 +237,8 @@ object REmover {
 
                 val yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH)
                 val xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH)
-                val angVelocity = hardware.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
+                val angVelocity =
+                    hardware.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
 
                 val speed = hypot(xVelocity, yVelocity)
 
@@ -257,7 +258,14 @@ object REmover {
                     deltaA += 2 * PI
                 }
 
-                if (abs(deltaX) < 0.5 && abs(deltaY) < 0.5 && abs(deltaA) < Math.PI / 48 && speed < 10 && Math.abs(angVelocity) < Math.PI/4|| timeoutTime > 1) {
+                if (
+                    (abs(deltaX) < 0.5
+                    && abs(deltaY) < 0.5
+                    && abs(deltaA) < Math.PI / 48
+                    && speed < 10
+                    && abs(angVelocity) < Math.PI / 4)
+                    || timeoutTime > 1
+                ) {
                     hardware.frontLeft.power = 0.0
                     hardware.frontRight.power = 0.0
                     hardware.backLeft.power = 0.0

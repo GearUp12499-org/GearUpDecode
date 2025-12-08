@@ -162,6 +162,18 @@ public class CompBotHardware extends HardwareMapper {
         pinpoint.setPosition(newPose);
     }
 
+    public static boolean isHoodUp(double distance) {
+        return distance > 36.0;
+    }
+
+    public static double speedForHoodUp(double distance) {
+        return 5.67 * distance + 784;
+    }
+
+    public static double speedForHoodDown(double distance) {
+        return 6.19 * distance + 786;
+    }
+
     public static class Locks {
         /**
          * {@link CompBotHardware#frontLeft}, {@link CompBotHardware#frontRight},

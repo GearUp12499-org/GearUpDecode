@@ -117,6 +117,18 @@ class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, priva
     }.require(lock)
 
     /**
+     * Set the target velocity, then wait to stabilize on that velocity.
+     *
+     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
+     * similar to [waitForTargetSimple].
+     */
+    @JvmOverloads
+    fun setTargetAndWait(velocityProvider: () -> Double, minDuration: Double = 0.5) = VirtualGroup {
+        add(OneShot { setTarget(velocityProvider()) })
+            .then(waitForTargetHold(minDuration))
+    }.require(lock)
+
+    /**
      * stop it
      */
     fun stopSoft() {

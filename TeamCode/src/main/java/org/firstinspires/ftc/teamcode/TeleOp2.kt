@@ -33,8 +33,11 @@ import org.firstinspires.ftc.teamcode.systems.shootThree
 import org.firstinspires.ftc.teamcode.tasks.PinpointUpdater
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.stopAllWith
+import org.firstinspires.ftc.teamcode.tools.remover
+import org.firstinspires.ftc.teamcode.tools.wrapAngle
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
@@ -107,9 +110,11 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             )
             this@TeleOp2.aprilTag = AprilTag(gsc)
 
-            scheduler.add(aprilTag.setupAprilTag(
-                CompBotHardware.GSC_EXPOSURE, CompBotHardware.GSC_GAIN
-            )).then(startFlag)
+            scheduler.add(
+                aprilTag.setupAprilTag(
+                    CompBotHardware.GSC_EXPOSURE, CompBotHardware.GSC_GAIN
+                )
+            ).then(startFlag)
 
             flipper.position = CompBotHardware.FLIPPER_DOWN
         }
@@ -207,9 +212,13 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         telemetry.addData("Slot 2", indexer.slots[1])
         telemetry.addData("Slot 3", indexer.slots[2])
         telemetry.addData("XYA", hardware.pinpoint.position.let {
-            "%.2f %.2f in %.1f deg".format(it.getX(DistanceUnit.INCH), it.getY(DistanceUnit.INCH), it.getHeading(
-                AngleUnit.DEGREES))
+            "%.2f %.2f in %.1f deg".format(
+                it.getX(DistanceUnit.INCH), it.getY(DistanceUnit.INCH), it.getHeading(
+                    AngleUnit.DEGREES
+                )
+            )
         })
+        telemetry.addData("distance from goal (in)", getDistanceToGoal())
 
         val a2 = gamepad2.a
         val b2 = gamepad2.b
@@ -226,7 +235,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, poseSet.midShoot))
+                add(REmover.drive2Pose2(hardware, poseSet.midShoot))
                     .then(OneShot {
                         aprilTag.readPosition()?.let(hardware::integratePositionData)
                     })
@@ -240,7 +249,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         if (x && !wasX) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, poseSet.closeShoot))
+                add(REmover.drive2Pose2(hardware, poseSet.closeShoot))
                 add(OneShot {
                     shooter.setTarget(SHOOT_CLOSE_RANGE)
                 })
@@ -251,7 +260,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         if (a && !wasA2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose(hardware, poseSet.farShoot))
+                add(REmover.drive2Pose2(hardware, poseSet.farShoot))
                     .then(OneShot {
                         aprilTag.readPosition()?.let(hardware::integratePositionData)
                     })
@@ -264,7 +273,25 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         val y2 = gamepad2.y
         if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(shootThree(SHOOT_MID_RANGE, bundle))
+            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
+            scheduler.add(lookAtGoal())
+                .then(OneShot {
+                    val distance = getDistanceToGoal()
+                    hardware.shooterHood1.position =
+                        if (CompBotHardware.isHoodUp(distance)) CompBotHardware.HOOD_UP else CompBotHardware.HOOD_DOWN
+                })
+                .then(shootThree(
+                    {
+                        val distance = getDistanceToGoal()
+                        val hood = CompBotHardware.isHoodUp(distance)
+                        if (hood) {
+                            CompBotHardware.speedForHoodUp(distance)
+                        } else {
+                            CompBotHardware.speedForHoodDown(distance)
+                        }
+                    },
+                    bundle
+                ))
         }
 
         wasA2 = a2
@@ -276,6 +303,22 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
     var gp1lStickX = 0.0f
     var gp1lStickY = 0.0f
     var gp1rStickX = 0.0f
+
+    fun lookAtGoal(): ITask<*> {
+        val currentPos = hardware.pinpoint.position.remover
+        val phi = atan2(poseSet.shootTarget.x - currentPos.x, poseSet.shootTarget.y - currentPos.y)
+        val theta1 = ((PI / 2 - phi) + PI).wrapAngle()
+        return REmover.drive2Pose2(
+            hardware, REmover.RobotPose(currentPos.x, currentPos.y, theta1)
+        )
+    }
+
+    fun getDistanceToGoal(): Double {
+        val currentPos = hardware.pinpoint.position.remover
+        val distance =
+            hypot(poseSet.shootMeasure.x - currentPos.x, poseSet.shootMeasure.y - currentPos.y)
+        return distance
+    }
 
     fun driveInputs() {
         gp1lStickX = gamepad1.left_stick_x
@@ -365,7 +408,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         if (button && !wasResetOrientation) {
             scheduler.stopAllWith(Locks.DRIVE_MOTORS)
             scheduler.add(VirtualGroup {
-                val flag = add(OneShot {
+                add(OneShot {
                     hardware.frontLeft.power = 0.0
                     hardware.frontRight.power = 0.0
                     hardware.backLeft.power = 0.0

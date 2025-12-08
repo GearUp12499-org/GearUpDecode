@@ -16,9 +16,14 @@ private val next = mapOf(
 )
 
 @JvmOverloads
-fun shootThree(speed: Double, b: Bundle, startAt: (() -> Indexer.Position) = { Out1 }, shutDownAtEnd: Boolean = true) = VirtualGroup {
+fun shootThree(
+    speedProvider: () -> Double,
+    b: Bundle,
+    startAt: (() -> Indexer.Position) = { Out1 },
+    shutDownAtEnd: Boolean = true
+) = VirtualGroup {
     add(VirtualGroup {
-        add(b.shooter.setTargetAndWait(speed, 0.35))
+        add(b.shooter.setTargetAndWait(speedProvider, 0.35))
         add(b.indexer.goToPosition(startAt))
     })
         .then(OneShot {
@@ -26,14 +31,14 @@ fun shootThree(speed: Double, b: Bundle, startAt: (() -> Indexer.Position) = { O
         })
         .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(b.shooter.setTargetAndWait(speed, 0.35))
+            add(b.shooter.setTargetAndWait(speedProvider, 0.35))
             add(b.indexer.goToPosition { next[startAt()]!! })
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
         .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(b.shooter.setTargetAndWait(speed, 0.35))
+            add(b.shooter.setTargetAndWait(speedProvider, 0.35))
             add(b.indexer.goToPosition { next[next[startAt()]]!! })
         })
         .then(b.indexer.shoot())
@@ -42,3 +47,11 @@ fun shootThree(speed: Double, b: Bundle, startAt: (() -> Indexer.Position) = { O
                 b.shooter.setTarget(0.0)
         })
 }
+
+@JvmOverloads
+fun shootThree(
+    speed: Double,
+    b: Bundle,
+    startAt: (() -> Indexer.Position) = { Out1 },
+    shutDownAtEnd: Boolean = true
+) = shootThree({ speed }, b, startAt, shutDownAtEnd)
