@@ -63,6 +63,7 @@ class Indexer(
 
     var lastPosition: Position = Position.None
     var resetPosition: Position = Position.None
+    var approxPosition: Position = Position.None
 
     private val positionHeldFor = ElapsedTime(ElapsedTime.Resolution.SECONDS)
 
@@ -77,7 +78,7 @@ class Indexer(
         const val REVOLUTION = TICKS_PER_POSITION * 6
 
         const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble() * 0.8
-        const val OPERATING_POWER = 0.7
+        const val OPERATING_POWER = 1.0
         const val SCAN_POWER = 0.2
 
         const val NEARBY = TICKS_PER_POSITION / 4
@@ -137,9 +138,7 @@ class Indexer(
     }
 
     fun updateState() {
-        val currentPosition =
-            matchPosition(!sensor1.state, !sensor2.state, !sensor3.state, !sensor4.state)
-        when (currentPosition) {
+        when (approxPosition) {
             Position.None -> {
                 resetStateCounter(); return
             }
@@ -148,7 +147,7 @@ class Indexer(
                 resetStateCounter(); return
             }
 
-            else -> if (!currentPosition.isIntakeStep) {
+            else -> if (!approxPosition.isIntakeStep) {
                 resetStateCounter(); return
             }
         }
@@ -174,13 +173,16 @@ class Indexer(
 
         if (d1 < 15 || (d1 < 40 && d2 >= 40)) {
             // use d1
-            slots[currentPosition.slot] = Slot.PURPLE
+            slots[approxPosition.slot] = Slot.PURPLE
+            Log.i("sensor", "$approxPosition is FILLED (1) $d1 $d2")
         } else if (d2 < 40) {
             // use d2
-            slots[currentPosition.slot] = Slot.PURPLE
+            slots[approxPosition.slot] = Slot.PURPLE
+            Log.i("sensor", "$approxPosition is FILLED (2) $d1 $d2")
         } else {
             // nothing
-            slots[currentPosition.slot] = Slot.EMPTY
+            slots[approxPosition.slot] = Slot.EMPTY
+            Log.i("sensor", "$approxPosition is EMPTY $d1 $d2")
         }
     }
 
@@ -217,14 +219,17 @@ class Indexer(
 
     fun goToPosition(target: Position) = goToPosition { target }
 
-    fun goToPosition(targetProvider: () -> Position) = object : Anonymous() {
+    fun goToPosition(targetProvider: () -> Position) = GoToPositionTask(targetProvider)
+
+    inner class GoToPositionTask(private val targetProvider: () -> Position) :
+        Task<GoToPositionTask>() {
         private val timer = ElapsedTime(ElapsedTime.Resolution.SECONDS)
 
-        private var isInRunPos = true
+        var isInRunPos = true; private set
         private var overshootFlip = 1
         private var targetingDirection = 1
         private var matching = false
-        private lateinit var target: Position
+        lateinit var target: Position; private set
 
         init {
             require(lock)
@@ -235,6 +240,7 @@ class Indexer(
         override fun onStart() {
             this.target = targetProvider()
             lastPosition = target
+            approxPosition = Position.None
             val targetRelativeTicks = target.getTicks()
             // there's probably a better way of doing this but i'm too tired atm
             var middle = indexerMotor.currentPosition.floorDiv(REVOLUTION) * REVOLUTION
@@ -274,8 +280,13 @@ class Indexer(
                 matchPosition(!sensor1.state, !sensor2.state, !sensor3.state, !sensor4.state)
             val error = abs(indexerMotor.currentPosition - targetTicks)
 
-            if (isInRunPos) tickRunToPos(instant, error)
-            else tickRunSensors(instant, error)
+            if (isInRunPos) {
+                approxPosition = Position.None
+                tickRunToPos(instant, error)
+            } else {
+                approxPosition = target
+                tickRunSensors(instant, error)
+            }
 
             Log.d(
                 "indexer",
@@ -337,6 +348,9 @@ class Indexer(
                 indexerMotor.mode = RunMode.STOP_AND_RESET_ENCODER
                 indexerMotor.power = 0.0
                 resetPosition = target
+                approxPosition = target
+            } else {
+                indexerMotor.power = 0.0
             }
         }
     }
@@ -353,6 +367,7 @@ class Indexer(
         }
 
         override fun onStart() {
+            approxPosition = Position.None
             indexerMotor.mode = RunMode.RUN_USING_ENCODER
             indexerMotor.power = 1.0
             indexerMotor.velocity = SCAN_VELOCITY
@@ -383,6 +398,7 @@ class Indexer(
             if (timer.time() > 0.5) {
                 lastPosition = position
                 resetPosition = position
+                approxPosition = position
                 return true
             }
             return false
@@ -401,7 +417,7 @@ class Indexer(
             require(Locks.INTAKE)
         }
 
-        private var subTask: ITask<*>? = null
+        private var subTask: GoToPositionTask? = null
         private var done = false
         private var slotN = -1
         private var slotTimer = false
@@ -433,19 +449,14 @@ class Indexer(
                 (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)
             indicator1.position = if (isTaskFree) 0.5 else 0.8
             indicator2.position = if (isTaskFree) 0.5 else 0.8
-            if (slot != slotN) {
-                if (!slotTimer) {
-                    timer2.reset()
-                    slotTimer = true
-                }
-                if (timer2.time() > 0.2) {
-                    if (lastPosition != slotPos && isTaskFree) {
-                        slotTimer = false
-                        subTask = scheduler!!.add(
-                            goToPosition(slotPos)
-                        )
-                    }
-                }
+            Log.i("intake", "slot $slot  slotPos $slotPos  approxPosition $approxPosition  subTask $subTask")
+            if (approxPosition != slotPos && subTask?.let { it.target != slotPos } ?: true) {
+                slotTimer = false
+                if (subTask?.let { it.getState() != ITask.State.Finished && it.getState() != ITask.State.Cancelled } ?: false)
+                    subTask!!.stop()
+                subTask = scheduler!!.add(
+                    goToPosition(slotPos)
+                )
             }
 
             return false
