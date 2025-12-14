@@ -230,7 +230,7 @@ class Indexer(
         private var overshootFlip = 1
         private var targetingDirection = 1
         private var matching = false
-        lateinit var target: Position; private set
+        var target: Position? = null; private set
 
         init {
             require(lock)
@@ -239,7 +239,8 @@ class Indexer(
         var targetTicks = 0
 
         override fun onStart() {
-            this.target = targetProvider()
+            val target = targetProvider()
+            this.target = target
 
             if (resetPosition == target && indexerMotor.currentPosition.absoluteValue < 10) finish()
 
@@ -288,7 +289,7 @@ class Indexer(
                 approxPosition = Position.None
                 tickRunToPos(instant, error)
             } else {
-                approxPosition = target
+                approxPosition = target!!
                 tickRunSensors(instant, error)
             }
 
@@ -351,8 +352,8 @@ class Indexer(
             if (completedNormally) {
                 indexerMotor.mode = RunMode.STOP_AND_RESET_ENCODER
                 indexerMotor.power = 0.0
-                resetPosition = target
-                approxPosition = target
+                resetPosition = target!!
+                approxPosition = target!!
             } else {
                 indexerMotor.power = 0.0
             }
