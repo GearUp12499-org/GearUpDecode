@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.INTAKE_POWER
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 class Indexer(
@@ -174,15 +175,15 @@ class Indexer(
         if (d1 < 15 || (d1 < 40 && d2 >= 40)) {
             // use d1
             slots[approxPosition.slot] = Slot.PURPLE
-            Log.i("sensor", "$approxPosition is FILLED (1) $d1 $d2")
+//            Log.i("sensor", "$approxPosition is FILLED (1) $d1 $d2")
         } else if (d2 < 40) {
             // use d2
             slots[approxPosition.slot] = Slot.PURPLE
-            Log.i("sensor", "$approxPosition is FILLED (2) $d1 $d2")
+//            Log.i("sensor", "$approxPosition is FILLED (2) $d1 $d2")
         } else {
             // nothing
             slots[approxPosition.slot] = Slot.EMPTY
-            Log.i("sensor", "$approxPosition is EMPTY $d1 $d2")
+//            Log.i("sensor", "$approxPosition is EMPTY $d1 $d2")
         }
     }
 
@@ -239,6 +240,9 @@ class Indexer(
 
         override fun onStart() {
             this.target = targetProvider()
+
+            if (resetPosition == target && indexerMotor.currentPosition.absoluteValue < 10) finish()
+
             lastPosition = target
             approxPosition = Position.None
             val targetRelativeTicks = target.getTicks()

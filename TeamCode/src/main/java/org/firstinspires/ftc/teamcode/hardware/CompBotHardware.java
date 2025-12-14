@@ -137,34 +137,34 @@ public class CompBotHardware extends HardwareMapper {
 
         shooterHood1.setPosition(HOOD_UP);
 
-        pinpoint.setOffsets(-3.9, -3.875, DistanceUnit.INCH);
+        pinpoint.setOffsets(-3.9, -3.875 + 0.05, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
     }
 
     public void integratePositionData(REmover.RobotPose pose) {
-        Pose2D current = pinpoint.getPosition();
-        Log.i(
-                "gearup",
-                String.format(
-                        "Integrating new pose data.\nPinpoint: %.2f %.2f in %.1f deg\nAprilTag: %.2f %.2f in %.1f deg",
-                        current.getX(DistanceUnit.INCH),
-                        current.getY(DistanceUnit.INCH),
-                        current.getHeading(AngleUnit.DEGREES),
-                        pose.x,
-                        pose.y,
-                        Math.toDegrees(pose.a)
-                )
-        );
-        Pose2D newPose = new Pose2D(
-                DistanceUnit.INCH,
-                (current.getX(DistanceUnit.INCH) + pose.x) / 2.0,
-                (current.getY(DistanceUnit.INCH) + pose.y) / 2.0,
-                AngleUnit.RADIANS,
-                GearUpMath.wrapAngle((current.getHeading(AngleUnit.RADIANS) + pose.a) / 2.0)
-        );
+//        Pose2D current = pinpoint.getPosition();
+//        Log.i(
+//                "gearup",
+//                String.format(
+//                        "Integrating new pose data.\nPinpoint: %.2f %.2f in %.1f deg\nAprilTag: %.2f %.2f in %.1f deg",
+//                        current.getX(DistanceUnit.INCH),
+//                        current.getY(DistanceUnit.INCH),
+//                        current.getHeading(AngleUnit.DEGREES),
+//                        pose.x,
+//                        pose.y,
+//                        Math.toDegrees(pose.a)
+//                )
+//        );
+//        Pose2D newPose = new Pose2D(
+//                DistanceUnit.INCH,
+//                (current.getX(DistanceUnit.INCH) + pose.x) / 2.0,
+//                (current.getY(DistanceUnit.INCH) + pose.y) / 2.0,
+//                AngleUnit.RADIANS,
+//                GearUpMath.wrapAngle((current.getHeading(AngleUnit.RADIANS) + pose.a) / 2.0)
+//        );
         // slow!
-        pinpoint.setPosition(newPose);
+//        pinpoint.setPosition(newPose);
     }
 
     public static boolean isHoodUp(double distance) {

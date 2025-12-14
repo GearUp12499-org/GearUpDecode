@@ -8,6 +8,7 @@ import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
@@ -122,10 +123,9 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
         val firstSet = knowObelisk
             .then(VirtualGroup {
                 add(REmover.drive2Pose2(hardware, poseSet.midShoot))
-                val idxMove = add(
-                    indexer.goToPosition {
-                        aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
-                    })
+                val idxMove = add(indexer.goToPosition {
+                    aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+                })
                 add(OneShot {
                     Log.i("April Tag read", aprilTag.obelisk.toString())
                     Log.i(
@@ -148,8 +148,12 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
         firstSet.then(VirtualGroup {
             add(REmover.drive2Pose2(hardware, poseSet.set1pos))
                 .then(REmover.drive2Pose2(hardware, poseSet.set1out, maxPower = 0.3))
+                .then(Wait.s(0.25))
                 .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
             val intake = add(indexer.intake(6.0))
+                .then(indexer.goToPosition {
+                    aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
+                })
         }).then(
             shootThree(
                 SHOOT_MID_RANGE,
@@ -159,9 +163,13 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
             )
         ).then(VirtualGroup {
             add(REmover.drive2Pose2(hardware, poseSet.set2pos))
-                .then(REmover.drive2Pose2(hardware, poseSet.set2out, maxPower = 0.3))
+                .then(REmover.drive2Pose2(hardware, poseSet.set2out, maxPower = 0.5))
+                .then(Wait.s(0.25))
                 .then(REmover.drive2Pose2(hardware, poseSet.midShoot))
             val intake = add(indexer.intake(6.0))
+                .then(indexer.goToPosition {
+                    aprilTag.obelisk?.let { obeliskToIndexer2[it] } ?: Indexer.Position.Out1
+                })
         }).then(
             shootThree(
                 SHOOT_MID_RANGE,
