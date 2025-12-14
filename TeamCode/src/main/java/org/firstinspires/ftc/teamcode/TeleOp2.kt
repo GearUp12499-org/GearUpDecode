@@ -235,45 +235,6 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         val y = gamepad1.y
         if (y && !wasY) {
             scheduler.stopAllWith(indexer.lock)
-            scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.midShoot))
-                    .then(OneShot {
-                        aprilTag.readPosition()?.let(hardware::integratePositionData)
-                    })
-                add(OneShot {
-                    shooter.setTarget(SHOOT_MID_RANGE)
-                })
-            }).then(shootThree(SHOOT_MID_RANGE, bundle))
-        }
-
-        val x = gamepad1.x
-        if (x && !wasX) {
-            scheduler.stopAllWith(indexer.lock)
-            scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.closeShoot))
-                add(OneShot {
-                    shooter.setTarget(SHOOT_CLOSE_RANGE)
-                })
-            }).then(shootThree(SHOOT_CLOSE_RANGE, bundle))
-        }
-
-        val a = gamepad1.a
-        if (a && !wasA2) {
-            scheduler.stopAllWith(indexer.lock)
-            scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.farShoot))
-                    .then(OneShot {
-                        aprilTag.readPosition()?.let(hardware::integratePositionData)
-                    })
-                add(OneShot {
-                    shooter.setTarget(SHOOT_FAR_RANGE)
-                })
-            }).then(shootThree(SHOOT_FAR_RANGE, bundle))
-        }
-
-        val y2 = gamepad2.y
-        if (y2 && !wasY2) {
-            scheduler.stopAllWith(indexer.lock)
             scheduler.stopAllWith(Locks.DRIVE_MOTORS)
             scheduler.add(OneShot {
                 val distance = getDistanceToGoal()
@@ -306,6 +267,43 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
                     },
                     bundle
                 ))
+        }
+
+        val x = gamepad1.x
+        if (x && !wasX) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(REmover.drive2Pose2(hardware, poseSet.midShoot))
+                    .then(OneShot {
+                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+                    })
+                add(OneShot {
+                    shooter.setTarget(SHOOT_MID_RANGE)
+                })
+            }).then(shootThree(SHOOT_MID_RANGE, bundle))
+        }
+
+        val a = gamepad1.a
+        if (a && !wasA2) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(VirtualGroup {
+                add(REmover.drive2Pose2(hardware, poseSet.farShoot))
+                    .then(OneShot {
+                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+                    })
+                add(OneShot {
+                    shooter.setTarget(SHOOT_FAR_RANGE)
+                    hardware.shooterHood1.position = CompBotHardware.HOOD_UP
+                })
+            }).then(shootThree(SHOOT_FAR_RANGE, bundle))
+        }
+
+        val y2 = gamepad2.y
+        if (y2 && !wasY2) {
+            scheduler.stopAllWith(indexer.lock)
+            scheduler.add(OneShot {
+                hardware.shooterHood1.position = CompBotHardware.HOOD_UP
+            }).then(shootThree(SHOOT_MID_RANGE, bundle))
         }
 
         wasA2 = a2
