@@ -12,6 +12,7 @@ import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.TeleOpOptions.DRIVE_PUSH_TO_OVERRIDE
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
@@ -418,30 +419,13 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
     fun resetOrientation() {
         val button = gamepad2.back
         if (button && !wasResetOrientation) {
-            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
-            scheduler.add(VirtualGroup {
-                add(OneShot {
-                    hardware.frontLeft.power = 0.0
-                    hardware.frontRight.power = 0.0
-                    hardware.backLeft.power = 0.0
-                    hardware.backRight.power = 0.0
-                    hardware.indicator1.position = 0.4
-                    hardware.indicator2.position = 0.4
-                }).then(WaitUntil {
-                    val vel = hypot(
-                        hardware.pinpoint.getVelX(DistanceUnit.INCH),
-                        hardware.pinpoint.getVelY(DistanceUnit.INCH)
-                    )
-                    vel < 0.5
-                }).then(OneShot {
-                    hardware.pinpoint.recalibrateIMU()
-                }).then(WaitUntil {
-                    hardware.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
-                }).then(OneShot {
-                    hardware.indicator1.position = 0.0
-                    hardware.indicator2.position = 0.0
-                })
-            }).require(Locks.DRIVE_MOTORS)
+            scheduler.add(OneShot {
+                val pos = hardware.pinpoint.position
+                hardware.pinpoint.position = Pose2D(
+                    DistanceUnit.INCH, pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH),
+                    AngleUnit.RADIANS, 0.0
+                )
+            })
         }
         wasResetOrientation = button
     }
