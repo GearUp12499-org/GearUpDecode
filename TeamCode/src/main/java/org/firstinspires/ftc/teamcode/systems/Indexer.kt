@@ -23,6 +23,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBotHardware.Locks
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.max
 import kotlin.math.sign
 
 class Indexer(
@@ -230,6 +231,7 @@ class Indexer(
         private var overshootFlip = 1
         private var targetingDirection = 1
         private var matching = false
+        private var posPower = OPERATING_POWER
         var target: Position? = null; private set
 
         init {
@@ -307,7 +309,7 @@ class Indexer(
             val now = indexerMotor.currentPosition
             indexerMotor.targetPosition = targetTicks
             indexerMotor.mode = RunMode.RUN_TO_POSITION
-            indexerMotor.power = OPERATING_POWER
+            indexerMotor.power = posPower
             targetingDirection = (targetTicks - now).sign
             overshootFlip = 1
         }
@@ -331,6 +333,7 @@ class Indexer(
             // we've messed it up.
             if (error > NOT_NEARBY) {
                 isInRunPos = true
+                posPower = max(posPower * 0.8, 0.5)
                 beforeRunToPos()
                 return tickRunToPos(instant, error)
             }
