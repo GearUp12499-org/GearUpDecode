@@ -7,6 +7,7 @@ import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -274,7 +275,20 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
         if (y2 && !wasY2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.stopAllWith(Locks.DRIVE_MOTORS)
-            scheduler.add(lookAtGoal())
+            scheduler.add(OneShot {
+                val distance = getDistanceToGoal()
+                if (distance < CompBotHardware.SHOOT_MIN_DIST) {
+                    scheduler.add(OneShot {
+                        hardware.indicator1.position = CompBotHardware.COLOR_RED
+                        hardware.indicator2.position = CompBotHardware.COLOR_RED
+                    }).then(Wait.s(0.5)).then(OneShot {
+                        hardware.indicator1.position = 0.0
+                        hardware.indicator2.position = 0.0
+                    })
+                    scheduler.getCurrentEvaluation()?.stop() // holy jank lmao
+                }
+            })
+                .then(lookAtGoal())
                 .then(OneShot {
                     val distance = getDistanceToGoal()
                     hardware.shooterHood1.position =

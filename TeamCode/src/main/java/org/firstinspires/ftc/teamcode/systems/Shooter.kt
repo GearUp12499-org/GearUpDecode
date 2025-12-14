@@ -16,7 +16,11 @@ import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
 import org.firstinspires.ftc.teamcode.tasks.stopAllWith
 import kotlin.math.abs
 
-class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, private val indicator2: Servo) : Task<Shooter>() {
+class Shooter(
+    private val motor: DcMotorEx,
+    private val indicator1: Servo,
+    private val indicator2: Servo
+) : Task<Shooter>() {
     companion object {
         private val LOCK_ROOT = Lock.StrLock("shooter_impl")
 
@@ -75,34 +79,54 @@ class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, priva
      * Setting the [minimumDuration] to `0.0` is effectively the same as [waitForTargetSimple].
      */
     @JvmOverloads
-    fun waitForTargetHold(minimumDuration: Double = 0.5) = object : Anonymous() {
-        init {
-            require(lock)
-        }
-
-        private val targetDuration = (minimumDuration * 1e9).toLong()
-        private var lastMetAt = 0L
-
-        override fun onStart() {
-            val now = System.nanoTime()
-            lastMetAt = now
-        }
-
-        override fun onTick(): Boolean {
-            val now = System.nanoTime()
-            val delta = currentVelocity - targetVelocity
-            val pct = delta / 500 + 0.5
-            indicator1.position = pct
-            indicator2.position = pct
-            Log.i("Shooter", "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta))
-            if (!isAtTarget()) {
-                lastMetAt = now
-                return false
+    fun waitForTargetHold(minimumDuration: Double = 0.5, maximumDuration: Double = -1.0) =
+        object : Anonymous() {
+            init {
+                require(lock)
             }
-            return (now - lastMetAt) >= targetDuration
+
+            private val targetDuration = (minimumDuration * 1e9).toLong()
+            private var lastMetAt = 0L
+            private var start = 0L
+
+            override fun onStart() {
+                val now = System.nanoTime()
+                lastMetAt = now
+                start = now
+            }
+
+            override fun onTick(): Boolean {
+                val now = System.nanoTime()
+                if (maximumDuration > 0 && now - start > maximumDuration * 1e9) return true
+                val delta = currentVelocity - targetVelocity
+                val pct = delta / 500 + 0.5
+                indicator1.position = pct
+                indicator2.position = pct
+                Log.i(
+                    "Shooter",
+                    "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta)
+                )
+                if (!isAtTarget()) {
+                    lastMetAt = now
+                    return false
+                }
+                return (now - lastMetAt) >= targetDuration
+            }
+
         }
 
-    }
+    /**
+     * Set the target velocity, then wait to stabilize on that velocity.
+     *
+     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
+     * similar to [waitForTargetSimple].
+     */
+    @JvmOverloads
+    fun setTargetAndWait(velocity: Double, minDuration: Double = 0.5, maxDuration: Double = -1.0) =
+        VirtualGroup {
+            add(OneShot { setTarget(velocity) })
+                .then(waitForTargetHold(minDuration, maxDuration))
+        }.require(lock)
 
     /**
      * Set the target velocity, then wait to stabilize on that velocity.
@@ -111,21 +135,13 @@ class Shooter(private val motor: DcMotorEx, private val indicator1: Servo, priva
      * similar to [waitForTargetSimple].
      */
     @JvmOverloads
-    fun setTargetAndWait(velocity: Double, minDuration: Double = 0.5) = VirtualGroup {
-        add(OneShot { setTarget(velocity) })
-            .then(waitForTargetHold(minDuration))
-    }.require(lock)
-
-    /**
-     * Set the target velocity, then wait to stabilize on that velocity.
-     *
-     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
-     * similar to [waitForTargetSimple].
-     */
-    @JvmOverloads
-    fun setTargetAndWait(velocityProvider: () -> Double, minDuration: Double = 0.5) = VirtualGroup {
+    fun setTargetAndWait(
+        velocityProvider: () -> Double,
+        minDuration: Double = 0.5,
+        maxDuration: Double = -1.0
+    ) = VirtualGroup {
         add(OneShot { setTarget(velocityProvider()) })
-            .then(waitForTargetHold(minDuration))
+            .then(waitForTargetHold(minDuration, maxDuration))
     }.require(lock)
 
     /**

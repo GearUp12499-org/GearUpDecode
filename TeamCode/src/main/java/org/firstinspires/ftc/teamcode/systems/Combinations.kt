@@ -31,14 +31,14 @@ fun shootThree(
         })
         .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(b.shooter.setTargetAndWait(speedProvider, 0.35))
+            add(b.shooter.setTargetAndWait(speedProvider, 0.2, 1.0))
             add(b.indexer.goToPosition { next[startAt()]!! })
         }).also {
             it.inside.forEach(ITask<*>::debug)
         }
         .then(b.indexer.shoot())
         .then(VirtualGroup {
-            add(b.shooter.setTargetAndWait(speedProvider, 0.35))
+            add(b.shooter.setTargetAndWait(speedProvider, 0.2, 1.0))
             add(b.indexer.goToPosition { next[next[startAt()]]!! })
         })
         .then(b.indexer.shoot())
