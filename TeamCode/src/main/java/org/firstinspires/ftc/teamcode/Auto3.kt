@@ -120,6 +120,9 @@ abstract class Auto3(isRed: Boolean) : LinearOpMode() {
                     aprilTag.obelisk?.let { obeliskToIndexer[it] } ?: Indexer.Position.Out1
                 })
             add(OneShot {
+                shooter.setTarget(SHOOT_CLOSE_RANGE)
+            })
+            add(OneShot {
                 Log.i("April Tag read", aprilTag.obelisk.toString())
                 Log.i(
                     "April Tag read",

@@ -143,7 +143,7 @@ abstract class Auto2(isRed: Boolean) : LinearOpMode() {
             )
             .then(VirtualGroup {
                 add(REmover.drive2Pose(hardware, poseSet.set3pos))
-                    .then(REmover.drive2Pose(hardware, poseSet.set3out, maxSpeed = 0.1))
+                    .then(REmover.drive2Pose(hardware, poseSet.set3out, maxSpeed = 0.5))
                     .then(REmover.drive2Pose(hardware, poseSet.farShoot))
                 val intake = add(indexer.intake(8.0))
             }).then(indexer.goToPosition {
