@@ -26,7 +26,7 @@ public class CompBotHardware extends HardwareMapper {
     public static final double FLIPPER_UP = 0.900;
 
     public static final double SHOOT_CLOSE_RANGE = 1040.0;
-    public static final double SHOOT_MID_RANGE = 1140.0;
+    public static final double SHOOT_MID_RANGE = 1160.0;
     public static final double SHOOT_FAR_RANGE = 1400.0;
 
     public static final long GSC_EXPOSURE = 0;
