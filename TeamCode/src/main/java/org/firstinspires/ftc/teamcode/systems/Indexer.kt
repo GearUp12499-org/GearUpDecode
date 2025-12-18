@@ -63,8 +63,11 @@ class Indexer(
 
     val slots = Array(3) { Slot.EMPTY }
 
+    @JvmField
     var lastPosition: Position = Position.None
+    @JvmField
     var resetPosition: Position = Position.None
+    @JvmField
     var approxPosition: Position = Position.None
 
     private val positionHeldFor = ElapsedTime(ElapsedTime.Resolution.SECONDS)
@@ -315,7 +318,7 @@ class Indexer(
         }
 
         fun tickRunToPos(instant: Position, error: Int) {
-            indexerMotor.power = OPERATING_POWER
+            indexerMotor.power = posPower
             if (error < NEARBY) {
                 isInRunPos = false
                 beforeRunSensors()
@@ -427,10 +430,8 @@ class Indexer(
 
         private var subTask: GoToPositionTask? = null
         private var done = false
-        private var slotN = -1
         private var slotTimer = false
         private val timer = ElapsedTime()
-        private val timer2 = ElapsedTime()
         private val timerTotal = ElapsedTime()
 
         override fun onStart() {

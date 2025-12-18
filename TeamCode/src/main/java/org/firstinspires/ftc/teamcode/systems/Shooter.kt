@@ -9,7 +9,6 @@ import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
-import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBotHardware
 import org.firstinspires.ftc.teamcode.tasks.DAEMON_TAGS
@@ -35,7 +34,6 @@ class Shooter(
     }
 
     var targetVelocity: Double = 0.0
-    private var currentVelocity: Double = 0.0
 
     init {
         require(CompBotHardware.Locks.SHOOTER)
@@ -49,10 +47,7 @@ class Shooter(
         motor.velocity = 0.0
     }
 
-    override fun onTick(): Boolean {
-        currentVelocity = motor.velocity
-        return false
-    }
+    override fun onTick() = false
 
     override fun onFinish(completedNormally: Boolean) {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -62,21 +57,13 @@ class Shooter(
 
     override fun getTags(): Set<String> = DAEMON_TAGS
 
-    fun isAtTarget() = abs(currentVelocity - targetVelocity) < ACCEPTABLE_VELOCITY_DIFF
     fun setTarget(velo: Double) {
         targetVelocity = velo
         motor.velocity = velo
     }
 
     /**
-     * Wait to reach the target velocity. Does not account for overshooting.
-     */
-    fun waitForTargetSimple() = WaitUntil(::isAtTarget)
-
-    /**
      * Wait to reach the target velocity for [minimumDuration] seconds continuously.
-     *
-     * Setting the [minimumDuration] to `0.0` is effectively the same as [waitForTargetSimple].
      */
     @JvmOverloads
     fun waitForTargetHold(minimumDuration: Double = 0.5, maximumDuration: Double = -1.0) =
@@ -98,6 +85,7 @@ class Shooter(
             override fun onTick(): Boolean {
                 val now = System.nanoTime()
                 if (maximumDuration > 0 && now - start > maximumDuration * 1e9) return true
+                val currentVelocity = motor.velocity
                 val delta = currentVelocity - targetVelocity
                 val pct = delta / 500 + 0.5
                 indicator1.position = pct
@@ -106,7 +94,7 @@ class Shooter(
                     "Shooter",
                     "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta)
                 )
-                if (!isAtTarget()) {
+                if (!(abs(currentVelocity - targetVelocity) < ACCEPTABLE_VELOCITY_DIFF)) {
                     lastMetAt = now
                     return false
                 }
@@ -118,8 +106,7 @@ class Shooter(
     /**
      * Set the target velocity, then wait to stabilize on that velocity.
      *
-     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
-     * similar to [waitForTargetSimple].
+     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met.
      */
     @JvmOverloads
     fun setTargetAndWait(velocity: Double, minDuration: Double = 0.5, maxDuration: Double = -1.0) =
@@ -131,8 +118,7 @@ class Shooter(
     /**
      * Set the target velocity, then wait to stabilize on that velocity.
      *
-     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met,
-     * similar to [waitForTargetSimple].
+     * Set the [minDuration] to `0.0` to complete immediately when the target velocity is met.
      */
     @JvmOverloads
     fun setTargetAndWait(

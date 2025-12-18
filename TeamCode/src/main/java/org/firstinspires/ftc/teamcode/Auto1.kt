@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.ElapsedTime.Resolution
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
+import io.github.gearup12499.taskshark.api.LogOutlet
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.Wait
@@ -178,7 +179,7 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
                 true
             )
         ).then(
-            REmover.drive2Pose2(hardware, poseSet.set2pos)
+            REmover.drive2Pose2(hardware, poseSet.auto1finish)
         )
             .then(OneShot {
                 stopAt = timer.time()
@@ -204,9 +205,13 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
 
         Lifetime.bump()
 
+        var last = System.nanoTime()
         while (opModeIsActive()) {
             scheduler.tick()
             telemetry.update()
+            val now = System.nanoTime()
+            Log.d("LoopTime", "%d : %d ns".format(now, now - last))
+            last = now
         }
 
         val time = stopAt ?: timer.time()
