@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime.Resolution
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.api.LogOutlet
+import io.github.gearup12499.taskshark.api.LogOutlet.Level
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.Wait
@@ -57,6 +58,7 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
     override fun runOpMode() {
         val timer = ElapsedTime(Resolution.SECONDS)
         TaskSharkAndroid.setup()
+        LogOutlet.currentLogger.level = Level.Info
         hardware = CompBotHardware(hardwareMap)
         scheduler = FastScheduler()
         startFlag = scheduler.add(SentinelTask())
@@ -205,13 +207,13 @@ abstract class Auto1(isRed: Boolean) : LinearOpMode() {
 
         Lifetime.bump()
 
-        var last = System.nanoTime()
+//        var last = System.nanoTime()
         while (opModeIsActive()) {
             scheduler.tick()
             telemetry.update()
-            val now = System.nanoTime()
-            Log.d("LoopTime", "%d : %d ns".format(now, now - last))
-            last = now
+//            val now = System.nanoTime()
+//            Log.d("LoopTime", "%d : %d ns".format(now, now - last))
+//            last = now
         }
 
         val time = stopAt ?: timer.time()

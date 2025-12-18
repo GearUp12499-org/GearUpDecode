@@ -90,10 +90,10 @@ class Shooter(
                 val pct = delta / 500 + 0.5
                 indicator1.position = pct
                 indicator2.position = pct
-                Log.i(
-                    "Shooter",
-                    "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta)
-                )
+//                Log.i(
+//                    "Shooter",
+//                    "%.2f -> %.2f => %.2f".format(currentVelocity, targetVelocity, delta)
+//                )
                 if (!(abs(currentVelocity - targetVelocity) < ACCEPTABLE_VELOCITY_DIFF)) {
                     lastMetAt = now
                     return false

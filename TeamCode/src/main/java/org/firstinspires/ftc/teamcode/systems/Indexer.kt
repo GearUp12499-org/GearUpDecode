@@ -298,12 +298,12 @@ class Indexer(
                 tickRunSensors(instant, error)
             }
 
-            Log.d(
-                "indexer",
-                "%s overshoot $overshootFlip ==? $matching result $instant deltaTicks $error MOTOR STATUS ${indexerMotor.mode} p${indexerMotor.power} v${indexerMotor.velocity} t${indexerMotor.targetPosition}".format(
-                    if (isInRunPos) "runPos" else "runSensor"
-                )
-            )
+//            Log.d(
+//                "indexer",
+//                "%s overshoot $overshootFlip ==? $matching result $instant deltaTicks $error MOTOR STATUS ${indexerMotor.mode} p${indexerMotor.power} v${indexerMotor.velocity} t${indexerMotor.targetPosition}".format(
+//                    if (isInRunPos) "runPos" else "runSensor"
+//                )
+//            )
 
             return matching && timer.time() > 0.5
         }
@@ -458,7 +458,7 @@ class Indexer(
                 (subTask == null || subTask!!.getState() == ITask.State.Finished || subTask!!.getState() == ITask.State.Cancelled)
             indicator1.position = if (isTaskFree) 0.5 else 0.8
             indicator2.position = if (isTaskFree) 0.5 else 0.8
-            Log.i("intake", "slot $slot  slotPos $slotPos  approxPosition $approxPosition  subTask $subTask")
+//            Log.i("intake", "slot $slot  slotPos $slotPos  approxPosition $approxPosition  subTask $subTask")
             if (approxPosition != slotPos && subTask?.let { it.target != slotPos } ?: true) {
                 slotTimer = false
                 if (subTask?.let { it.getState() != ITask.State.Finished && it.getState() != ITask.State.Cancelled } ?: false)
