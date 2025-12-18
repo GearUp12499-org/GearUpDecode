@@ -176,7 +176,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
 
     var wasA2 = false
     var wasB2 = false
-    var wasY = false
+    var wasX2 = false
     var wasX = false
     var wasA = false
     var wasY2 = false
@@ -232,8 +232,8 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             scheduler.add(indexer.goToPosition(getNextIn(indexer.lastPosition)))
         }
 
-        val y = gamepad1.y
-        if (y && !wasY) {
+        val x2 = gamepad2.x
+        if (x2 && !wasX2) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.stopAllWith(Locks.DRIVE_MOTORS)
             scheduler.add(OneShot {
@@ -306,10 +306,14 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             }).then(shootThree(SHOOT_MID_RANGE, bundle))
         }
 
+        if (gamepad2.dpad_left) {
+            if (scheduler.getLockOwner(shooter.lock) == null) shooter.setTarget(SHOOT_MID_RANGE)
+        }
+
         wasA2 = a2
         wasA = a
         wasB2 = b2
-        wasY = y
+        wasX2 = x2
     }
 
     var gp1lStickX = 0.0f
