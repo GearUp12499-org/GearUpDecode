@@ -327,9 +327,8 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
 
     fun getDistanceToGoal(): Double {
         val currentPos = hardware.pinpoint.position.remover
-        // TODO: subtract 7
         val distance =
-            hypot(poseSet.shootMeasure.x - currentPos.x, poseSet.shootMeasure.y - currentPos.y)
+            max(hypot(poseSet.shootMeasure.x - currentPos.x, poseSet.shootMeasure.y - currentPos.y) - 5, 0.0)
         return distance
     }
 

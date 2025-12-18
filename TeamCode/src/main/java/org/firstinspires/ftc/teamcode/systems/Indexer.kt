@@ -81,7 +81,7 @@ class Indexer(
 
         const val SCAN_VELOCITY = TICKS_PER_POSITION.toDouble() * 0.8
         const val OPERATING_POWER = 1.0
-        const val SCAN_POWER = 0.2
+        const val SCAN_POWER = 0.3
 
         const val NEARBY = TICKS_PER_POSITION / 4
         const val NOT_NEARBY = TICKS_PER_POSITION / 2
@@ -333,7 +333,7 @@ class Indexer(
             // we've messed it up.
             if (error > NOT_NEARBY) {
                 isInRunPos = true
-                posPower = max(posPower * 0.8, 0.5)
+                posPower = max(posPower * 0.75, 0.5)
                 beforeRunToPos()
                 return tickRunToPos(instant, error)
             }

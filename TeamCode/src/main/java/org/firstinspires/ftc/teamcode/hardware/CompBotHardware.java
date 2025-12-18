@@ -36,7 +36,7 @@ public class CompBotHardware extends HardwareMapper {
 
     public static final double HOOD_UP = 1.0;
     public static final double HOOD_DOWN = 0.7;
-    public static final double SHOOT_MIN_DIST = 24.0;
+    public static final double SHOOT_MIN_DIST = 20.0;
     public static final double SHOOT_HOOD_UP_DIST = 40.0;
 
     public static final double COLOR_RED = 0.3;
