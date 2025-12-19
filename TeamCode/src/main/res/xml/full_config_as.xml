@@ -16,7 +16,6 @@
 <!--            <RevColorSensorV3 name="backColor2" port="0" bus="2" />-->
         </LynxModule>
         <ServoHub name="Servo Hub 3" port="3">
-            <Servo name="flipper" port="0" />
             <Servo name="shooterHood1" port="4" />
             <Servo name="shooterHood2" port="5" />
         </ServoHub>
@@ -25,6 +24,7 @@
             <goBILDA5202SeriesMotor name="backLeft" port="2" />
             <goBILDA5202SeriesMotor name="frontLeft" port="3" />
             <Servo name="indicator1" port="0" />
+            <Servo name="flipper" port="2" />
             <Servo name="limelightLight1" port="5" />
             <DigitalDevice name="idxMag1" port="0" />
             <DigitalDevice name="idxMag2" port="2" />
