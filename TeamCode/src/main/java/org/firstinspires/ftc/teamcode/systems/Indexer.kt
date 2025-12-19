@@ -199,12 +199,14 @@ class Indexer(
         add(OneShot {
             flipper.position = CompBotHardware.FLIPPER_UP
         })
-            .then(Wait.s(0.25))
+            .then(Wait.s(0.15))
+//            .then(Wait.s(1.0))
             .then(OneShot {
                 flipper.position = CompBotHardware.FLIPPER_DOWN
                 deleteCurrent()
             })
-            .then(Wait.s(0.15))
+            .then(Wait.s(0.25))
+//            .then(Wait.s(1.0))
     }
 
     override fun onFinish(completedNormally: Boolean) {
