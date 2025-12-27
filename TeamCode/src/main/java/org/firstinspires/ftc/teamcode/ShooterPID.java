@@ -27,6 +27,9 @@ public class ShooterPID extends LinearOpMode {
     double pidf;
 
     double targetVel = 1100;
+    double servoPos = 0.5; //hardware.axonEncoder.getVoltage();
+    double hoodUp = 0.5589;
+    double hoodDown = 0.1828;
 
     public void setBothPower(double power){
         hardware.shoot1.setPower(power);
@@ -62,10 +65,7 @@ public class ShooterPID extends LinearOpMode {
     public void shooterPIDController(double targetVel){
         double output = hardware.shoot1.getPower();
         hardware.shoot2.setPower(output);
-        telemetry.addData("Target Vel: ", targetVel);
-        telemetry.addData("Vel: ", hardware.shoot1.getVelocity());
         telemetry.addData("Output: ", output);
-        telemetry.update();
     }
 
     @Override
@@ -84,7 +84,27 @@ public class ShooterPID extends LinearOpMode {
                 hardware.shoot1.setVelocity(targetVel);
             }
 
-//            customSetVelocity(1100);
+            if(gamepad1.a){
+                servoPos += 0.005;
+                if(servoPos > hoodUp){
+                    servoPos = hoodUp;
+                }
+                sleep(50);
+                hardware.axonServo.setPosition(servoPos);
+            } else if(gamepad1.b){
+                servoPos -= 0.005;
+                if(servoPos < hoodDown){
+                    servoPos = hoodDown;
+                }
+                sleep(50);
+                hardware.axonServo.setPosition(servoPos);
+            }
+            telemetry.addData("Servo Voltage: ", hardware.axonEncoder.getVoltage());
+            telemetry.addData("Servo Position: ", hardware.axonServo.getPosition());
+            telemetry.addData("Target Vel: ", targetVel);
+            telemetry.addData("Vel: ", hardware.shoot1.getVelocity());
+            telemetry.update();
+//          customSetVelocity(1100);
             shooterPIDController(targetVel);
 
         }
