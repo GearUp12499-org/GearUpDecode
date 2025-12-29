@@ -38,9 +38,10 @@ public class AutoBalance extends LinearOpMode {
 
     SentinelTask startFlag;
 
-    double xPos;
-    double yPos;
-    double heading;
+    double FLpower = 0;
+    double BLpower = 0;
+    double FRpower = 0;
+    double BRpower = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -71,26 +72,26 @@ public class AutoBalance extends LinearOpMode {
            }
 
            if (gamepad1.b){
-               hardware.frontLeft.setPower(0.4);
-               hardware.frontRight.setPower(0.5);
-               hardware.backLeft.setPower(0.6);
-               hardware.backRight.setPower(0.5);
+               hardware.frontLeft.setPower(FLpower);
+               hardware.frontRight.setPower(FRpower);
+               hardware.backLeft.setPower(BLpower);
+               hardware.backRight.setPower(BRpower);
            }
 
-            if (gamepad1.x){
-                hardware.frontLeft.setPower(0.4);
-                hardware.frontRight.setPower(-0.5);
-                hardware.backLeft.setPower(-0.6);
-                hardware.backRight.setPower(0.5);
+            else if (gamepad1.x){
+               hardware.frontLeft.setPower(-FLpower);
+               hardware.frontRight.setPower(FRpower);
+               hardware.backLeft.setPower(BLpower);
+               hardware.backRight.setPower(-BRpower);
             }
 
-            if (gamepad1.y){
-                hardware.frontLeft.setPower(0.4);
-                hardware.frontRight.setPower(-0.5);
-                hardware.backLeft.setPower(0.6);
-                hardware.backRight.setPower(-0.5);
+            else if (gamepad1.y){
+               hardware.frontLeft.setPower(-FLpower);
+               hardware.frontRight.setPower(FRpower);
+               hardware.backLeft.setPower(-BLpower);
+               hardware.backRight.setPower(BRpower);
             }
-            if (gamepad1.start){
+            else{
                 hardware.frontLeft.setPower(0);
                 hardware.frontRight.setPower(0);
                 hardware.backLeft.setPower(0);
@@ -105,15 +106,14 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-//        for (double start = 0.5; start <= 0.75; start += 0.25) {
-        for(double start = 0.5; start <= 0.6; start += 0.25){
-            double FLpower = start;
-            double FRpower = start;
-            double BLpower = start;
-            double BRpower = start;
+        for (double start = 0.75; start <= 0.76; start += 0.25) {
+            FLpower = start;
+            FRpower = start;
+            BLpower = start;
+            BRpower = start;
             double delta = 0.1;
 
-            for (int i = 1; i < 4 ; i++) {
+            for (int i = 1; i <= 7 ; i++) {
 
 
 
@@ -136,7 +136,7 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24){
+                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24 && hardware.pinpoint.getPosX(DistanceUnit.INCH) > -1){
                         hardware.pinpoint.update();
                     }
 
@@ -146,6 +146,11 @@ public class AutoBalance extends LinearOpMode {
                     hardware.backRight.setPower(0);
 
                     double currentError = Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH));
+
+                    if(hardware.pinpoint.getPosX(DistanceUnit.INCH) < -1){
+                        currentError = 100000000;
+                    }
+
 
                     if(currentError < BestOffset){
                         BestOffset = currentError;
@@ -191,11 +196,17 @@ public class AutoBalance extends LinearOpMode {
                     hardware.frontRight.setPower(TempFRpower);
                     hardware.backRight.setPower(TempBRpower);
 
-                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24){
+
+
+                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24 && hardware.pinpoint.getPosX(DistanceUnit.INCH) > -1){
                         hardware.pinpoint.update();
                     }
 
                     double currentError = Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH));
+
+                    if(hardware.pinpoint.getPosX(DistanceUnit.INCH) < -1){
+                        currentError = 100000000;
+                    }
 
                     if(currentError < BestOffset){
                         BestOffset = currentError;
@@ -287,7 +298,10 @@ public class AutoBalance extends LinearOpMode {
                 Log.i("FRPower", String.valueOf(FRpower));
                 delta *= .7;
             }
-
+            Log.i("QQQBLPower", String.valueOf(BLpower));
+            Log.i("QQQBRPower", String.valueOf(BRpower));
+            Log.i("QQQFLPower", String.valueOf(FLpower));
+            Log.i("QQQFRPower", String.valueOf(FRpower));
         }
     }
     public void drive2Pose2(REmover.RobotPose xya, double maxPower) {
