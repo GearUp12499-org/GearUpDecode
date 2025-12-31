@@ -3,17 +3,16 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
+import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareOld;
 
 //@Disabled
 @TeleOp
 // @Autonomous
 public class ShooterPID extends LinearOpMode {
-    CompBot2Hardware hardware;
+    CompBot2HardwareOld hardware;
     ElapsedTime runTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     double kp = 0;
     double ki = 0;
@@ -70,7 +69,7 @@ public class ShooterPID extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        hardware = new CompBot2Hardware(hardwareMap);
+        hardware = new CompBot2HardwareOld(hardwareMap);
         hardware.shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
 
 
