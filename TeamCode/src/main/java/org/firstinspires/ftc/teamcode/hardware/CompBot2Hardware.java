@@ -49,6 +49,12 @@ public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("ballStop")
     public ServoImplEx ballStop;
 
+    @HardwareName("flipper")
+    public ServoImplEx flipper;
+
+    @HardwareName("bottomBallStop")
+    public ServoImplEx bottomBallStop;
+
     @HardwareName("ballStopEncoder")
     public AnalogInput ballStopEncoder;
 

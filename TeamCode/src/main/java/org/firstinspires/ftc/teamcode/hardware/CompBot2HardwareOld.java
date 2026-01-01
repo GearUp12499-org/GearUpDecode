@@ -13,11 +13,11 @@ public class CompBot2HardwareOld extends HardwareMapper {
     @HardwareName("shoot2")
     public DcMotorEx shoot2;
 
-    @HardwareName("axon")
-    public Servo axonServo;
-
-    @HardwareName("axonF")
-    public AnalogInput axonEncoder;
+//    @HardwareName("axon")
+//    public Servo axonServo;
+//
+//    @HardwareName("axonF")
+//    public AnalogInput axonEncoder;
 
     public CompBot2HardwareOld(HardwareMap map) {
         super(map);

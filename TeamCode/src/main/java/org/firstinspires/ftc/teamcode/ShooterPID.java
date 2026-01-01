@@ -89,17 +89,17 @@ public class ShooterPID extends LinearOpMode {
                     servoPos = hoodUp;
                 }
                 sleep(50);
-                hardware.axonServo.setPosition(servoPos);
+//                hardware.axonServo.setPosition(servoPos);
             } else if(gamepad1.b){
                 servoPos -= 0.005;
                 if(servoPos < hoodDown){
                     servoPos = hoodDown;
                 }
                 sleep(50);
-                hardware.axonServo.setPosition(servoPos);
+//                hardware.axonServo.setPosition(servoPos);
             }
-            telemetry.addData("Servo Voltage: ", hardware.axonEncoder.getVoltage());
-            telemetry.addData("Servo Position: ", hardware.axonServo.getPosition());
+//            telemetry.addData("Servo Voltage: ", hardware.axonEncoder.getVoltage());
+//            telemetry.addData("Servo Position: ", hardware.axonServo.getPosition());
             telemetry.addData("Target Vel: ", targetVel);
             telemetry.addData("Vel: ", hardware.shoot1.getVelocity());
             telemetry.update();
