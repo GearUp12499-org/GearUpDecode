@@ -73,8 +73,8 @@ public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("pinpoint")
     public GoBildaPinpoint2Driver pinpoint;
 
-    @HardwareName("distanceRight")
-    public Rev2mDistanceSensor distanceRight;
+//    @HardwareName("distanceRight")
+//    public Rev2mDistanceSensor distanceRight;
 
     @HardwareName("distanceLeft")
     public Rev2mDistanceSensor distanceLeft;
