@@ -2,10 +2,13 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -17,11 +20,21 @@ class TeleOp : LinearOpMode() {
     private lateinit var hw: CompBot2Hardware
 
     override fun runOpMode() {
+        TaskSharkAndroid.setup()
+        val sch = FastScheduler()
         hw = CompBot2Hardware(hardwareMap)
         hw.pinpoint.resetPosAndIMU()
 
+        val shooter = sch.add(ShooterImpl(hw))
+
         waitForStart()
+
+        hw.initMotion()
+
+        var wasX = false
+
         while (opModeIsActive()) {
+            sch.tick()
             hw.pinpoint.update()
 
             val d = when {
@@ -34,12 +47,10 @@ class TeleOp : LinearOpMode() {
             hw.backLeft.power = d
             hw.backRight.power = d
 
-            val s = when {
-                gamepad1.x -> 0.55
-                else -> 0.0
-            }
-            hw.shoot1.power = s
-            hw.shoot2.power = s
+            val isX = gamepad1.x
+            if (isX && !wasX) shooter.setTarget(1600.0)
+            if (!isX && wasX) shooter.setTarget(0.0)
+            wasX = isX
 
             hw.turret.power = when {
                 gamepad1.dpad_right -> 0.5
@@ -61,7 +72,13 @@ class TeleOp : LinearOpMode() {
             // The equivalent button is start on Xbox-style controllers.
             if (gamepad1.options) {
                 val pos = hw.pinpoint.position
-                val new = Pose2D(DistanceUnit.INCH, pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), AngleUnit.RADIANS, 0.0)
+                val new = Pose2D(
+                    DistanceUnit.INCH,
+                    pos.getX(DistanceUnit.INCH),
+                    pos.getY(DistanceUnit.INCH),
+                    AngleUnit.RADIANS,
+                    0.0
+                )
                 hw.pinpoint.position = new
             }
 
@@ -99,10 +116,16 @@ class TeleOp : LinearOpMode() {
                 )
             )
             telemetry.addLine("Analog Inputs (% of 3.3V)")
-            telemetry.addData("ballStopEnc", hw.ballStopEncoder.voltage/hw.ballStopEncoder.maxVoltage)
-            telemetry.addData("hoodEnc", hw.hoodEncoder.voltage/hw.hoodEncoder.maxVoltage)
-            telemetry.addData("sliderEnc", hw.sliderEncoder.voltage/hw.sliderEncoder.maxVoltage)
-            telemetry.addData("dropDownEnc", hw.dropDownEncoder.voltage/hw.dropDownEncoder.maxVoltage)
+            telemetry.addData(
+                "ballStopEnc",
+                hw.ballStopEncoder.voltage / hw.ballStopEncoder.maxVoltage
+            )
+            telemetry.addData("hoodEnc", hw.hoodEncoder.voltage / hw.hoodEncoder.maxVoltage)
+            telemetry.addData("sliderEnc", hw.sliderEncoder.voltage / hw.sliderEncoder.maxVoltage)
+            telemetry.addData(
+                "dropDownEnc",
+                hw.dropDownEncoder.voltage / hw.dropDownEncoder.maxVoltage
+            )
             telemetry.addLine("Distance (inch)")
 //            telemetry.addData("distanceRight", hw.distanceRight.getDistance(DistanceUnit.INCH))
             telemetry.addData("distanceLeft", hw.distanceLeft.getDistance(DistanceUnit.INCH))

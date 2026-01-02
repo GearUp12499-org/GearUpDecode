@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode
+package org.firstinspires.ftc.teamcode.utilities
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
@@ -7,7 +7,6 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
-import java.lang.Math.toRadians
 
 @Autonomous
 class REmoverTest : LinearOpMode() {
@@ -15,6 +14,8 @@ class REmoverTest : LinearOpMode() {
         TaskSharkAndroid.setup()
         val hw = CompBot2Hardware(hardwareMap)
         val sch = FastScheduler()
+
+        hw.initMotion()
 
         hw.pinpoint.resetPosAndIMU()
 
@@ -24,7 +25,7 @@ class REmoverTest : LinearOpMode() {
                 return false
             }
         })
-        sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0, 0.0, toRadians(180.0))))
+        sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0, 0.0, Math.toRadians(180.0))))
 
         while (opModeInInit()) {
             hw.pinpoint.update()

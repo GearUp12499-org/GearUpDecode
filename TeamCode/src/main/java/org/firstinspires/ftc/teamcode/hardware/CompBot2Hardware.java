@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -16,6 +17,26 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBot2Hardware extends HardwareMapper {
+    public static final double DROP_DOWN_SWEET_SPOT = 0.48;
+    public static final double DROP_DOWN_BOTTOM = 0.44;
+    public static final double DROP_DOWN_TOP = 0.64;
+
+    public static final double SLIDER_OUT = 0.26;
+    public static final double SLIDER_IN = 0.86;
+
+    public static final int TURRET_CW_90 = 230;
+    public static final int TURRET_CW_STOP = 345;
+    public static final int TURRET_CCW_90 = -230;
+    public static final int TURRET_CCW_STOP = -345;
+
+    public static final double BALL_STOP_STOWED = 0.37;
+    public static final double BALL_STOP_MIDDLE = 0.47;
+
+    public static final double FLIPPER_DOWN = 0.25;
+    public static final double FLIPPER_UP = 0.68;
+
+    public static final double HOOD_UP = 0.56;
+
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotorEx frontRight;
@@ -44,10 +65,10 @@ public class CompBot2Hardware extends HardwareMapper {
 
     @HardwareName("shoot1")
     @Reversed
-    public DcMotorEx shoot1;
+    private DcMotorEx shoot1;
 
     @HardwareName("shoot2")
-    public DcMotorEx shoot2;
+    private DcMotorEx shoot2;
 
     @HardwareName("ballStop")
     public ServoImplEx ballStop;
@@ -114,10 +135,49 @@ public class CompBot2Hardware extends HardwareMapper {
     public CompBot2Hardware(HardwareMap map) {
         super(map);
 
-        // expect -3, -5.5
         pinpoint.setOffsets(-2.933, -5.020, DistanceUnit.INCH);
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
+
+        shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
+    }
+
+    // move on init is banned in the auto-teleop transition
+    public void initMotion() {
+        dropDown.setPosition(DROP_DOWN_SWEET_SPOT);
+    }
+
+    private boolean shooterMode = false;
+
+    private void setupShooterPow() {
+        shoot1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMode = false;
+    }
+
+    public void setShooterPower(double power) {
+        if (shooterMode) setupShooterPow();
+        shoot1.setPower(power);
+        shoot2.setPower(power);
+    }
+
+    private void setupShooterVel1() {
+        shoot1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMode = true;
+    }
+
+    public void setupShooterVel() {
+        setupShooterVel1();
+        shoot1.setVelocity(0);
+    }
+
+    public void setShoot1Vel(double vel) {
+        if (!shooterMode) setupShooterVel1();
+        shoot1.setVelocity(vel);
+    }
+
+    public void copyShooterPower() {
+        if (!shooterMode) setupShooterVel1();
+        shoot2.setPower(shoot1.getPower());
     }
 
     public static class Locks {
