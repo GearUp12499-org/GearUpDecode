@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 
+import io.github.gearup12499.taskshark.Lock;
+
 public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
@@ -110,5 +112,9 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public CompBot2Hardware(HardwareMap map) {
         super(map);
+    }
+
+    public static class Locks {
+        public static final Lock.StrLock DRIVE_MOTORS = new Lock.StrLock("drive_motors");
     }
 }
