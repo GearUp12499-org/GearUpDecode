@@ -59,7 +59,7 @@ object REmover {
     /**
      * Radius of turn, inches
      */
-    const val R = 7.66
+    const val R = 6.53
 
     const val ROTATE_FUDGE = 1.3
 
@@ -232,8 +232,6 @@ object REmover {
                 currentTime = runtime.time()
 
                 val timeoutTime = timeout.time()
-
-                hardware.pinpoint.update()
 
                 val yVelocity = hardware.pinpoint.getVelY(DistanceUnit.INCH)
                 val xVelocity = hardware.pinpoint.getVelX(DistanceUnit.INCH)

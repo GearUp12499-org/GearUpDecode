@@ -26,6 +26,8 @@
             <goBILDA5202SeriesMotor name="turret" port="2" />
             <goBILDA5202SeriesMotor name="intake" port="3" />
             <Servo name="ballStop" port="0" />
+            <Servo name="flipper" port="2" />
+            <Servo name="bottomBallStop" port="4" />
             <AnalogInput name="ballStopEncoder" port="0" />
             <DigitalDevice name="frontRamp" port="0" />
             <DigitalDevice name="middleRamp" port="2" />

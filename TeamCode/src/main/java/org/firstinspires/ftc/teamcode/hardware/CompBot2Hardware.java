@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 
@@ -112,6 +113,11 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public CompBot2Hardware(HardwareMap map) {
         super(map);
+
+        // expect -3, -5.5
+        pinpoint.setOffsets(-2.933, -5.020, DistanceUnit.INCH);
+        pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
     }
 
     public static class Locks {
