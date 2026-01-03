@@ -11,6 +11,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 
 import java.util.List;
 
@@ -33,10 +34,6 @@ public class ATTurret extends LinearOpMode {
     // adjust
     private static final int SOFT_LIMIT_BUFFER = 30;
 
-    // reference: compbot2
-    // TURRET_CW_90 = 230, TURRET_CW_STOP = 345
-    // TURRET_CCW_90 = -230, TURRET_CCW_STOP = -345
-
     private Limelight3A limelight;
     private DcMotorEx turretMotor;
     private double prevError = 0;
@@ -48,22 +45,22 @@ public class ATTurret extends LinearOpMode {
     }
 
     private double limit(double power, int currentPosition) {
-        if (currentPosition >= TURRET_CW_STOP - SOFT_LIMIT_BUFFER && power > 0) {
-            double distanceToLimit = TURRET_CW_STOP - currentPosition;
+        if (currentPosition >= CompBot2Hardware.TURRET_CW_STOP - SOFT_LIMIT_BUFFER && power > 0) {
+            double distanceToLimit = CompBot2Hardware.TURRET_CW_STOP - currentPosition;
             double scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER;
             power = power * Math.max(0, scaleFactor);
         }
 
-        if (currentPosition <= TURRET_CCW_STOP + SOFT_LIMIT_BUFFER && power < 0) {
-            double distanceToLimit = currentPosition - TURRET_CCW_STOP;
+        if (currentPosition <= CompBot2Hardware.TURRET_CCW_STOP + SOFT_LIMIT_BUFFER && power < 0) {
+            double distanceToLimit = currentPosition - CompBot2Hardware.TURRET_CCW_STOP;
             double scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER;
             power = power * Math.max(0, scaleFactor);
         }
 
-        if (currentPosition >= TURRET_CW_STOP && power > 0) {
+        if (currentPosition >= CompBot2Hardware.TURRET_CW_STOP && power > 0) {
             return 0;
         }
-        if (currentPosition <= TURRET_CCW_STOP && power < 0) {
+        if (currentPosition <= CompBot2Hardware.TURRET_CCW_STOP && power < 0) {
             return 0;
         }
 
@@ -185,7 +182,8 @@ public class ATTurret extends LinearOpMode {
             int currentPosition = getTurretPosition();
 
             telemetry.addData("status", isTracking ? "ic" : "i dont c");
-            telemetry.addData("ticks", "%d (limit: %d to %d)", currentPosition, TURRET_CCW_STOP, TURRET_CW_STOP);
+            telemetry.addData("ticks", "%d (limit: %d to %d)", currentPosition, CompBot2Hardware.TURRET_CCW_STOP,
+                    CompBot2Hardware.TURRET_CW_STOP);
 
             if (gamepad1.a) { // reset
                 turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
