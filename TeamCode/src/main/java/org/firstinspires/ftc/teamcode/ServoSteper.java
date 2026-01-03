@@ -40,7 +40,7 @@ public class ServoSteper extends LinearOpMode {
                     position = minServo;
                 }
             }
-            hardware.flipper.setPosition(position);
+            hardware.bottomBallStop.setPosition(position);
 
             if (gamepad1.a){
                 hardware.intake.setPower(1);

@@ -18,6 +18,7 @@ public class ShooterTest2 extends LinearOpMode {
         hardware = new CompBot2Hardware(hardwareMap);
 
         hardware.initMotion();
+        hardware.bottomBallStop.setPosition(0.42);
 
         boolean wasb = false;
         boolean wasx = false;
@@ -50,6 +51,21 @@ public class ShooterTest2 extends LinearOpMode {
                 hardware.hood.setPosition(targetpos);
             }
 
+            if(gamepad1.dpad_down){
+                hardware.bottomBallStop.setPosition(0.58);
+            }
+
+            if(gamepad1.dpad_left){
+                hardware.bottomBallStop.setPosition(0.15);
+                sleep(500);
+                hardware.flipper.setPosition(0.68);
+                sleep(800);
+                hardware.intake.setPower(-0.8);
+
+                hardware.flipper.setPosition(0.25);
+                sleep(500);
+                hardware.intake.setPower(1);
+            }
             if(gamepad1.a){
                 hardware.setShoot1Vel(targetvel);
                 hardware.intake.setPower(1);

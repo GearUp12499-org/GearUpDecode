@@ -38,6 +38,10 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double HOOD_UP = 0.56;
     public static final double HOOD_DOWN = 0.1828;
 
+    public static final double BOTTOM_BALL_STOP = 0.52;
+    public static final double BOTTOM_STOP_STOWED = 0.42;
+    public static final double BOTTOM_STOP_OUT = 0.15;
+
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotorEx frontRight;
