@@ -8,12 +8,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 @TeleOp
 public class ATLocalizationTest extends LinearOpMode {
-    private Hardware hardware;
     private Limelight3A limelight;
 
     @Override
     public void runOpMode() {
-        Hardware hardware = new Hardware(hardwareMap);
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.pipelineSwitch(6);
