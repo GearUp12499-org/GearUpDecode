@@ -36,6 +36,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double FLIPPER_UP = 0.68;
 
     public static final double HOOD_UP = 0.56;
+    public static final double HOOD_DOWN = 0.1828;
 
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
@@ -159,6 +160,13 @@ public class CompBot2Hardware extends HardwareMapper {
         shoot1.setPower(power);
         shoot2.setPower(power);
     }
+    public double getshoot1vel() {
+        return shoot1.getVelocity();
+    }
+
+    public double gethoodpos(){
+        return hood.getPosition();
+    }
 
     private void setupShooterVel1() {
         shoot1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -174,7 +182,6 @@ public class CompBot2Hardware extends HardwareMapper {
         if (!shooterMode) setupShooterVel1();
         shoot1.setVelocity(vel);
     }
-
     public void copyShooterPower() {
         if (!shooterMode) setupShooterVel1();
         shoot2.setPower(shoot1.getPower());
