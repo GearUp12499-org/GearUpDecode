@@ -106,7 +106,7 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-        for (double start = 0.75; start <= 0.76; start += 0.25) {
+        for (double start = 0.5; start <= 0.51; start += 0.25) {
             FLpower = start;
             FRpower = start;
             BLpower = start;
@@ -115,10 +115,17 @@ public class AutoBalance extends LinearOpMode {
 
             for (int i = 1; i <= 7 ; i++) {
 
-
+                double FLChange=0;
+                double FRChange=0;
+                double BLChange=0;
+                double BRChange=0;
 
                 int BestMult = -1000;
                 double BestOffset = 10000;
+
+                double Xpos = hardware.pinpoint.getPosX(DistanceUnit.INCH);
+                double Ypos = hardware.pinpoint.getPosY(DistanceUnit.INCH);
+                double Angle = hardware.pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
 
 //              forward
                 for (int mult = -1; mult <= 1; mult++){
@@ -136,8 +143,11 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24 && hardware.pinpoint.getPosX(DistanceUnit.INCH) > -1){
+                    while(Xpos < 48 && Math.abs(Ypos) < 24 && Xpos > -1){
                         hardware.pinpoint.update();
+                        Xpos = hardware.pinpoint.getPosX(DistanceUnit.INCH);
+                        Ypos = hardware.pinpoint.getPosY(DistanceUnit.INCH);
+                        Angle = hardware.pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
                     }
 
                     hardware.frontLeft.setPower(0);
@@ -145,10 +155,11 @@ public class AutoBalance extends LinearOpMode {
                     hardware.frontRight.setPower(0);
                     hardware.backRight.setPower(0);
 
-                    double currentError = Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH));
+                    double currentError = Ypos;
 
-                    if(hardware.pinpoint.getPosX(DistanceUnit.INCH) < -1){
+                    if(Xpos < -1){
                         currentError = 100000000;
+
                     }
 
 
@@ -157,17 +168,17 @@ public class AutoBalance extends LinearOpMode {
                         BestMult = mult;
                     }
 
-                    Log.i("xPos", String.valueOf(hardware.pinpoint.getPosX(DistanceUnit.INCH)));
-                    Log.i("yPos", String.valueOf(hardware.pinpoint.getPosY(DistanceUnit.INCH)));
-                    Log.i("Heading", String.valueOf(hardware.pinpoint.getHeading(AngleUnit.RADIANS)));
+                    Log.i("xPos", String.valueOf(Xpos));
+                    Log.i("yPos", String.valueOf(Ypos));
+                    Log.i("Heading", String.valueOf(Angle));
 
 
                 }
 
-                FLpower = FLpower + BestMult * delta;
-                FRpower = FRpower - BestMult * delta;
-                BLpower = BLpower + BestMult * delta;
-                BRpower = BRpower - BestMult * delta;
+                FLChange = FLChange + BestMult * delta;
+                FRChange = FRChange - BestMult * delta;
+                BLChange = BLChange + BestMult * delta;
+                BRChange = BRChange - BestMult * delta;
 
                 telemetry.addData("FL",FLpower);
                 telemetry.addData("FR",FRpower);
@@ -198,11 +209,14 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-                    while(hardware.pinpoint.getPosX(DistanceUnit.INCH) < 48 && Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH)) < 24 && hardware.pinpoint.getPosX(DistanceUnit.INCH) > -1){
+                    while(Xpos < 48 && Math.abs(Ypos) < 24 && Xpos > -1){
                         hardware.pinpoint.update();
+                        Xpos = hardware.pinpoint.getPosX(DistanceUnit.INCH);
+                        Ypos = hardware.pinpoint.getPosY(DistanceUnit.INCH);
+                        Angle = hardware.pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
                     }
 
-                    double currentError = Math.abs(hardware.pinpoint.getPosY(DistanceUnit.INCH));
+                    double currentError = Ypos;
 
                     if(hardware.pinpoint.getPosX(DistanceUnit.INCH) < -1){
                         currentError = 100000000;
@@ -220,15 +234,15 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-                    Log.i("xPos", String.valueOf(hardware.pinpoint.getPosX(DistanceUnit.INCH)));
-                    Log.i("yPos", String.valueOf(hardware.pinpoint.getPosY(DistanceUnit.INCH)));
-                    Log.i("Heading", String.valueOf(hardware.pinpoint.getHeading(AngleUnit.RADIANS)));
+                    Log.i("xPos", String.valueOf(Xpos));
+                    Log.i("yPos", String.valueOf(Ypos));
+                    Log.i("Heading", String.valueOf(Angle));
                 }
 
-                FLpower =  (FLpower + BestMult * delta);
-                FRpower =  (FRpower + BestMult * delta);
-                BLpower =  (BLpower - BestMult * delta);
-                BRpower =  (BRpower - BestMult * delta);
+                FLChange =  (FLChange + BestMult * delta);
+                FRChange =  (FRChange + BestMult * delta);
+                BLChange =  (BLChange - BestMult * delta);
+                BRChange =  (BRChange - BestMult * delta);
 
 
                 telemetry.addData("StrafeFL",FLpower);
@@ -257,11 +271,14 @@ public class AutoBalance extends LinearOpMode {
                     hardware.frontRight.setPower(TempFRpower);
                     hardware.backRight.setPower(TempBRpower);
 
-                    while(hardware.pinpoint.getHeading(AngleUnit.RADIANS.getUnnormalized()) - StartHeading < Math.PI){
+                    while(Angle - StartHeading < Math.PI){
                         hardware.pinpoint.update();
+                        Xpos = hardware.pinpoint.getPosX(DistanceUnit.INCH);
+                        Ypos = hardware.pinpoint.getPosY(DistanceUnit.INCH);
+                        Angle = hardware.pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
                     }
 
-                    double currentError = Math.abs(Math.hypot(hardware.pinpoint.getPosY(DistanceUnit.INCH), hardware.pinpoint.getPosX(DistanceUnit.INCH)));
+                    double currentError = Math.abs(Math.hypot(Ypos, Xpos));
 
                     if(currentError < BestOffset){
                         BestOffset = currentError;
@@ -275,15 +292,20 @@ public class AutoBalance extends LinearOpMode {
 
 
 
-                    Log.i("xPos", String.valueOf(hardware.pinpoint.getPosX(DistanceUnit.INCH)));
-                    Log.i("yPos", String.valueOf(hardware.pinpoint.getPosY(DistanceUnit.INCH)));
-                    Log.i("Heading", String.valueOf(hardware.pinpoint.getHeading(AngleUnit.RADIANS)));
+                    Log.i("xPos", String.valueOf(Xpos));
+                    Log.i("yPos", String.valueOf(Ypos));
+                    Log.i("Heading", String.valueOf(Angle));
                 }
 
-                FLpower =  (FLpower + BestMult * delta);
-                FRpower =  (FRpower - BestMult * delta);
-                BLpower =  (BLpower - BestMult * delta);
-                BRpower =  (BRpower + BestMult * delta);
+                FLChange =  (FLChange + BestMult * delta);
+                FRChange =  (FRChange - BestMult * delta);
+                BLChange =  (BLChange - BestMult * delta);
+                BRChange =  (BRChange + BestMult * delta);
+
+                FLpower = FLpower+FLChange/3;
+                FRpower = FRpower+FRChange/3;
+                BLpower = BLpower+BLChange/3;
+                BRpower = BRpower+BRChange/3;
 
                 telemetry.addData("FL",FLpower);
                 telemetry.addData("FR",FRpower);
