@@ -20,11 +20,10 @@ public class turrettracking extends LinearOpMode {
 
     private static final int TARGET_TAG_ID = 24;
 
-    private static final double kP = 0.06;
-    private static final double kD = 0.005;
-
+    private static final double kD = 0.00001;
+    private static final double kP = 0.05;
     private static final double MAX_POWER = 0.8;
-    private static final double MIN_POWER = 0.001;
+    private static final double MIN_POWER = 0.01;
     private static final double DEADBAND = 1.5;
 
     private static final int SOFT_LIMIT_BUFFER = 20;
