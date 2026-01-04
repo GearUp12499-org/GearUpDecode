@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -41,6 +42,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double BOTTOM_BALL_STOP = 0.52;
     public static final double BOTTOM_STOP_STOWED = 0.42;
     public static final double BOTTOM_STOP_OUT = 0.15;
+
+    @HardwareName("limelight")
+    public Limelight3A limelight;
 
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
