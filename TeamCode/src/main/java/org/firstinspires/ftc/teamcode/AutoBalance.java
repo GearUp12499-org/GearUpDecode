@@ -38,10 +38,10 @@ public class AutoBalance extends LinearOpMode {
 
     SentinelTask startFlag;
 
-    double FLpower = 0;
-    double BLpower = 0;
-    double FRpower = 0;
-    double BRpower = 0;
+    double FLpower = 0.6;
+    double BLpower = 0.75;
+    double FRpower = 0.9;
+    double BRpower = 0.75;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -120,6 +120,11 @@ public class AutoBalance extends LinearOpMode {
                 int BestMult = -1000;
                 double BestOffset = 10000;
 
+                double FLChange = 0;
+                double FRChange = 0;
+                double BLChange = 0;
+                double BRChange = 0;
+
 //              forward
                 for (int mult = -1; mult <= 1; mult++){
                     drive2Pose2(new REmover.RobotPose(0,0,0),1);
@@ -164,10 +169,10 @@ public class AutoBalance extends LinearOpMode {
 
                 }
 
-                FLpower = FLpower + BestMult * delta;
-                FRpower = FRpower - BestMult * delta;
-                BLpower = BLpower + BestMult * delta;
-                BRpower = BRpower - BestMult * delta;
+                FLChange = FLChange + BestMult * delta;
+                FRChange = FRChange - BestMult * delta;
+                BLChange = BLChange + BestMult * delta;
+                BRChange = BRChange - BestMult * delta;
 
                 telemetry.addData("FL",FLpower);
                 telemetry.addData("FR",FRpower);
@@ -225,10 +230,10 @@ public class AutoBalance extends LinearOpMode {
                     Log.i("Heading", String.valueOf(hardware.pinpoint.getHeading(AngleUnit.RADIANS)));
                 }
 
-                FLpower =  (FLpower + BestMult * delta);
-                FRpower =  (FRpower + BestMult * delta);
-                BLpower =  (BLpower - BestMult * delta);
-                BRpower =  (BRpower - BestMult * delta);
+                FLChange =  (FLChange + BestMult * delta);
+                FRChange =  (FRChange + BestMult * delta);
+                BLChange =  (BLChange - BestMult * delta);
+                BRChange =  (BRChange - BestMult * delta);
 
 
                 telemetry.addData("StrafeFL",FLpower);
@@ -280,10 +285,15 @@ public class AutoBalance extends LinearOpMode {
                     Log.i("Heading", String.valueOf(hardware.pinpoint.getHeading(AngleUnit.RADIANS)));
                 }
 
-                FLpower =  (FLpower + BestMult * delta);
-                FRpower =  (FRpower - BestMult * delta);
-                BLpower =  (BLpower - BestMult * delta);
-                BRpower =  (BRpower + BestMult * delta);
+                FLChange =  (FLChange + BestMult * delta);
+                FRChange =  (FRChange - BestMult * delta);
+                BLChange =  (BLChange - BestMult * delta);
+                BRChange =  (BRChange + BestMult * delta);
+
+                FLpower = FLpower + FLChange/3;
+                FRpower = FRpower + FRChange/3;
+                BLpower = BLpower + BLChange/3;
+                BRpower = BRpower + BRChange/3;
 
                 telemetry.addData("FL",FLpower);
                 telemetry.addData("FR",FRpower);

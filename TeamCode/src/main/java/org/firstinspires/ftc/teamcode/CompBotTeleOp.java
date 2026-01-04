@@ -46,7 +46,7 @@ public class CompBotTeleOp extends LinearOpMode {
 
         waitForStart();
         runtime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16,AngleUnit.RADIANS, -Math.PI));
+//        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH,-63,-16,AngleUnit.RADIANS, -Math.PI));
 
 
 
@@ -74,11 +74,21 @@ public class CompBotTeleOp extends LinearOpMode {
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(abs(rotY) + abs(rotX) + abs(rx), 1);
-            double frontLeftPower = (rotY + rotX + rx) / denominator;
-            double backLeftPower = (rotY - rotX + rx) / denominator;
-            double frontRightPower = (rotY - rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
+
+            double frontLeftPower = (rotY + rotX + rx) * 0.201/0.25;
+            double backLeftPower = (rotY - rotX + rx) * 0.3/0.25;
+            double frontRightPower = (rotY - rotX - rx) * 0.239/0.25;
+            double backRightPower = (rotY + rotX - rx) * 0.261/0.25;
+
+            double tempMax1 = Math.max(frontLeftPower, backLeftPower);
+            double tempMax2 = Math.max(frontLeftPower, frontRightPower);
+            double tempMax3 = Math.max(tempMax1, tempMax2);
+            double denominator = Math.max(tempMax3, 1);
+
+            frontLeftPower /= denominator;
+            backLeftPower /= denominator;
+            frontRightPower /= denominator;
+            backRightPower /= denominator;
 
 
             if (gamepad1.x){
