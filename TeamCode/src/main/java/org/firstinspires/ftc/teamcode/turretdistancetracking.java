@@ -14,8 +14,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 import java.util.List;
 
 @TeleOp
-public class turrettracking extends LinearOpMode {
-
+public class turretdistancetracking extends LinearOpMode {
     CompBot2Hardware hardware;
 
     private static final int TARGET_TAG_ID = 24;
@@ -24,8 +23,8 @@ public class turrettracking extends LinearOpMode {
     private static final double kD = 0.005;
 
     private static final double MAX_POWER = 0.8;
-    private static final double MIN_POWER = 0.001;
-    private static final double DEADBAND = 1.5;
+    private static final double MIN_POWER = 0.05;
+    private static final double DEADBAND = 1.0;
 
     private static final int SOFT_LIMIT_BUFFER = 20;
 
@@ -82,6 +81,10 @@ public class turrettracking extends LinearOpMode {
         return Range.clip(output, -MAX_POWER, MAX_POWER);
     }
 
+    private double getDistanceToGoal(double ta) {
+        return Math.sqrt(56.0 / ta) - 5.82;
+    }
+
     private void trackAprilTag() {
 
         LLResult result = hardware.limelight.getLatestResult();
@@ -114,6 +117,8 @@ public class turrettracking extends LinearOpMode {
         }
 
         double tx = target.getTargetXDegrees();
+        double ty = target.getTargetYDegrees();
+        double ta = target.getTargetArea();
         double dt = loopTimer.seconds();
         loopTimer.reset();
 
@@ -122,7 +127,18 @@ public class turrettracking extends LinearOpMode {
 
         hardware.turret.setPower(power);
 
-        telemetry.addData("tx", "%.2f", tx);
+        double limelightMountAngleDegrees = 30.0;
+        double limelightLensHeightInches = 13.5;
+        double goalHeightInches = 29.5;
+        double angleToGoalDegrees = limelightMountAngleDegrees + ty;
+        double angleToGoalRadians = Math.toRadians(angleToGoalDegrees);
+        double distanceFromLimelightToGoalInches = (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
+
+        telemetry.addData("distance from goal", "%.5f", getDistanceToGoal(ta));
+        telemetry.addData("distance", "%.2f", distanceFromLimelightToGoalInches);
+        telemetry.addData("tx", "%.5f", tx);
+        telemetry.addData("ty", "%.5f", ty);
+        telemetry.addData("ta","%.5f", ta);
         telemetry.addData("Turret pos", getTurretPosition());
     }
 
