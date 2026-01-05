@@ -16,7 +16,7 @@ import kotlin.math.max
 import kotlin.math.sin
 
 @TeleOp
-class TeleOp : LinearOpMode() {
+class TeleOpOld : LinearOpMode() {
     private lateinit var hw: CompBot2Hardware
 
     override fun runOpMode() {
@@ -30,8 +30,10 @@ class TeleOp : LinearOpMode() {
         waitForStart()
 
         hw.initMotion()
+        hw.slider.position = CompBot2Hardware.SLIDER_IN
 
         var wasX = false
+        var wasRB = false
 
         while (opModeIsActive()) {
             sch.tick()
@@ -82,6 +84,16 @@ class TeleOp : LinearOpMode() {
                 hw.pinpoint.position = new
             }
 
+            val isRB = gamepad1.right_bumper
+            if (isRB && !wasRB) {
+//                hw.slider.position = 0.5
+                hw.slider.position = CompBot2Hardware.SLIDER_OUT
+            }
+            if (!isRB && wasRB) {
+                hw.slider.position = CompBot2Hardware.SLIDER_IN
+            }
+            wasRB = isRB
+
             val botHeading: Double = hw.pinpoint.getHeading(AngleUnit.RADIANS) + PI / 2
 
 
@@ -122,6 +134,7 @@ class TeleOp : LinearOpMode() {
             )
             telemetry.addData("hoodEnc", hw.hoodEncoder.voltage / hw.hoodEncoder.maxVoltage)
             telemetry.addData("sliderEnc", hw.sliderEncoder.voltage / hw.sliderEncoder.maxVoltage)
+            telemetry.addData("sliderWrite", hw.slider.position)
             telemetry.addData(
                 "dropDownEnc",
                 hw.dropDownEncoder.voltage / hw.dropDownEncoder.maxVoltage
@@ -132,6 +145,10 @@ class TeleOp : LinearOpMode() {
             telemetry.addLine("Digital I/O")
             telemetry.addData("frontRamp", hw.frontRamp.state)
             telemetry.addData("middleRamp", hw.middleRamp.state)
+            telemetry.addData(
+                "color left",
+                hw.colorTopLeft.getDistance(DistanceUnit.MM)
+            )
             telemetry.update()
         }
     }

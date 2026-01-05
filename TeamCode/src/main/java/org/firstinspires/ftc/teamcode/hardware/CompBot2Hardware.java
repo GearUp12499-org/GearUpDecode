@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -22,8 +23,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double DROP_DOWN_BOTTOM = 0.44;
     public static final double DROP_DOWN_TOP = 0.64;
 
-    public static final double SLIDER_OUT = 0.26;
-    public static final double SLIDER_IN = 0.86;
+    public static final double SLIDER_OUT = 0.10;
+    public static final double SLIDER_IN = 0.95;
 
     public static final int TURRET_CW_90 = 230;
     public static final int TURRET_CW_STOP = 345;
@@ -39,9 +40,12 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double HOOD_UP = 0.56;
     public static final double HOOD_DOWN = 0.1828;
 
-    public static final double BOTTOM_BALL_STOP = 0.52;
+    public static final double BOTTOM_BALL_STOP = 0.58;
     public static final double BOTTOM_STOP_STOWED = 0.42;
     public static final double BOTTOM_STOP_OUT = 0.15;
+
+    public static final double INTAKE_POWER = 0.80;
+    public static final double OUTTAKE_POWER = -0.60;
 
     @HardwareName("limelight")
     public Limelight3A limelight;
