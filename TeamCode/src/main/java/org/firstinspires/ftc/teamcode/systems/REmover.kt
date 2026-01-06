@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import android.util.Log
+import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
@@ -44,16 +46,17 @@ object REmover {
     const val KD = 43.75
     const val THRESHOLD = 0.2
 
-    const val FKP: Double = 0.4
-    const val FKD: Double = 0.07
+    const val FKP: Double = 0.1
+    const val FKD: Double = 0.01
     const val FKI: Double = 0.00001
 
+    //0.4, 0.07, 0.00001
     const val SKP: Double = 0.4
-    const val SKD: Double = 0.07
+    const val SKD: Double = 0.016
     const val SKI: Double = 0.00001
 
-    const val WKP: Double = 0.5
-    const val WKD: Double = 0.025
+    const val WKP: Double = 0.15
+    const val WKD: Double = 0.005
     const val WKI: Double = 0.0
 
     /**
