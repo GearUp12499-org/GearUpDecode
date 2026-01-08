@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.util.Pair;
+
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -49,6 +51,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double OUTTAKE_POWER = -0.60;
 
     public static final double SHOOT_MID_RANGE = 1290.0;
+
+    public static final double SHOOT_HOOD_UP_DIST = 32.0;
+    public static final double SHOOT_MIN_DIST = 20.0;
 
     @HardwareName("limelight")
     public Limelight3A limelight;
@@ -207,5 +212,18 @@ public class CompBot2Hardware extends HardwareMapper {
     public static class Locks {
         public static final Lock.StrLock DRIVE_MOTORS = new Lock.StrLock("drive_motors");
         public static final Lock.StrLock INTAKE_STORAGE = new Lock.StrLock("intake_storage");
+    }
+
+    /**
+     * @param distance in inches
+     * @return hood, speed
+     */
+    public static Pair<Double, Double> hoodAndSpeed(double distance) {
+        boolean isUp = distance >= SHOOT_HOOD_UP_DIST;
+        double hood = isUp ? HOOD_50 : HOOD_DOWN;
+        double speed;
+        if (isUp) speed = 8.0 * distance + 990;
+        else speed = 8.92 * distance + 1014;
+        return new Pair<>(hood, speed);
     }
 }

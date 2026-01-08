@@ -3,25 +3,35 @@ package org.firstinspires.ftc.teamcode
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
+import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.systems.remover
+import org.firstinspires.ftc.teamcode.systems.wrapAngle
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
@@ -36,6 +46,7 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
     private lateinit var scheduler: FastScheduler
 
     override fun runOpMode() {
+        TaskSharkAndroid.setup()
         hw = CompBot2Hardware(hardwareMap)
         scheduler = FastScheduler()
 
@@ -130,11 +141,13 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
         private var gp1RB = false
         private var gp1LB = false
         private var gp1X = false
+        private var gp2Y = false
 
         fun inOut(sch: Scheduler) {
             val rb = gamepad1.right_bumper
             val lb = gamepad1.left_bumper
             val x = gamepad1.x
+            val y = gamepad1.y // TODO: Gamepad2
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -152,6 +165,12 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
                 }).then(Combo.shoot(hw))
                     .then(shooter.setTargetAsync(0.0))
             }
+            if (y && !gp2Y) {
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                sch.stopUsing(Locks.DRIVE_MOTORS)
+                sch.add(ShootFromHere())
+                    .then(shooter.setTargetAsync(0.0))
+            }
             if (lb && !gp1LB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
@@ -161,6 +180,60 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
             gp1RB = rb
             gp1LB = lb
             gp1X = x
+            gp2Y = y
         }
+    }
+
+    private inner class ShootFromHere : Group({}) {
+        private var speed: Double = 0.0
+        init {
+            val that = getScheduler()
+            that
+                .add(OneShot {
+                    val distance = getDistanceToGoal()
+                    if (distance < SHOOT_MIN_DIST) {
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
+                        /* outer */
+                        scheduler!!.add(Wait.s(.5))
+                            .then(OneShot {
+                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_0)
+                            })
+                        that.getCurrentEvaluation()?.stop()
+                    }
+                })
+                .then(lookAtGoal())
+                .then(OneShot {
+                    var hoodAndSpeed = CompBot2Hardware.hoodAndSpeed(getDistanceToGoal())
+                    speed = hoodAndSpeed.second
+                    hw.hood.position = hoodAndSpeed.first
+                })
+                .then(shooter.setTargetAndWait(0.2) { speed })
+                .then(Combo.shoot(hw))
+
+            require(Locks.DRIVE_MOTORS)
+            require(Locks.INTAKE_STORAGE)
+        }
+
+        override fun onFinish(completedNormally: Boolean) {
+            super.onFinish(completedNormally)
+        }
+    }
+
+
+    fun getDistanceToGoal(): Double {
+        val currentPos = hw.pinpoint.position.remover
+        val distance =
+            max(hypot(poseSet.shootMeasure.x - currentPos.x, poseSet.shootMeasure.y - currentPos.y) - 5, 0.0)
+        return distance
+    }
+
+    fun lookAtGoal(): ITask<*> {
+        val currentPos = hw.pinpoint.position.remover
+        val phi = atan2(poseSet.shootTarget.x - currentPos.x, poseSet.shootTarget.y - currentPos.y)
+        val theta1 = ((PI / 2 - phi) + PI).wrapAngle()
+        return REmover.drive2Pose2(
+            hw,
+            REmover.RobotPose(currentPos.x, currentPos.y, theta1)
+        )
     }
 }

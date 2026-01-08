@@ -225,3 +225,16 @@ object REmover {
         systemPackages.add(REmover::class.qualifiedName!!)
     }
 }
+
+val Pose2D.remover: REmover.RobotPose
+    get() = REmover.RobotPose(
+        this.getX(DistanceUnit.INCH),
+        this.getY(DistanceUnit.INCH),
+        this.getHeading(AngleUnit.RADIANS)
+    )
+
+fun Double.wrapAngle() = when {
+    this > PI -> this - 2 * PI
+    this < -PI -> this + 2 * PI
+    else -> this
+}

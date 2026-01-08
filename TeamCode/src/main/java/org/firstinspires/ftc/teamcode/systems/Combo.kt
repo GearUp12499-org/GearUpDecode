@@ -5,6 +5,8 @@ import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
 
@@ -16,6 +18,8 @@ object Combo {
                     hw.intake.power = 0.0
                     hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                     hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+                    hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
                 })
                 .then(Wait.ms(250))
                 .then(OneShot {
@@ -27,7 +31,7 @@ object Combo {
                 .then(OneShot {
                     hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
                 })
-                .then(WaitUntilContinuous(.3) {
+                .then(WaitUntilContinuous(.5) {
                     hw.frontRamp.state && hw.middleRamp.state
                 })
             this.require(CompBot2Hardware.Locks.INTAKE_STORAGE)
@@ -38,6 +42,7 @@ object Combo {
             hw.intake.power = 0.0
             hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
         }
     }
 
@@ -48,6 +53,7 @@ object Combo {
                     hw.intake.power = 1.0
                     hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
                     hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                 })
                 .then(WaitUntilContinuous(.3) {
                     !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
@@ -68,6 +74,7 @@ object Combo {
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
+            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_0)
         }
     }
 }
