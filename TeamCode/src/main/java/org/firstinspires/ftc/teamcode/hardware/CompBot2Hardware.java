@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -49,6 +48,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double INTAKE_POWER = 0.80;
     public static final double OUTTAKE_POWER = -0.60;
 
+    public static final double SHOOT_MID_RANGE = 1290.0;
+
     @HardwareName("limelight")
     public Limelight3A limelight;
 
@@ -72,6 +73,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public DcMotorEx backLeft;
 
     @HardwareName("turret")
+    @AutoClearEncoder
+    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotorEx turret;
 
     @HardwareName("intake")
@@ -174,7 +177,7 @@ public class CompBot2Hardware extends HardwareMapper {
         shoot1.setPower(power);
         shoot2.setPower(power);
     }
-    public double getshoot1vel() {
+    public double getShoot1Vel() {
         return shoot1.getVelocity();
     }
 
@@ -203,5 +206,6 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public static class Locks {
         public static final Lock.StrLock DRIVE_MOTORS = new Lock.StrLock("drive_motors");
+        public static final Lock.StrLock INTAKE_STORAGE = new Lock.StrLock("intake_storage");
     }
 }

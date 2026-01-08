@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package org.firstinspires.ftc.teamcode.variants
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
