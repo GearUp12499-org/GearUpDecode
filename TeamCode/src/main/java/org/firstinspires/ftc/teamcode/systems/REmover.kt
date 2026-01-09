@@ -40,24 +40,20 @@ object REmover {
         val asPose2D: Pose2D get() = Pose2D(DistanceUnit.INCH, x, y, AngleUnit.RADIANS, a)
     }
 
-    const val KP = 0.2
-    const val KD = 43.75
     const val THRESHOLD = 0.2
 
     const val tipFearRatio: Double = 2.0
     const val FKP: Double = 0.35
     const val tipFKP: Double = 0.1
-    const val FKD: Double = 0.01
+    const val FKD: Double = 0.02
     const val FKI: Double = 0.00001
-
-
 
     //0.4, 0.07, 0.00001
     const val SKP: Double = 0.4
-    const val SKD: Double = 0.016
+    const val SKD: Double = 0.025
     const val SKI: Double = 0.00001
 
-    const val WKP: Double = 0.15
+    const val WKP: Double = 0.4
     const val WKD: Double = 0.005
     const val WKI: Double = 0.0
 

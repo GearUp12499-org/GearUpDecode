@@ -37,55 +37,54 @@ abstract class Auto1(red: Boolean) : LinearOpMode() {
                 return false
             }
         })
-sch.add(shooter.setTargetAndWait(1290.0))
 
         sch.add(VirtualGroup {
             add(REmover.drive2Pose2(hw, poseSet.midShoot))
             add(shooter.setTargetAndWait(1290.0, 0.2))
         })
-            .then(Combo.shoot(hw))
-            .then(shooter.setTargetAsync(0.0))
-            .then(VirtualGroup {
-                val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set1pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set1out))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
-                        add(shooter.setTargetAndWait(1290.0, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-            .then(Combo.shoot(hw))
-            .then(shooter.setTargetAsync(0.0))
-            .then(VirtualGroup {
-                val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set2pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set2out))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
-                        add(shooter.setTargetAndWait(1290.0, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-            .then(Combo.shoot(hw))
-            .then(shooter.setTargetAsync(0.0))
-            .then(VirtualGroup {
-                val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set3pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot2))
-                        add(shooter.setTargetAndWait(1290.0, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-            .then(Combo.shoot(hw))
+//            .then(Combo.shoot(hw))
+//            .then(shooter.setTargetAsync(0.0))
+//            .then(VirtualGroup {
+//                val intake = add(Combo.intake(hw))
+//                add(REmover.drive2Pose2(hw, poseSet.set1pos))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set1out))
+//                    .then(VirtualGroup {
+//                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
+//                        add(shooter.setTargetAndWait(1290.0, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
+//            .then(Combo.shoot(hw))
+//            .then(shooter.setTargetAsync(0.0))
+//            .then(VirtualGroup {
+//                val intake = add(Combo.intake(hw))
+//                add(REmover.drive2Pose2(hw, poseSet.set2pos))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set2out))
+//                    .then(VirtualGroup {
+//                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
+//                        add(shooter.setTargetAndWait(1290.0, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
+//            .then(Combo.shoot(hw))
+//            .then(shooter.setTargetAsync(0.0))
+//            .then(VirtualGroup {
+//                val intake = add(Combo.intake(hw))
+//                add(REmover.drive2Pose2(hw, poseSet.set3pos))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
+//                    .then(VirtualGroup {
+//                        add(REmover.drive2Pose2(hw, poseSet.midShoot2))
+//                        add(shooter.setTargetAndWait(1290.0, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
+//            .then(Combo.shoot(hw))
 
         waitForStart()
         while (opModeIsActive()) sch.tick()
