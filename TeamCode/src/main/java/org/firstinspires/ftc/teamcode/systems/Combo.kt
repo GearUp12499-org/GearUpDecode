@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
+import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 object Combo {
     fun intake(hw: CompBot2Hardware) = object : Group({}) {
@@ -17,7 +18,9 @@ object Combo {
                 .add(OneShot {
                     hw.intake.power = 0.0
                     hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
-                    hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+                    hw.bottomBallStop.position =
+                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 110.0) CompBot2Hardware.BOTTOM_BALL_STOP
+                        else CompBot2Hardware.BOTTOM_STOP_STOWED
                     hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
                 })
@@ -75,7 +78,7 @@ object Combo {
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
-            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_0)
+            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
         }
     }
 }

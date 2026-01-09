@@ -6,13 +6,15 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
-abstract class Auto1(red: Boolean) : LinearOpMode() {
+abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var hw: CompBot2Hardware
@@ -27,6 +29,9 @@ abstract class Auto1(red: Boolean) : LinearOpMode() {
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
         hw.hood.position = CompBot2Hardware.HOOD_50
         hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
+
+        StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
+        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
 
         val sch = FastScheduler()
         shooter = sch.add(ShooterImpl(hw))

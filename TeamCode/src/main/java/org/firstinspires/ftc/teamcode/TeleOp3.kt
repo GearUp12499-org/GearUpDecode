@@ -14,10 +14,10 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
-import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
@@ -38,7 +38,7 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 
-abstract class TeleOp3(red: Boolean) : LinearOpMode() {
+abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var hw: CompBot2Hardware
@@ -50,6 +50,9 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
         hw = CompBot2Hardware(hardwareMap)
         scheduler = FastScheduler()
 
+        StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
+        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+
         if (StaticStore.duration() > 30.seconds) hw.pinpoint.resetPosAndIMU()
 
         // Background tasks
@@ -58,7 +61,7 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
         shooter = robotStartTask.then(ShooterImpl(hw))
         robotStartTask.then(DriveTask())
         robotStartTask.then(OneShot {
-            hw.slider.position = CompBot2Hardware.SLIDER_OUT
+            hw.slider.position = CompBot2Hardware.SLIDER_IN
             hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
             hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
@@ -85,6 +88,8 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
 
             mecanumDispatcher(sch)
             inOut(sch)
+            emerg(sch)
+
             return false
         }
 
@@ -141,17 +146,30 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
         private var gp1RB = false
         private var gp1LB = false
         private var gp1X = false
+        private var gp1Y = false
         private var gp2Y = false
+        private var gp2A = false
 
         fun inOut(sch: Scheduler) {
             val rb = gamepad1.right_bumper
             val lb = gamepad1.left_bumper
             val x = gamepad1.x
-            val y = gamepad1.y // TODO: Gamepad2
+            val y1 = gamepad1.y
+            val y2 = gamepad2.y
+            val a2 = gamepad2.a
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.add(Combo.intake(hw))
+            }
+            if (a2 && !gp2A) {
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                sch.add(VirtualGroup {
+                    add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
+                    add(OneShot {
+                        hw.hood.position = CompBot2Hardware.HOOD_50
+                    })
+                }).then(Combo.shoot(hw))
             }
             if (x && !gp1X) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -165,7 +183,19 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
                 }).then(Combo.shoot(hw))
                     .then(shooter.setTargetAsync(0.0))
             }
-            if (y && !gp2Y) {
+            if (y1 && !gp1Y) {
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                sch.stopUsing(Locks.DRIVE_MOTORS)
+                sch.add(VirtualGroup {
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(shooter.setTargetAndWait(SHOOT_FAR_RANGE, 0.3))
+                    add(OneShot {
+                        hw.hood.position = CompBot2Hardware.HOOD_UP
+                    })
+                }).then(Combo.shoot(hw))
+                    .then(shooter.setTargetAsync(0.0))
+            }
+            if (y2 && !gp2Y) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 sch.add(ShootFromHere())
@@ -180,12 +210,42 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
             gp1RB = rb
             gp1LB = lb
             gp1X = x
-            gp2Y = y
+            gp1Y = y1
+            gp2Y = y2
+        }
+
+        private var gp2l = false
+        private var gp2r = false
+        fun emerg(sch: Scheduler) {
+            /*
+            button prime shooter motor
+            dpad to manually adjust shooter angle
+            intake/outake buttons
+             */
+            val lb = gamepad2.left_bumper
+            val rb = gamepad2.right_bumper
+
+            if (lb || rb) {
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                hw.intake.power = if (lb) 0.8 else -0.8
+                if (rb && !gp2r) {
+                    shooter.setTarget(-500.0)
+                    hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
+                }
+                if (!rb && gp2r) shooter.setTarget(0.0)
+            } else if (gp2l || gp2r) {
+                hw.intake.power = 0.0
+                shooter.setTarget(0.0)
+            }
+
+            gp2l = lb
+            gp2r = rb
         }
     }
 
     private inner class ShootFromHere : Group({}) {
         private var speed: Double = 0.0
+
         init {
             val that = getScheduler()
             that
@@ -196,7 +256,7 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
                         /* outer */
                         scheduler!!.add(Wait.s(.5))
                             .then(OneShot {
-                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_0)
+                                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                             })
                         that.getCurrentEvaluation()?.stop()
                     }
@@ -214,16 +274,18 @@ abstract class TeleOp3(red: Boolean) : LinearOpMode() {
             require(Locks.INTAKE_STORAGE)
         }
 
-        override fun onFinish(completedNormally: Boolean) {
-            super.onFinish(completedNormally)
-        }
     }
 
 
     fun getDistanceToGoal(): Double {
         val currentPos = hw.pinpoint.position.remover
         val distance =
-            max(hypot(poseSet.shootMeasure.x - currentPos.x, poseSet.shootMeasure.y - currentPos.y) - 5, 0.0)
+            max(
+                hypot(
+                    poseSet.shootMeasure.x - currentPos.x,
+                    poseSet.shootMeasure.y - currentPos.y
+                ) - 5, 0.0
+            )
         return distance
     }
 
