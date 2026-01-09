@@ -46,7 +46,8 @@ object Combo {
         }
     }
 
-    fun shoot(hw: CompBot2Hardware) = object : Group({}) {
+    @JvmOverloads
+    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.3) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
@@ -55,7 +56,7 @@ object Combo {
                     hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                 })
-                .then(WaitUntilContinuous(.3) {
+                .then(WaitUntilContinuous(flipperWait) {
                     !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
                             || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
                 })
