@@ -23,7 +23,7 @@ abstract class Auto1(red: Boolean) : LinearOpMode() {
 
         hw = CompBot2Hardware(hardwareMap)
         hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
-        hw.slider.position = CompBot2Hardware.SLIDER_IN
+        hw.slider.position = CompBot2Hardware.SLIDER_OUT
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
         hw.hood.position = CompBot2Hardware.HOOD_50
         hw.pinpoint.setPosition(poseSet.farStart.asPose2D)

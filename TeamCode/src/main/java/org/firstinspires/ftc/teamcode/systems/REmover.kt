@@ -44,9 +44,13 @@ object REmover {
     const val KD = 43.75
     const val THRESHOLD = 0.2
 
-    const val FKP: Double = 0.1
+    const val tipFearRatio: Double = 2.0
+    const val FKP: Double = 0.35
+    const val tipFKP: Double = 0.1
     const val FKD: Double = 0.01
     const val FKI: Double = 0.00001
+
+
 
     //0.4, 0.07, 0.00001
     const val SKP: Double = 0.4
@@ -176,9 +180,24 @@ object REmover {
 //                    sumW += W * deltaTime
 //                }
 
-                val pf: Double = FKP * f + FKI * sumF - FKD * vF
-                val ps: Double = SKP * s + SKI * sumS - SKD * vS
+                var tipFactor: Double = 1.0
+
+                if(abs(f) > tipFearRatio * abs(s)){
+                    val ratio: Double = abs(s) / abs(f)
+
+                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
+                }
+
+                val tempFKP : Double = tipFactor * FKP
+                val tempSKP : Double = tipFactor * SKP
+
+                val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
+                val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
                 val pw: Double = WKP * w + WKI * sumW - WKD * vW
+
+
+
+
 
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
