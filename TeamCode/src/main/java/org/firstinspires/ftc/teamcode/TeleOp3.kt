@@ -149,6 +149,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp1Y = false
         private var gp2Y = false
         private var gp2A = false
+        private var gp2upD = false
 
         fun inOut(sch: Scheduler) {
             val rb = gamepad1.right_bumper
@@ -157,6 +158,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val y1 = gamepad1.y
             val y2 = gamepad2.y
             val a2 = gamepad2.a
+            val upD = gamepad2.dpad_up
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -169,7 +171,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot {
                         hw.hood.position = CompBot2Hardware.HOOD_50
                     })
-                }).then(Combo.shoot(hw))
+                }).then(Combo.shoot(hw, shooter))
             }
             if (x && !gp1X) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -180,8 +182,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot {
                         hw.hood.position = CompBot2Hardware.HOOD_50
                     })
-                }).then(Combo.shoot(hw))
-                    .then(shooter.setTargetAsync(0.0))
+                }).then(Combo.shoot(hw, shooter))
             }
             if (y1 && !gp1Y) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -192,14 +193,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot {
                         hw.hood.position = CompBot2Hardware.HOOD_UP
                     })
-                }).then(Combo.shoot(hw))
-                    .then(shooter.setTargetAsync(0.0))
+                }).then(Combo.shoot(hw, shooter))
             }
             if (y2 && !gp2Y) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 sch.add(ShootFromHere())
-                    .then(shooter.setTargetAsync(0.0))
             }
             if (lb && !gp1LB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -207,11 +206,16 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 shooter.setTarget(0.0)
             }
 
+            if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
+                shooter.setTarget(SHOOT_MID_RANGE)
+
             gp1RB = rb
             gp1LB = lb
             gp1X = x
             gp1Y = y1
             gp2Y = y2
+            gp2A = a2
+            gp2upD = upD
         }
 
         private var gp2l = false
@@ -268,7 +272,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     hw.hood.position = hoodAndSpeed.first
                 })
                 .then(shooter.setTargetAndWait(0.2) { speed })
-                .then(Combo.shoot(hw))
+                .then(Combo.shoot(hw, shooter))
 
             require(Locks.DRIVE_MOTORS)
             require(Locks.INTAKE_STORAGE)

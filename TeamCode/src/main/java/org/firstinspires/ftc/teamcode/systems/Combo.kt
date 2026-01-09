@@ -5,7 +5,6 @@ import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
@@ -50,7 +49,7 @@ object Combo {
     }
 
     @JvmOverloads
-    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.3) = object : Group({}) {
+    fun shoot(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
@@ -77,6 +76,7 @@ object Combo {
 
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
+            shooter.setTarget(0.0)
             hw.intake.power = 0.0
             hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
         }

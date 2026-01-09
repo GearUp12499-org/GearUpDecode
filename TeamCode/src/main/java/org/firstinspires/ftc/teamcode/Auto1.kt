@@ -6,7 +6,6 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
-import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
@@ -47,7 +46,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             add(REmover.drive2Pose2(hw, poseSet.midShoot))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
-            .then(Combo.shoot(hw))
+            .then(Combo.shoot(hw, shooter))
             .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
@@ -61,7 +60,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
-            .then(Combo.shoot(hw))
+            .then(Combo.shoot(hw, shooter))
             .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
@@ -75,7 +74,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
-            .then(Combo.shoot(hw))
+            .then(Combo.shoot(hw, shooter))
             .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
@@ -89,7 +88,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
-            .then(Combo.shoot(hw))
+            .then(Combo.shoot(hw, shooter))
 
         waitForStart()
         while (opModeIsActive()) sch.tick()

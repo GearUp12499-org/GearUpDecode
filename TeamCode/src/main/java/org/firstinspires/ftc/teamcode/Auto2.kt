@@ -46,7 +46,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             add(REmover.drive2Pose2(hw, poseSet.farShoot))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
         })
-            .then(Combo.shoot(hw, 0.5))
+            .then(Combo.shoot(hw, shooter, 0.5))
             .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
@@ -60,7 +60,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
-            .then(Combo.shoot(hw, 0.5))
+            .then(Combo.shoot(hw, shooter, 0.5))
             .then(REmover.drive2Pose2(hw, poseSet.set2pos))
 
         waitForStart()
