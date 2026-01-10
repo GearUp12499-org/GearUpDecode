@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBot2Hardware extends HardwareMapper {
-    public static final double DROP_DOWN_SWEET_SPOT = 0.48;
+    public static final double DROP_DOWN_SWEET_SPOT = 0.50;
     public static final double DROP_DOWN_BOTTOM = 0.44;
     public static final double DROP_DOWN_TOP = 0.64;
 
