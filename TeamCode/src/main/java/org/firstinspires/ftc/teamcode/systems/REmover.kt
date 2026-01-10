@@ -198,6 +198,7 @@ object REmover {
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
                 if (abs(deltaAll - prevDeltaAll) > 0.5) {
+                    prevDeltaAll = deltaAll
                     timeout.reset()
                 }
 
@@ -226,8 +227,6 @@ object REmover {
                 hardware.backLeft.power = pbl
                 hardware.frontRight.power = pfr
                 hardware.backRight.power = pbr
-
-                prevDeltaAll = deltaAll
                 prevTime = currentTime
 
                 return false

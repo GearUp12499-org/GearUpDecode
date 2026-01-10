@@ -44,13 +44,14 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public static final double BOTTOM_BALL_STOP = 0.58;
 //    public static final double BOTTOM_STOP_STOWED = 0.42;
-    public static final double BOTTOM_STOP_STOWED = 0.35;
+    public static final double BOTTOM_STOP_STOWED = 0.40;
     public static final double BOTTOM_STOP_OUT = 0.15;
 
     public static final double INTAKE_POWER = 0.80;
     public static final double OUTTAKE_POWER = -0.60;
 
     public static final double SHOOT_MID_RANGE = 1290.0;
+    public static final double SHOOT_MID_RANGE2 = 1310.0;
     public static final double SHOOT_FAR_RANGE = 1840.0;
 
     public static final double SHOOT_HOOD_UP_DIST = 32.0;

@@ -10,8 +10,11 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.Combo
+import org.firstinspires.ftc.teamcode.systems.Prismatic
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.tasks.Deferred
+import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 abstract class Auto2(private val red: Boolean) : LinearOpMode() {
@@ -19,6 +22,22 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
+
+    private var skipExtra = false
+
+    fun reconfigure(skip: Boolean) {
+        skipExtra = skip
+        Prismatic.configurationLights(
+            hw.prism,
+            red,
+            if (skip) Prismatic.Mode.ALTERNATE else Prismatic.Mode.MAIN
+        )
+
+        telemetry.addLine("AUTO SETUP --------")
+        telemetry.addLine("Skip 2nd Spike Line: ${if (skip) "YES (ALTERNATE)" else "NO (MAIN)"}")
+        telemetry.addLine("Press 1/RB to change")
+        telemetry.update()
+    }
 
     override fun runOpMode() {
         TaskSharkAndroid.setup()
@@ -39,6 +58,11 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
         val sch = FastScheduler()
         shooter = sch.add(ShooterImpl(hw))
+        sch.add(Configurator())
+
+        reconfigure(false)
+
+        val startFlag = sch.add(SentinelTask())
 
         sch.add(object : Task.Anonymous() {
             override fun onTick(): Boolean {
@@ -47,7 +71,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             }
         })
 
-        sch.add(VirtualGroup {
+        startFlag.then(VirtualGroup {
             add(REmover.drive2Pose2(hw, poseSet.farShoot))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
         })
@@ -66,11 +90,49 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     })
             })
             .then(Combo.shoot(hw, shooter, 0.5))
-            .then(REmover.drive2Pose2(hw, poseSet.set2pos))
+            .then(Deferred {
+                if (skipExtra) null
+                else VirtualGroup {
+                    val intake = add(Combo.intake(hw))
+                    add(REmover.drive2Pose2(hw, poseSet.set4pos))
+                        .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                        .then(VirtualGroup {
+                            add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                        })
+                        .then(OneShot {
+                            intake.finish()
+                        })
+                }
+            }).then(Deferred {
+                if (skipExtra) null
+                else Combo.shoot(hw, shooter, 0.5)
+            }).then(REmover.drive2Pose2(hw, poseSet.auto2park))
 
-        waitForStart()
+        while (opModeInInit()) sch.tick()
+
+        startFlag.finish()
+
         while (opModeIsActive()) sch.tick()
 
+        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
         StaticStore.mark() // indicate to carry pinpoint into teleop in the next 30 seconds
+    }
+
+    private inner class Configurator : Task<Configurator>() {
+        private var rbt = false
+
+        override fun onTick(): Boolean {
+            if (opModeIsActive()) finish()
+
+            val rb = gamepad1.right_bumper
+            if (rb && !rbt) {
+                reconfigure(!skipExtra)
+            }
+
+            rbt = rb
+
+            return false // use finish() to kill this
+        }
     }
 }
