@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
@@ -31,6 +32,10 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+
+        hw.turret.targetPosition = 0
+        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+        hw.turret.power = 1.0
 
         val sch = FastScheduler()
         shooter = sch.add(ShooterImpl(hw))

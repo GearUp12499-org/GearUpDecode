@@ -23,6 +23,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.systems.TurretTrack
 import org.firstinspires.ftc.teamcode.systems.remover
 import org.firstinspires.ftc.teamcode.systems.wrapAngle
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
@@ -43,6 +44,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
+    private lateinit var turretTrack: TurretTrack
     private lateinit var scheduler: FastScheduler
 
     override fun runOpMode() {
@@ -58,6 +60,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         // Background tasks
         scheduler.add(PinpointTask(hw.pinpoint))
         val robotStartTask = scheduler.add(SentinelTask())
+        turretTrack = scheduler.add(TurretTrack(hw.limelight, hw.turret, red))
         shooter = robotStartTask.then(ShooterImpl(hw))
         robotStartTask.then(DriveTask())
         robotStartTask.then(OneShot {
@@ -149,6 +152,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp1Y = false
         private var gp2Y = false
         private var gp2A = false
+        private var gp2B = false
         private var gp2upD = false
 
         fun inOut(sch: Scheduler) {
@@ -158,6 +162,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val y1 = gamepad1.y
             val y2 = gamepad2.y
             val a2 = gamepad2.a
+            val b2 = gamepad2.b
             val upD = gamepad2.dpad_up
 
             if (rb && !gp1RB) {
@@ -172,6 +177,25 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         hw.hood.position = CompBot2Hardware.HOOD_50
                     })
                 }).then(Combo.shoot(hw, shooter))
+            }
+            if (b2 && !gp2B) {
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                sch.add(VirtualGroup {
+                    add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
+                    add(OneShot {
+                        hw.hood.position = CompBot2Hardware.HOOD_50
+                    })
+                }).then(VirtualGroup {
+                    val track = add(turretTrack.track())
+                    add(Combo.shoot(hw, shooter))
+                        .then(OneShot {
+                            track.finish()
+
+                            hw.turret.targetPosition = 0
+                            hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+                            hw.turret.power = 1.0
+                        })
+                })
             }
             if (x && !gp1X) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -215,6 +239,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp1Y = y1
             gp2Y = y2
             gp2A = a2
+            gp2B = b2
             gp2upD = upD
         }
 
