@@ -18,18 +18,18 @@ class TuneRemover : LinearOpMode() {
         TaskSharkAndroid.setup()
         val sch = FastScheduler()
         hw = CompBot2Hardware(hardwareMap)
-//        hw.pinpoint.resetPosAndIMU()
+        hw.pinpoint.resetPosAndIMU()
         waitForStart()
 
-        hw.pinpoint.setPosition(
-            Pose2D(
-                DistanceUnit.INCH,
-                -63.375,
-                -17.25,
-                AngleUnit.RADIANS,
-                -Math.PI
-            )
-        )
+//        hw.pinpoint.setPosition(
+//            Pose2D(
+//                DistanceUnit.INCH,
+//                -63.375,
+//                -17.25,
+//                AngleUnit.RADIANS,
+//                -Math.PI
+//            )
+//        )
 
         var wasA = false;
         var wasB = false;
@@ -47,7 +47,7 @@ class TuneRemover : LinearOpMode() {
                 sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,-48.0,0.0)))
             }
             else if (gamepad1.x && !wasX) {
-                sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,Math.PI)))
+                sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,0.0)))
             }
             else if (gamepad1.y && !wasY) {
                 sch.add(REmover.drive2Pose2(hw, REmover.RobotPose(24.0,-24.0,3*Math.PI/4)))

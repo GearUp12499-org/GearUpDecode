@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
+
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import java.util.List;
 
@@ -103,7 +100,7 @@ public class ShooterTest2 extends LinearOpMode {
             wasx = gamepad1.x;
             wasdpad = gamepad1.dpad_right;
 
-            double currentVel = hardware.getshoot1vel();
+            double currentVel = hardware.getShoot1Vel();
             double hoodpos = hardware.gethoodpos();
 
             List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();

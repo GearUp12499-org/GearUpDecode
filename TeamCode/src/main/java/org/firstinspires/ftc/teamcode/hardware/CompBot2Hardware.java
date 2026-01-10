@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.util.Pair;
+
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -9,7 +11,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -19,7 +20,7 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import io.github.gearup12499.taskshark.Lock;
 
 public class CompBot2Hardware extends HardwareMapper {
-    public static final double DROP_DOWN_SWEET_SPOT = 0.48;
+    public static final double DROP_DOWN_SWEET_SPOT = 0.49;
     public static final double DROP_DOWN_BOTTOM = 0.44;
     public static final double DROP_DOWN_TOP = 0.64;
 
@@ -49,6 +50,12 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double INTAKE_POWER = 0.80;
     public static final double OUTTAKE_POWER = -0.60;
 
+    public static final double SHOOT_MID_RANGE = 1290.0;
+    public static final double SHOOT_FAR_RANGE = 1840.0;
+
+    public static final double SHOOT_HOOD_UP_DIST = 32.0;
+    public static final double SHOOT_MIN_DIST = 20.0;
+
     @HardwareName("limelight")
     public Limelight3A limelight;
 
@@ -72,6 +79,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public DcMotorEx backLeft;
 
     @HardwareName("turret")
+    @AutoClearEncoder
+    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotorEx turret;
 
     @HardwareName("intake")
@@ -174,7 +183,7 @@ public class CompBot2Hardware extends HardwareMapper {
         shoot1.setPower(power);
         shoot2.setPower(power);
     }
-    public double getshoot1vel() {
+    public double getShoot1Vel() {
         return shoot1.getVelocity();
     }
 
@@ -203,5 +212,19 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public static class Locks {
         public static final Lock.StrLock DRIVE_MOTORS = new Lock.StrLock("drive_motors");
+        public static final Lock.StrLock INTAKE_STORAGE = new Lock.StrLock("intake_storage");
+    }
+
+    /**
+     * @param distance in inches
+     * @return hood, speed
+     */
+    public static Pair<Double, Double> hoodAndSpeed(double distance) {
+        boolean isUp = distance >= SHOOT_HOOD_UP_DIST;
+        double hood = isUp ? HOOD_50 : HOOD_DOWN;
+        double speed;
+        if (isUp) speed = 8.0 * distance + 990;
+        else speed = 8.92 * distance + 1014;
+        return new Pair<>(hood, speed);
     }
 }
