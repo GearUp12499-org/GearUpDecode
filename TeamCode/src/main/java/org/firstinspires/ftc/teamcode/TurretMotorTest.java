@@ -118,8 +118,6 @@ public class TurretMotorTest extends LinearOpMode {
             wasdpad = gamepad1.dpad_right;
 
             telemetry.addData("Target Vel", targetvel);
-            telemetry.addData("Current Vel", hardware.getshoot1vel());
-            telemetry.addData("At Speed", Math.abs(targetvel - hardware.getshoot1vel()) < 20);
             telemetry.update();
             counter++;
         }

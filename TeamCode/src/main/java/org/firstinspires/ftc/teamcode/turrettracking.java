@@ -21,18 +21,25 @@ public class turrettracking extends LinearOpMode {
     private static final int TARGET_TAG_ID = 24;
 
     private static final double kP = 0.06;
-    private static final double kD = 0.00;
+    private static final double kI = 0.0003;
+    private static final double kD = 0.0005;
 
     private static final double MAX_POWER = 0.8;
     private static final double MIN_POWER = 0.00;
+    private static final double MAX_I = 0.2;
     private static final double DEADBAND = 1.0;
 
     private static final int SOFT_LIMIT_BUFFER = 20;
 
     private double prevError = 0;
+    private double integralError = 0;
     private ElapsedTime loopTimer = new ElapsedTime();
     private int encoderOffset = 0;
 
+    private double lastTx = 0;
+    private int lastEncoderPosAtCapture = 0;
+    private static final double TICKS_PER_DEGREE = (double) CompBot2Hardware.TURRET_CW_90 / 90.0;
+    private static final double VELOCITY_THRESHOLD = 50;
 
     private int getTurretPosition() {
         return hardware.turret.getCurrentPosition() - encoderOffset;
@@ -62,28 +69,36 @@ public class turrettracking extends LinearOpMode {
     }
 
     private double getTurretPower(double tx, double deltat) {
-        if (Math.abs(tx) < DEADBAND) {
-            prevError = tx;
+        double error = tx;
+
+        if (Math.abs(error) < DEADBAND) {
+            prevError = error;
+            integralError = 0;
             return 0;
         }
 
-        double p = kP * tx;
-        double d = deltat > 0 ? kD * ((tx - prevError) / deltat) : 0;
-        double output = p + d;
+        integralError += error * deltat;
+        integralError = Range.clip(integralError, -MAX_I, MAX_I);
 
-        prevError = tx;
+        double p = kP * error;
+        double i = kI * integralError;
+        double d = deltat > 0 ? kD * ((error - prevError) / deltat) : 0;
 
-        if (output > 0 && output < MIN_POWER){
+        double output = p + i + d;
+
+        prevError = error;
+
+        if (output > 0 && output < MIN_POWER) {
             output = MIN_POWER;
-        }
-        if (output < 0 && output > -MIN_POWER) {
+        } else if (output < 0 && output > -MIN_POWER) {
             output = -MIN_POWER;
         }
+
         return Range.clip(output, -MAX_POWER, MAX_POWER);
     }
 
     private double taToDistance(double ta) {
-        return Math.sqrt(56.0/ta) - 5.82;
+        return Math.sqrt(56.0 / ta) - 5.82;
     }
 
     private void trackAprilTag() {
@@ -117,19 +132,32 @@ public class turrettracking extends LinearOpMode {
             return;
         }
 
-        double tx = target.getTargetXDegrees();
         double dt = loopTimer.seconds();
         double ta = target.getTargetArea();
         loopTimer.reset();
 
+        int currentEncoder = getTurretPosition();
+        double tx;
+
+        if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
+            lastTx = target.getTargetXDegrees();
+            lastEncoderPosAtCapture = currentEncoder;
+            tx = lastTx;
+        } else {
+            double deltaTicks = currentEncoder - lastEncoderPosAtCapture;
+            tx = lastTx - (deltaTicks / TICKS_PER_DEGREE);
+        }
+
         double power = getTurretPower(tx, dt);
-        power = limit(power, getTurretPosition());
+        power = limit(power, currentEncoder);
 
         hardware.turret.setPower(power);
 
         telemetry.addData("distance", "%.3f", taToDistance(ta));
         telemetry.addData("tx", "%.2f", tx);
-        telemetry.addData("Turret pos", getTurretPosition());
+        telemetry.addData("raw_tx", "%.2f", target.getTargetXDegrees());
+        telemetry.addData("turret_vel", "%.2f", hardware.turret.getVelocity());
+        telemetry.addData("Turret pos", currentEncoder);
     }
 
     @Override
