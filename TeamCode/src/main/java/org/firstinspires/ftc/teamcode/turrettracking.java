@@ -21,10 +21,10 @@ public class turrettracking extends LinearOpMode {
     private static final int TARGET_TAG_ID = 24;
 
     private static final double kP = 0.06;
-    private static final double kD = 0.005;
+    private static final double kD = 0.00;
 
     private static final double MAX_POWER = 0.8;
-    private static final double MIN_POWER = 0.05;
+    private static final double MIN_POWER = 0.00;
     private static final double DEADBAND = 1.0;
 
     private static final int SOFT_LIMIT_BUFFER = 20;
@@ -82,6 +82,10 @@ public class turrettracking extends LinearOpMode {
         return Range.clip(output, -MAX_POWER, MAX_POWER);
     }
 
+    private double taToDistance(double ta) {
+        return Math.sqrt(56.0/ta) - 5.82;
+    }
+
     private void trackAprilTag() {
 
         LLResult result = hardware.limelight.getLatestResult();
@@ -115,6 +119,7 @@ public class turrettracking extends LinearOpMode {
 
         double tx = target.getTargetXDegrees();
         double dt = loopTimer.seconds();
+        double ta = target.getTargetArea();
         loopTimer.reset();
 
         double power = getTurretPower(tx, dt);
@@ -122,6 +127,7 @@ public class turrettracking extends LinearOpMode {
 
         hardware.turret.setPower(power);
 
+        telemetry.addData("distance", "%.3f", taToDistance(ta));
         telemetry.addData("tx", "%.2f", tx);
         telemetry.addData("Turret pos", getTurretPosition());
     }
@@ -136,7 +142,7 @@ public class turrettracking extends LinearOpMode {
         hardware.turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         hardware.turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
-        hardware.limelight.setPollRateHz(100);
+        hardware.limelight.setPollRateHz(150);
         hardware.limelight.pipelineSwitch(2);
         hardware.limelight.start();
 
