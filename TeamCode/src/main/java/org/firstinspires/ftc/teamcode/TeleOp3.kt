@@ -28,6 +28,7 @@ import org.firstinspires.ftc.teamcode.systems.remover
 import org.firstinspires.ftc.teamcode.systems.wrapAngle
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
+import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import kotlin.math.PI
@@ -181,19 +182,23 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.add(VirtualGroup {
-                    add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                    add(OneShot {
-                        hw.hood.position = CompBot2Hardware.HOOD_50
-                    })
-                }).then(VirtualGroup {
                     val track = add(turretTrack.track())
-                    add(Combo.shoot(hw, shooter))
+                    val bind = add(compose {
+                        onTick {
+                            val hoodSpeed = track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                            false
+                        }
+                        onFinish {
+                            shooter.setTarget(0.0)
+                        }
+                    })
+                    add(shooter.awaitTarget(0.2))
+                        .then(Combo.shoot(hw, shooter))
                         .then(OneShot {
                             track.finish()
-
-                            hw.turret.targetPosition = 0
-                            hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-                            hw.turret.power = 1.0
+                            bind.finish()
                         })
                 })
             }

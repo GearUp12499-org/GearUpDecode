@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import java.lang.Math.clamp
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.sqrt
 
 class TurretTrack(
     private val ll: Limelight3A,
@@ -38,12 +39,17 @@ class TurretTrack(
 
     val targetTag = if (red) TAG_RED else TAG_BLUE
 
-    fun track() = object : Anonymous() {
+    fun track() = TrackTask()
+
+    inner class TrackTask : Anonymous() {
         private var prevError = 0.0
         private var integralError = 0.0
         private var lastT = 0L
         private var lastTx = 0.0
         private var lastEncoderPosAtCapture = 0
+
+        var distance: Double? = null
+            private set
 
         override fun onStart() {
             ll.start()
@@ -100,6 +106,10 @@ class TurretTrack(
             return result
         }
 
+        private fun taToDistance(ta: Double): Double {
+            return sqrt(56.0 / ta) - 5.82
+        }
+
         override fun onTick(): Boolean {
             val result = ll.latestResult
             if (result == null || !result.isValid) {
@@ -125,6 +135,7 @@ class TurretTrack(
             val dt = (now - lastT) / 1e9
             lastT = now
             val ta = target.targetArea
+            distance = taToDistance(ta)
 
             val currentEncoder = turret.currentPosition
 
@@ -148,6 +159,9 @@ class TurretTrack(
         override fun onFinish(completedNormally: Boolean) {
             ll.stop()
             turret.power = 0.0
+            turret.targetPosition = 0
+            turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+            turret.power = 1.0
         }
     }
 

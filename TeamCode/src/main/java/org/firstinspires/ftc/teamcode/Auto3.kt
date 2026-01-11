@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
+import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 abstract class Auto3(private val red: Boolean) : LinearOpMode() {
@@ -43,10 +44,10 @@ abstract class Auto3(private val red: Boolean) : LinearOpMode() {
 
         val startFlag = sch.add(SentinelTask())
 
-        sch.add(object : Task.Anonymous() {
-            override fun onTick(): Boolean {
+        sch.add(compose {
+            onTick {
                 hw.pinpoint.update()
-                return false
+                false
             }
         })
 
