@@ -16,6 +16,9 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.drivers.IGoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.drivers.NoOpPrism;
+import org.firstinspires.ftc.teamcode.utilities.StaticStore;
 
 import io.github.gearup12499.taskshark.Lock;
 
@@ -147,7 +150,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public RevColorSensorV3 colorBottomLeft;
 
     @HardwareName("prism")
-    public GoBildaPrismDriver prism;
+    public GoBildaPrismDriver actualPrism;
+
+    public IGoBildaPrismDriver prism;
 
     @HardwareName("frontRamp")
     @DigitalMode(DigitalChannel.Mode.INPUT)
@@ -165,6 +170,14 @@ public class CompBot2Hardware extends HardwareMapper {
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
 
         shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
+
+        refreshPrismState();
+    }
+
+    public void refreshPrismState() {
+        if (StaticStore.INSTANCE.getPrismBroken())
+            prism = NoOpPrism.INSTANCE;
+        else prism = actualPrism;
     }
 
     // move on init is banned in the auto-teleop transition

@@ -25,17 +25,25 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
     private var skipExtra = false
 
-    fun reconfigure(skip: Boolean) {
+    fun reconfigure(skip: Boolean, prismBroken: Boolean) {
         skipExtra = skip
         Prismatic.configurationLights(
             hw.prism,
             red,
             if (skip) Prismatic.Mode.ALTERNATE else Prismatic.Mode.MAIN
         )
+        hw.refreshPrismState()
+
+        if (prismBroken) {
+            telemetry.addLine("PRISM IS DISABLED!")
+            telemetry.addLine("DO NOT TRUST LIGHTING")
+            telemetry.addLine()
+        }
 
         telemetry.addLine("AUTO SETUP --------")
         telemetry.addLine("Skip 2nd Spike Line: ${if (skip) "YES (ALTERNATE)" else "NO (MAIN)"}")
         telemetry.addLine("Press 1/RB to change")
+        telemetry.addLine("Press 1/X to toggle Prism")
         telemetry.update()
     }
 
@@ -60,7 +68,9 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         shooter = sch.add(ShooterImpl(hw))
         sch.add(Configurator())
 
-        reconfigure(false)
+        if (StaticStore.prismBroken)
+            telemetry.speak("Prism is disabled, lighting will not match!")
+        reconfigure(false, StaticStore.prismBroken)
 
         val startFlag = sch.add(SentinelTask())
 
@@ -121,16 +131,22 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
     private inner class Configurator : Task<Configurator>() {
         private var rbt = false
+        private var xt = false
 
         override fun onTick(): Boolean {
             if (opModeIsActive()) finish()
 
             val rb = gamepad1.right_bumper
+            val x = gamepad1.x
             if (rb && !rbt) {
-                reconfigure(!skipExtra)
+                reconfigure(!skipExtra, StaticStore.prismBroken)
+            }
+            if (x && !xt) {
+                reconfigure(skipExtra, !StaticStore.prismBroken)
             }
 
             rbt = rb
+            xt = x
 
             return false // use finish() to kill this
         }

@@ -9,6 +9,8 @@ object StaticStore {
     var lastOpMode: TimeSource.Monotonic.ValueTimeMark? = null
     var fallbackArtboard = GoBildaPrismDriver.Artboard.ARTBOARD_0
 
+    var prismBroken = false
+
     fun mark() {
         lastOpMode = timeSource.markNow()
     }

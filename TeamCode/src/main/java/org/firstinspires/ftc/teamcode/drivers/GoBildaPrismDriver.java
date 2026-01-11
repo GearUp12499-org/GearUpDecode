@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
         xmlTag = "goBILDAPrism",
         description ="Prism RGB LED Driver (6-30V Input, I²C / PWM Control)"
 )
-public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
+public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> implements IGoBildaPrismDriver {
     private static final byte DEFAULT_ADDRESS = 0x38;
     private final int MAXIMUM_NUMBER_OF_ANIMATIONS = 10;
     private final int MAXIMUM_NUMBER_OF_ANIMATION_GROUPS = 8;
@@ -292,6 +292,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
     /**
      * return What artboard is set as default boot animation?
      */
+    @Override
     public int getBootAnimationArtboard(){
         byte[] packet = deviceClient.read(Register.STATUS.address, Register.STATUS.registerType.lengthBytes);
         return 0;
@@ -306,6 +307,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
      * @return true if the animation was successfully inserted, false if the index 
      *         is out of bounds or the animation is null
      */
+    @Override
     public boolean insertAnimation(LayerHeight height, PrismAnimations.AnimationBase animation)
     {
         if(height == LayerHeight.DISABLED || animation == null)
@@ -324,6 +326,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
      * @return true if both insertion and update operations were successful, 
      *         false if either operation failed
      */
+    @Override
     public boolean insertAndUpdateAnimation(LayerHeight height, PrismAnimations.AnimationBase animation)
     {
         if(insertAnimation(height, animation))
@@ -337,6 +340,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
      * 
      * @return true if the update process completed (currently always returns true)
      */
+    @Override
     public boolean updateAllAnimations()
     {
         for(int i = 0; i < MAXIMUM_NUMBER_OF_ANIMATIONS; i++){
@@ -353,11 +357,13 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
      * @return true if the animation was successfully updated, false if the index 
      *         is out of bounds or if no animation exists at the specified index
      */
+    @Override
     public boolean updateAnimationFromIndex(LayerHeight height)
     {
         return updateAnimationFromIndex(height, false);
     }
 
+    @Override
     public void clearAllAnimations()
     {
         byte[] packet = TypeConversion.intToByteArray(1 << 25, ByteOrder.LITTLE_ENDIAN);
@@ -384,6 +390,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
         deviceClient.write(Register.CONTROL.address, packet);
     }
 
+    @Override
     public void saveCurrentAnimationsToArtboard(Artboard artboard)
     {
         byte[] data = {
@@ -395,6 +402,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
         deviceClient.write(Register.ARTBOARD_CONTROL.address, data);
     }
 
+    @Override
     public void loadAnimationsFromArtboard(Artboard artboard)
     {
         byte[] data = {
@@ -406,6 +414,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
         deviceClient.write(Register.ARTBOARD_CONTROL.address, data);
     }
 
+    @Override
     public void setDefaultBootArtboard(Artboard artboard)
     {
         byte[] data = {
@@ -417,6 +426,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
         deviceClient.write(Register.ARTBOARD_CONTROL.address, data);
     }
 
+    @Override
     public void enableDefaultBootArtboard(boolean enable)
     {
         byte[] data = {

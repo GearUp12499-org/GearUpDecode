@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.systems
 
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver
+import org.firstinspires.ftc.teamcode.drivers.IGoBildaPrismDriver
 import org.firstinspires.ftc.teamcode.drivers.PrismAnimations
 import org.firstinspires.ftc.teamcode.drivers.PrismAnimations.AnimationBase
 import org.firstinspires.ftc.teamcode.drivers.PrismColor
@@ -67,7 +68,7 @@ object Prismatic {
     }
 
     fun configurationLights(
-        prism: GoBildaPrismDriver,
+        prism: IGoBildaPrismDriver,
         red: Boolean,
         mode: Mode
     ) {

@@ -24,8 +24,11 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
     private var altnStart = false
 
-    fun reconfigure(altn: Boolean) {
+    fun reconfigure(altn: Boolean, prismBroken: Boolean) {
         altnStart = altn
+        StaticStore.prismBroken = prismBroken
+        hw.refreshPrismState()
+
         Prismatic.configurationLights(
             hw.prism,
             red,
@@ -33,9 +36,16 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         )
         hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
 
+        if (prismBroken) {
+            telemetry.addLine("PRISM IS DISABLED!")
+            telemetry.addLine("DO NOT TRUST LIGHTING")
+            telemetry.addLine()
+        }
+
         telemetry.addLine("AUTO SETUP --------")
         telemetry.addLine("Position: ${if (altn) "GOAL (ALTERNATE)" else "FAR (MAIN)"}")
         telemetry.addLine("Press 1/RB to change")
+        telemetry.addLine("Press 1/X to toggle Prism")
         telemetry.update()
     }
 
@@ -55,7 +65,9 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         Prismatic.configurationLights(hw.prism, red, Prismatic.Mode.MAIN)
 
-        reconfigure(false)
+        if (StaticStore.prismBroken)
+            telemetry.speak("Prism is disabled, lighting will not match!")
+        reconfigure(false, StaticStore.prismBroken)
 
         val sch = FastScheduler()
 
@@ -131,16 +143,22 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
     private inner class Configurator : Task<Configurator>() {
         private var rbt = false
+        private var xt = false
 
         override fun onTick(): Boolean {
             if (opModeIsActive()) finish()
 
             val rb = gamepad1.right_bumper
+            val x = gamepad1.x
             if (rb && !rbt) {
-                reconfigure(!altnStart)
+                reconfigure(!altnStart, StaticStore.prismBroken)
+            }
+            if (x && !xt) {
+                reconfigure(altnStart, !StaticStore.prismBroken)
             }
 
             rbt = rb
+            xt = x
 
             return false // use finish() to kill this
         }

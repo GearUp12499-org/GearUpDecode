@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
-import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
@@ -14,7 +13,6 @@ import org.firstinspires.ftc.teamcode.systems.Prismatic
 import org.firstinspires.ftc.teamcode.systems.Prismatic.Mode
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
-import org.firstinspires.ftc.teamcode.tasks.Deferred
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
@@ -44,6 +42,9 @@ abstract class Auto3(private val red: Boolean) : LinearOpMode() {
 
         val sch = FastScheduler()
         shooter = sch.add(ShooterImpl(hw))
+
+        if (StaticStore.prismBroken)
+            telemetry.speak("Prism is disabled, lighting will not match!")
         Prismatic.configurationLights(hw.prism, red, Mode.ALTERNATE)
 
         val startFlag = sch.add(SentinelTask())
