@@ -7,10 +7,10 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.Combo
-import org.firstinspires.ftc.teamcode.systems.Prismatic
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.Deferred
@@ -27,21 +27,15 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
     fun reconfigure(skip: Boolean, prismBroken: Boolean) {
         skipExtra = skip
-        Prismatic.configurationLights(
-            hw.prism,
-            red,
-            if (skip) Prismatic.Mode.ALTERNATE else Prismatic.Mode.MAIN
-        )
         hw.refreshPrismState()
 
         if (prismBroken) {
-            telemetry.addLine("PRISM IS DISABLED!")
-            telemetry.addLine("DO NOT TRUST LIGHTING")
+            telemetry.addLine("PRISM IS DISABLED")
             telemetry.addLine()
         }
 
-        telemetry.addLine("AUTO SETUP --------")
-        telemetry.addLine("Skip 2nd Spike Line: ${if (skip) "YES (ALTERNATE)" else "NO (MAIN)"}")
+        telemetry.addLine("<big><big>Auto Setup</big></big>")
+        telemetry.addLine("Collect Corner Artifacts: ${if (skip) "<strong>NO (ALTERNATE)</strong>" else "YES (MAIN)"}")
         telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")
         telemetry.update()
@@ -68,8 +62,8 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         shooter = sch.add(ShooterImpl(hw))
         sch.add(Configurator())
 
-        if (StaticStore.prismBroken)
-            telemetry.speak("Prism is disabled, lighting will not match!")
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
+        telemetry.update()
         reconfigure(false, StaticStore.prismBroken)
 
         val startFlag = sch.add(SentinelTask())

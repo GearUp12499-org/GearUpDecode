@@ -7,12 +7,12 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.Combo
-import org.firstinspires.ftc.teamcode.systems.Prismatic
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
@@ -28,22 +28,15 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         altnStart = altn
         StaticStore.prismBroken = prismBroken
         hw.refreshPrismState()
-
-        Prismatic.configurationLights(
-            hw.prism,
-            red,
-            if (altn) Prismatic.Mode.ALTERNATE else Prismatic.Mode.MAIN
-        )
         hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
 
         if (prismBroken) {
-            telemetry.addLine("PRISM IS DISABLED!")
-            telemetry.addLine("DO NOT TRUST LIGHTING")
+            telemetry.addLine("PRISM IS DISABLED")
             telemetry.addLine()
         }
 
-        telemetry.addLine("AUTO SETUP --------")
-        telemetry.addLine("Position: ${if (altn) "GOAL (ALTERNATE)" else "FAR (MAIN)"}")
+        telemetry.addLine("<big><big>Auto Setup</big></big>")
+        telemetry.addLine("Position: <strong>${if (altn) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
         telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")
         telemetry.update()
@@ -63,10 +56,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         hw.turret.power = 1.0
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
-        Prismatic.configurationLights(hw.prism, red, Prismatic.Mode.MAIN)
+        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
 
-        if (StaticStore.prismBroken)
-            telemetry.speak("Prism is disabled, lighting will not match!")
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
+        telemetry.update()
         reconfigure(false, StaticStore.prismBroken)
 
         val sch = FastScheduler()
