@@ -149,6 +149,14 @@ class TeleOpOld : LinearOpMode() {
                 "color left",
                 hw.colorTopLeft.getDistance(DistanceUnit.MM)
             )
+            telemetry.addData(
+                "color bottom l",
+                hw.colorBottomLeft.getDistance(DistanceUnit.MM)
+            )
+            telemetry.addData(
+                "color bottom r",
+                hw.colorBottomRight.getDistance(DistanceUnit.MM)
+            )
             telemetry.update()
         }
     }

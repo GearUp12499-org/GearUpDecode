@@ -12,7 +12,7 @@ class PoseSet private constructor(val invert: Boolean) {
 
     companion object {
         private val farStart = RobotPose(-64.75, -17.25, Math.PI/2)
-        private val goalStart = RobotPose(49.64, -54.48, -2.5248)
+        private val goalStart = RobotPose(49.64, -54.48, -2.318)
         private val readAT = RobotPose(46.92, -11.92, -2.55)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val midShoot = RobotPose(24.0, -24.0, 3 * Math.PI / 4)
@@ -24,8 +24,8 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set2out = RobotPose(-12.0, -61.625, -Math.PI / 2)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0,  -61.625, -Math.PI / 2)
-        private val set4pos = RobotPose(-36.0,  -60.5, -3 * Math.PI / 4)
-        private val set4out = RobotPose(-64.25,  -59.5, -23 * Math.PI / 24)
+        private val set4pos = RobotPose(-42.0,  -60.0, -3 * Math.PI / 4)
+        private val set4out = RobotPose(-64.0,  -61.0, -Math.PI)
         private val set4out2 = RobotPose(-64.25,  -63.75, -Math.PI)
         private val auto2park = RobotPose(-56.0, -36.0, -Math.PI)
         private val auto1finish = RobotPose(0.0,  -48.0, Math.PI)

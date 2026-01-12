@@ -50,7 +50,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double BOTTOM_STOP_STOWED = 0.40;
     public static final double BOTTOM_STOP_OUT = 0.15;
 
-    public static final double INTAKE_POWER = 0.80;
+    public static final double INTAKE_POWER = 0.8;
     public static final double OUTTAKE_POWER = -0.60;
 
     public static final double SHOOT_MID_RANGE = 1290.0;

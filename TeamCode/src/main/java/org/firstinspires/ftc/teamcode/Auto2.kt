@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
@@ -8,6 +9,7 @@ import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.Combo
@@ -70,7 +72,13 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         val startFlag = sch.add(SentinelTask())
 
         sch.add(compose {
+            var state: GoBildaPinpoint2Driver.DeviceStatus? = null
             onTick {
+                val stateNew = hw.pinpoint.deviceStatus
+                if (stateNew != state) {
+                    Log.w("Pinpoint", "state changed $state -> $stateNew")
+                    state = stateNew
+                }
                 hw.pinpoint.update()
                 false
             }
@@ -98,7 +106,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             .then(Deferred {
                 if (skipExtra) null
                 else VirtualGroup {
-                    val intake = add(Combo.intake(hw))
+                    val intake = add(Combo.intake(hw, 1.0))
                     add(REmover.drive2Pose2(hw, poseSet.set4pos))
                         .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                         .then(VirtualGroup {

@@ -11,24 +11,24 @@ import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 object Combo {
-    fun intake(hw: CompBot2Hardware) = object : Group({}) {
+    fun intake(hw: CompBot2Hardware, power: Double = CompBot2Hardware.INTAKE_POWER) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
                     hw.intake.power = 0.0
                     hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                     hw.bottomBallStop.position =
-                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 110.0) CompBot2Hardware.BOTTOM_BALL_STOP
+                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) CompBot2Hardware.BOTTOM_BALL_STOP
                         else CompBot2Hardware.BOTTOM_STOP_STOWED
                     hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
                 })
                 .then(Wait.ms(250))
                 .then(OneShot {
-                    hw.intake.power = CompBot2Hardware.INTAKE_POWER
+                    hw.intake.power = power
                 })
                 .then(WaitUntil {
-                    hw.colorTopLeft.getDistance(DistanceUnit.MM) < 110.0
+                    hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0
                 })
                 .then(OneShot {
                     hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP

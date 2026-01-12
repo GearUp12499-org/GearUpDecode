@@ -42,6 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 
 abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
+    private val skew = (if (red) 1 else -1) * PI / 2
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
@@ -124,7 +125,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         }
 
         fun mecanum(y: Double, x: Double, rx: Double) {
-            val botHeading: Double = hw.pinpoint.getHeading(AngleUnit.RADIANS) + PI / 2
+            val botHeading: Double = hw.pinpoint.getHeading(AngleUnit.RADIANS) + skew
 
             // Rotate the movement direction counter to the bot's rotation
             var rotX = x * cos(-botHeading) - y * sin(-botHeading)

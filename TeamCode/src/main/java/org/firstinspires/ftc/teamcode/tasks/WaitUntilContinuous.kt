@@ -1,8 +1,15 @@
 package org.firstinspires.ftc.teamcode.tasks
 
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.systemPackages
 
 class WaitUntilContinuous(private val duration: Double, private val cond: Condition) : Task<WaitUntilContinuous>() {
+    companion object {
+        init {
+            systemPackages.add(WaitUntilContinuous::class.qualifiedName!!)
+        }
+    }
+
     fun interface Condition {
         fun check(): Boolean
     }
