@@ -4,9 +4,13 @@ import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark.ITask
+import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
@@ -26,12 +30,24 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     private lateinit var shooter: ShooterImpl
 
     private var altnStart = false
+    private var confTask: ITask<*>? = null
 
-    fun reconfigure(altn: Boolean, prismBroken: Boolean) {
+    fun reconfigure(altn: Boolean, prismBroken: Boolean, sch: Scheduler) {
         altnStart = altn
         StaticStore.prismBroken = prismBroken
         hw.refreshPrismState()
-        hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
+
+        confTask?.stop()
+        confTask = sch.add(Group {
+            it.add(OneShot {
+                hw.pinpoint.recalibrateIMU()
+            }).then(WaitUntil {
+                hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
+            }).then(OneShot {
+                hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
+            })
+        })
+
 
         if (prismBroken) {
             telemetry.addLine("PRISM IS DISABLED")
@@ -49,7 +65,6 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         TaskSharkAndroid.setup()
 
         hw = CompBot2Hardware(hardwareMap)
-        hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
         hw.slider.position = CompBot2Hardware.SLIDER_IN
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
         hw.hood.position = CompBot2Hardware.HOOD_50
@@ -63,9 +78,9 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
         telemetry.update()
-        reconfigure(false, StaticStore.prismBroken)
 
         val sch = FastScheduler()
+        reconfigure(false, StaticStore.prismBroken, sch)
 
         sch.add(Configurator())
 
@@ -153,10 +168,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             val rb = gamepad1.right_bumper
             val x = gamepad1.x
             if (rb && !rbt) {
-                reconfigure(!altnStart, StaticStore.prismBroken)
+                reconfigure(!altnStart, StaticStore.prismBroken, scheduler!!)
             }
             if (x && !xt) {
-                reconfigure(altnStart, !StaticStore.prismBroken)
+                reconfigure(altnStart, !StaticStore.prismBroken, scheduler!!)
             }
 
             rbt = rb

@@ -69,7 +69,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             hw.slider.position = CompBot2Hardware.SLIDER_IN
             hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
-            hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
 
             hw.turret.targetPosition = 0
             hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
@@ -265,7 +264,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 hw.intake.power = if (lb) 0.8 else -0.8
                 if (rb && !gp2r) {
                     shooter.setTarget(-500.0)
-                    hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                 }
                 if (!rb && gp2r) shooter.setTarget(0.0)
             } else if (gp2l || gp2r) {

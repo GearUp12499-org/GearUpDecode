@@ -135,10 +135,6 @@ class TeleOpOld : LinearOpMode() {
             telemetry.addData("hoodEnc", hw.hoodEncoder.voltage / hw.hoodEncoder.maxVoltage)
             telemetry.addData("sliderEnc", hw.sliderEncoder.voltage / hw.sliderEncoder.maxVoltage)
             telemetry.addData("sliderWrite", hw.slider.position)
-            telemetry.addData(
-                "dropDownEnc",
-                hw.dropDownEncoder.voltage / hw.dropDownEncoder.maxVoltage
-            )
             telemetry.addLine("Distance (inch)")
 //            telemetry.addData("distanceRight", hw.distanceRight.getDistance(DistanceUnit.INCH))
             telemetry.addData("distanceLeft", hw.distanceLeft.getDistance(DistanceUnit.INCH))

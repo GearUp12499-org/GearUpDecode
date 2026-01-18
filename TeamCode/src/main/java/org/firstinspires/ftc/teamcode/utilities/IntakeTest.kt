@@ -44,7 +44,6 @@ class IntakeTest : LinearOpMode() {
         it.add(OneShot {
             hw.intake.power = 0.0
             hw.slider.position = CompBot2Hardware.SLIDER_IN
-            hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         })
             .then(Wait.ms(250))
@@ -62,7 +61,6 @@ class IntakeTest : LinearOpMode() {
             })
             .then(OneShot {
                 hw.intake.power = 0.0
-                hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
             })
     }
 

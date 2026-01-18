@@ -10,8 +10,8 @@
             <goBILDA5202SeriesMotor name="shoot1" port="2" />
             <goBILDA5202SeriesMotor name="shoot2" port="3" />
             <Servo name="hood" port="0" />
-            <Servo name="slider" port="2" />
-            <Servo name="dropDown" port="4" />
+            <Servo name="shooterBallStop" port="2" />
+            <Servo name="slider" port="5" />
             <AnalogInput name="dropDownEncoder" port="0" />
             <AnalogInput name="sliderEncoder" port="1" />
             <AnalogInput name="hoodEncoder" port="2" />

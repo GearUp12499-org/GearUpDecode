@@ -48,7 +48,6 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         TaskSharkAndroid.setup()
 
         hw = CompBot2Hardware(hardwareMap)
-        hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
         hw.slider.position = CompBot2Hardware.SLIDER_IN
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
         hw.hood.position = CompBot2Hardware.HOOD_UP

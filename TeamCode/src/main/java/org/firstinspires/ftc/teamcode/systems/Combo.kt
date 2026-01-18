@@ -16,7 +16,6 @@ object Combo {
             getScheduler()
                 .add(OneShot {
                     hw.intake.power = 0.0
-                    hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                     hw.bottomBallStop.position =
                         if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) CompBot2Hardware.BOTTOM_BALL_STOP
                         else CompBot2Hardware.BOTTOM_STOP_STOWED
@@ -42,7 +41,6 @@ object Combo {
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
-            hw.dropDown.position = CompBot2Hardware.DROP_DOWN_BOTTOM
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
         }
@@ -55,7 +53,6 @@ object Combo {
                 .add(OneShot {
                     hw.intake.power = 1.0
                     hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
-                    hw.dropDown.position = CompBot2Hardware.DROP_DOWN_SWEET_SPOT
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                 })
                 .then(WaitUntilContinuous(flipperWait) {

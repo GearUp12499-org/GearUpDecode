@@ -122,11 +122,8 @@ public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("sliderEncoder")
     public AnalogInput sliderEncoder;
 
-    @HardwareName("dropDown")
-    public ServoImplEx dropDown;
-
-    @HardwareName("dropDownEncoder")
-    public AnalogInput dropDownEncoder;
+    @HardwareName("shooterBallStop")
+    public ServoImplEx shooterBallStop;
 
     @HardwareName("pinpoint")
     public GoBildaPinpoint2Driver pinpoint;
@@ -182,7 +179,7 @@ public class CompBot2Hardware extends HardwareMapper {
 
     // move on init is banned in the auto-teleop transition
     public void initMotion() {
-        dropDown.setPosition(DROP_DOWN_SWEET_SPOT);
+//        dropDown.setPosition(DROP_DOWN_SWEET_SPOT);
     }
 
     private boolean shooterMode = false;
