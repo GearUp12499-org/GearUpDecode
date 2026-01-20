@@ -8,13 +8,16 @@ import com.qualcomm.robotcore.util.Range;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 
 import java.util.List;
 
 @TeleOp
-public class turrettracking extends LinearOpMode {
+public class TurretTrackingPlus extends LinearOpMode {
 
     CompBot2Hardware hardware;
 
@@ -40,6 +43,9 @@ public class turrettracking extends LinearOpMode {
     private int lastEncoderPosAtCapture = 0;
     private static final double TICKS_PER_DEGREE = (double) CompBot2Hardware.TURRET_CW_90 / 90.0;
     private static final double VELOCITY_THRESHOLD = 50;
+
+    private double lastImuError = 0;
+    private int lastImuEncoderPosAtCapture = 0;
 
     private int getTurretPosition() {
         return hardware.turret.getCurrentPosition() - encoderOffset;
@@ -68,8 +74,8 @@ public class turrettracking extends LinearOpMode {
         return power;
     }
 
-    private double getTurretPower(double tx, double deltat) {
-        double error = tx;
+    private double getTurretPower(double tang, double deltat) {
+        double error = tang;
 
         if (Math.abs(error) < DEADBAND) {
             prevError = error;
@@ -101,21 +107,74 @@ public class turrettracking extends LinearOpMode {
         return Math.sqrt(56.0 / ta) - 5.82;
     }
 
-    private void trackAprilTag() {
+    private boolean isDestinationReachable = true;
 
+    private double getPinpointGoalYawDiff(Pose2D goalPose, int currentTurretEncoder) {
+        Pose2D robotPose = hardware.pinpoint.getPosition();
+
+        double x = goalPose.getX(DistanceUnit.INCH) - robotPose.getX(DistanceUnit.INCH);
+        double y = goalPose.getY(DistanceUnit.INCH) - robotPose.getY(DistanceUnit.INCH);
+        double goalAngle = Math.atan2(y, x);
+        double goalAngleDeg = AngleUnit.normalizeDegrees(goalAngle * 180 / Math.PI);
+
+        double botHeading = AngleUnit.normalizeDegrees(robotPose.getHeading(AngleUnit.DEGREES));
+
+        double turretRotationDeg = currentTurretEncoder / TICKS_PER_DEGREE; // How much to rotate the turret, turret is
+                                                                            // backwards to the front of the robot
+        double turretWorldHeading = AngleUnit.normalizeDegrees(botHeading + 180 - turretRotationDeg);
+
+        telemetry.addData("bot heading (deg)", botHeading);
+        telemetry.addData("turret rotation (deg)", turretRotationDeg);
+        telemetry.addData("turret world heading (deg)", turretWorldHeading);
+        telemetry.addData("goal angle (deg)", goalAngleDeg);
+
+        double error = AngleUnit.normalizeDegrees(goalAngleDeg - turretWorldHeading);
+
+        double limelightConventionError = -error;
+
+        int targetTicks = currentTurretEncoder + (int) (limelightConventionError * TICKS_PER_DEGREE);
+        isDestinationReachable = (targetTicks >= CompBot2Hardware.TURRET_CCW_STOP &&
+                targetTicks <= CompBot2Hardware.TURRET_CW_STOP);
+
+        return limelightConventionError;
+    }
+
+    private static final double IMU_HANDOFF_THRESHOLD = 15.0;
+
+    private double trackPoseByIMU(Pose2D goalPose, int currentEncoder, double dt, double imuError) {
+        double adjustedImuError;
+
+        if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
+            lastImuError = imuError;
+            lastImuEncoderPosAtCapture = currentEncoder;
+            adjustedImuError = lastImuError;
+        } else {
+            double deltaTicks = currentEncoder - lastImuEncoderPosAtCapture;
+            adjustedImuError = lastImuError - (deltaTicks / TICKS_PER_DEGREE);
+        }
+
+        double power = getTurretPower(adjustedImuError, dt);
+
+        telemetry.addData("imu_error", "%.2f", adjustedImuError);
+        telemetry.addData("imu_x", "%.2f", hardware.pinpoint.getPosition().getX(DistanceUnit.INCH));
+        telemetry.addData("imu_y", "%.2f", hardware.pinpoint.getPosition().getY(DistanceUnit.INCH));
+        telemetry.addData("power", "%.3f", power);
+        telemetry.addData("turret_vel", "%.2f", hardware.turret.getVelocity());
+        telemetry.addData("dest_reachable", isDestinationReachable);
+
+        return power;
+    }
+
+    private double trackAprilTag(Pose2D goalPose, int currentEncoder, double dt, double imuError) {
         LLResult result = hardware.limelight.getLatestResult();
 
         if (result == null || !result.isValid()) {
-            hardware.turret.setPower(0);
-            prevError = 0;
-            return;
+            return Double.NaN;
         }
 
         List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
         if (tags.isEmpty()) {
-            hardware.turret.setPower(0);
-            prevError = 0;
-            return;
+            return Double.NaN;
         }
 
         LLResultTypes.FiducialResult target = null;
@@ -127,16 +186,10 @@ public class turrettracking extends LinearOpMode {
         }
 
         if (target == null) {
-            hardware.turret.setPower(0);
-            prevError = 0;
-            return;
+            return Double.NaN;
         }
 
-        double dt = loopTimer.seconds();
         double ta = target.getTargetArea();
-        loopTimer.reset();
-
-        int currentEncoder = getTurretPosition();
         double tx;
 
         if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
@@ -149,15 +202,50 @@ public class turrettracking extends LinearOpMode {
         }
 
         double power = getTurretPower(tx, dt);
-        power = limit(power, currentEncoder);
-
-        hardware.turret.setPower(power);
 
         telemetry.addData("distance", "%.3f", taToDistance(ta));
         telemetry.addData("tx", "%.2f", tx);
         telemetry.addData("raw_tx", "%.2f", target.getTargetXDegrees());
-        telemetry.addData("turret_vel", "%.2f", hardware.turret.getVelocity());
-        telemetry.addData("Turret pos", currentEncoder);
+
+        return power;
+    }
+
+    private void turretTrackingController(Pose2D goalPose) {
+        hardware.pinpoint.update();
+
+        double dt = loopTimer.seconds();
+        loopTimer.reset();
+
+        int currentEncoder = getTurretPosition();
+
+        double rawImuError = getPinpointGoalYawDiff(goalPose, currentEncoder);
+        double imuError = rawImuError;
+
+        double power;
+        String trackingMode;
+
+        if (Math.abs(imuError) > IMU_HANDOFF_THRESHOLD) {
+            trackingMode = "IMU_HEAVY";
+            power = trackPoseByIMU(goalPose, currentEncoder, dt, imuError);
+        } else {
+            double limelightPower = trackAprilTag(goalPose, currentEncoder, dt, imuError);
+            if (!Double.isNaN(limelightPower)) {
+                trackingMode = "LIMELIGHT";
+                power = limelightPower;
+            } else {
+                trackingMode = "IMU_FINE";
+                power = trackPoseByIMU(goalPose, currentEncoder, dt, imuError);
+            }
+        }
+
+        power = Range.clip(power, -MAX_POWER, MAX_POWER);
+        power = limit(power, currentEncoder);
+
+        hardware.turret.setPower(power);
+
+        telemetry.addData(">>> TRACKING MODE", trackingMode);
+        telemetry.addData("current turret deg", currentEncoder / TICKS_PER_DEGREE);
+        telemetry.addData("raw_imu_error", "%.2f", rawImuError);
     }
 
     @Override
@@ -184,11 +272,16 @@ public class turrettracking extends LinearOpMode {
         boolean wasdpad = false;
 
         waitForStart();
+
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+
         loopTimer.reset();
+
+        Pose2D goalPose = new Pose2D(DistanceUnit.INCH, 58, -56, AngleUnit.DEGREES, -2.318 * 180 / Math.PI);
 
         while (opModeIsActive()) {
 
-            trackAprilTag();
+            turretTrackingController(goalPose);
 
             hardware.copyShooterPower();
 
