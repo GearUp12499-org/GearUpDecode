@@ -7,19 +7,20 @@ import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.*
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 object Combo {
-    fun intake(hw: CompBot2Hardware, power: Double = CompBot2Hardware.INTAKE_POWER) = object : Group({}) {
+    fun intake(hw: CompBot2Hardware, power: Double = INTAKE_POWER) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
                     hw.intake.power = 0.0
                     hw.bottomBallStop.position =
-                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) CompBot2Hardware.BOTTOM_BALL_STOP
-                        else CompBot2Hardware.BOTTOM_STOP_STOWED
-                    hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
+                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) BOTTOM_BALL_STOP
+                        else BOTTOM_STOP_STOWED
+                    hw.flipper.position = FLIPPER_DOWN
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
                 })
                 .then(Wait.ms(250))
@@ -30,19 +31,45 @@ object Combo {
                     hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0
                 })
                 .then(OneShot {
-                    hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
+                    hw.bottomBallStop.position = BOTTOM_BALL_STOP
                 })
                 .then(WaitUntilContinuous(.5) {
                     hw.frontRamp.state && hw.middleRamp.state
                 })
-            this.require(CompBot2Hardware.Locks.INTAKE_STORAGE)
+            this.require(Locks.INTAKE_STORAGE)
         }
 
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
-            hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+            hw.bottomBallStop.position = BOTTOM_STOP_STOWED
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
+        }
+    }
+
+    fun intakeBox(hw: CompBot2Hardware, power: Double = INTAKE_POWER) = object: Group({}) {
+        init {
+            getScheduler()
+                .add(OneShot {
+                    hw.intake.power = 0.0
+                    hw.ballStop.position = BALL_STOP_MIDDLE
+                    hw.slider.position = SLIDER_IN
+                    hw.flipper.position = FLIPPER_DOWN
+                    hw.bottomBallStop.position = BOTTOM_STOP_OUT
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
+                })
+                .then(Wait.ms(250))
+                .then(OneShot {
+                    hw.intake.power = power
+                })
+                .then(WaitUntil {
+                    hw.middleRamp.state
+                })
+                .then(Wait.s(0.75))
+                .then(OneShot {
+                    hw.slider.position = SLIDER_OUT
+                    hw.ballStop.position = BALL_STOP_STOWED
+                })
         }
     }
 
@@ -52,7 +79,7 @@ object Combo {
             getScheduler()
                 .add(OneShot {
                     hw.intake.power = 1.0
-                    hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+                    hw.bottomBallStop.position = BOTTOM_STOP_STOWED
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                 })
                 .then(WaitUntilContinuous(flipperWait) {
@@ -60,15 +87,15 @@ object Combo {
                             || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
                 })
                 .then(OneShot {
-                    hw.flipper.position = CompBot2Hardware.FLIPPER_UP
+                    hw.flipper.position = FLIPPER_UP
                 })
                 .then(Wait.ms(1000))
                 .then(OneShot {
-                    hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
-                    hw.intake.power = CompBot2Hardware.OUTTAKE_POWER
+                    hw.flipper.position = FLIPPER_DOWN
+                    hw.intake.power = OUTTAKE_POWER
                 })
                 .then(Wait.ms(500))
-            this.require(CompBot2Hardware.Locks.INTAKE_STORAGE)
+            this.require(Locks.INTAKE_STORAGE)
         }
 
         override fun onFinish(completedNormally: Boolean) {
