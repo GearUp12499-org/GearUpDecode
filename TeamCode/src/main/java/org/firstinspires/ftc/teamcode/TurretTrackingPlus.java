@@ -32,12 +32,16 @@ public class TurretTrackingPlus extends LinearOpMode {
     private static final double MAX_I = 0.2;
     private static final double DEADBAND = 1.0;
 
-    private static final int SOFT_LIMIT_BUFFER = 20;
+    private static final int SOFT_LIMIT_BUFFER = 10;
+    private static final double IMU_HANDOFF_THRESHOLD = 30.0;
 
     private double prevError = 0;
     private double integralError = 0;
     private ElapsedTime loopTimer = new ElapsedTime();
     private int encoderOffset = 0;
+
+    private boolean isLimelightTracking = false;
+    private boolean resetPID = true;
 
     private double lastTx = 0;
     private int lastEncoderPosAtCapture = 0;
@@ -74,13 +78,17 @@ public class TurretTrackingPlus extends LinearOpMode {
         return power;
     }
 
-    private double getTurretPower(double tang, double deltat) {
-        double error = tang;
-
+    private double getTurretPower(double error, double deltat) {
         if (Math.abs(error) < DEADBAND) {
             prevError = error;
             integralError = 0;
             return 0;
+        }
+
+        if (resetPID) {
+            prevError = error;
+            integralError = 0;
+            resetPID = false;
         }
 
         integralError += error * deltat;
@@ -139,77 +147,6 @@ public class TurretTrackingPlus extends LinearOpMode {
         return limelightConventionError;
     }
 
-    private static final double IMU_HANDOFF_THRESHOLD = 15.0;
-
-    private double trackPoseByIMU(Pose2D goalPose, int currentEncoder, double dt, double imuError) {
-        double adjustedImuError;
-
-        if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
-            lastImuError = imuError;
-            lastImuEncoderPosAtCapture = currentEncoder;
-            adjustedImuError = lastImuError;
-        } else {
-            double deltaTicks = currentEncoder - lastImuEncoderPosAtCapture;
-            adjustedImuError = lastImuError - (deltaTicks / TICKS_PER_DEGREE);
-        }
-
-        double power = getTurretPower(adjustedImuError, dt);
-
-        telemetry.addData("imu_error", "%.2f", adjustedImuError);
-        telemetry.addData("imu_x", "%.2f", hardware.pinpoint.getPosition().getX(DistanceUnit.INCH));
-        telemetry.addData("imu_y", "%.2f", hardware.pinpoint.getPosition().getY(DistanceUnit.INCH));
-        telemetry.addData("power", "%.3f", power);
-        telemetry.addData("turret_vel", "%.2f", hardware.turret.getVelocity());
-        telemetry.addData("dest_reachable", isDestinationReachable);
-
-        return power;
-    }
-
-    private double trackAprilTag(Pose2D goalPose, int currentEncoder, double dt, double imuError) {
-        LLResult result = hardware.limelight.getLatestResult();
-
-        if (result == null || !result.isValid()) {
-            return Double.NaN;
-        }
-
-        List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
-        if (tags.isEmpty()) {
-            return Double.NaN;
-        }
-
-        LLResultTypes.FiducialResult target = null;
-        for (LLResultTypes.FiducialResult tag : tags) {
-            if (tag.getFiducialId() == TARGET_TAG_ID) {
-                target = tag;
-                break;
-            }
-        }
-
-        if (target == null) {
-            return Double.NaN;
-        }
-
-        double ta = target.getTargetArea();
-        double tx;
-
-        if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
-            lastTx = target.getTargetXDegrees();
-            lastEncoderPosAtCapture = currentEncoder;
-            tx = lastTx;
-        } else {
-            double deltaTicks = currentEncoder - lastEncoderPosAtCapture;
-            tx = lastTx - (deltaTicks / TICKS_PER_DEGREE);
-        }
-
-        double power = getTurretPower(tx, dt);
-
-        telemetry.addData("distance", "%.3f", taToDistance(ta));
-        telemetry.addData("tx", "%.2f", tx);
-        telemetry.addData("raw_tx", "%.2f", target.getTargetXDegrees());
-
-        return power;
-    }
-
     private void turretTrackingController(Pose2D goalPose) {
         hardware.pinpoint.update();
 
@@ -217,35 +154,63 @@ public class TurretTrackingPlus extends LinearOpMode {
         loopTimer.reset();
 
         int currentEncoder = getTurretPosition();
-
         double rawImuError = getPinpointGoalYawDiff(goalPose, currentEncoder);
-        double imuError = rawImuError;
 
-        double power;
-        String trackingMode;
-
-        if (Math.abs(imuError) > IMU_HANDOFF_THRESHOLD) {
-            trackingMode = "IMU_HEAVY";
-            power = trackPoseByIMU(goalPose, currentEncoder, dt, imuError);
+        double refinedImuError;
+        if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
+            lastImuError = rawImuError;
+            lastImuEncoderPosAtCapture = currentEncoder;
+            refinedImuError = rawImuError;
         } else {
-            double limelightPower = trackAprilTag(goalPose, currentEncoder, dt, imuError);
-            if (!Double.isNaN(limelightPower)) {
-                trackingMode = "LIMELIGHT";
-                power = limelightPower;
-            } else {
-                trackingMode = "IMU_FINE";
-                power = trackPoseByIMU(goalPose, currentEncoder, dt, imuError);
+            double deltaTicks = currentEncoder - lastImuEncoderPosAtCapture;
+            refinedImuError = lastImuError - (deltaTicks / TICKS_PER_DEGREE);
+        }
+
+        LLResult result = hardware.limelight.getLatestResult();
+        double refinedLimelightError = Double.NaN;
+        boolean limelightVisible = false;
+
+        if (result != null && result.isValid()) {
+            List<LLResultTypes.FiducialResult> tags = result.getFiducialResults();
+            LLResultTypes.FiducialResult target = null;
+            for (LLResultTypes.FiducialResult tag : tags) {
+                if (tag.getFiducialId() == TARGET_TAG_ID) {
+                    target = tag;
+                    break;
+                }
+            }
+            if (target != null) {
+                limelightVisible = true;
+                if (Math.abs(hardware.turret.getVelocity()) < VELOCITY_THRESHOLD) {
+                    lastTx = target.getTargetXDegrees();
+                    lastEncoderPosAtCapture = currentEncoder;
+                    refinedLimelightError = lastTx;
+                } else {
+                    double deltaTicks = currentEncoder - lastEncoderPosAtCapture;
+                    refinedLimelightError = lastTx - (deltaTicks / TICKS_PER_DEGREE);
+                }
             }
         }
 
+        boolean nextIsLimelight = limelightVisible;
+
+        if (nextIsLimelight != isLimelightTracking) {
+            isLimelightTracking = nextIsLimelight;
+            resetPID = true;
+        }
+
+        double finalError = isLimelightTracking ? refinedLimelightError : refinedImuError;
+
+        double power = getTurretPower(finalError, dt);
         power = Range.clip(power, -MAX_POWER, MAX_POWER);
         power = limit(power, currentEncoder);
 
         hardware.turret.setPower(power);
 
-        telemetry.addData(">>> TRACKING MODE", trackingMode);
-        telemetry.addData("current turret deg", currentEncoder / TICKS_PER_DEGREE);
-        telemetry.addData("raw_imu_error", "%.2f", rawImuError);
+        telemetry.addData(">>> MODE", isLimelightTracking ? "LIMELIGHT" : "IMU");
+        telemetry.addData("error", "%.2f", finalError);
+        telemetry.addData("power", "%.3f", power);
+        telemetry.addData("reachable", isDestinationReachable);
     }
 
     @Override
@@ -273,7 +238,7 @@ public class TurretTrackingPlus extends LinearOpMode {
 
         waitForStart();
 
-        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, -180));
 
         loopTimer.reset();
 
