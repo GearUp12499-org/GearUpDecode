@@ -45,7 +45,7 @@ public class ShooterTest2 extends LinearOpMode {
 
             if (gamepad1.dpad_up) {
                 hardware.flipper.setPosition(0.68);
-                sleep(800);
+                sleep(1000);
                 hardware.intake.setPower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
