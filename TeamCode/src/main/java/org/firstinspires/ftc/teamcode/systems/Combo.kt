@@ -91,7 +91,7 @@ object Combo {
 
             override fun onFinish(completedNormally: Boolean) {
                 super.onFinish(completedNormally)
-                shooter.setTarget(0.0)
+//                shooter.setTarget(0.0)
                 hw.intake.power = 0.0
                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
             }
@@ -126,7 +126,7 @@ object Combo {
 
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
-            shooter.setTarget(0.0)
+//            shooter.setTarget(0.0)
             hw.intake.power = 0.0
             hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
         }
