@@ -45,8 +45,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double HOOD_50 = 0.3700;
     public static final double HOOD_DOWN = 0.1817;
 
-    public static final double BOTTOM_BALL_STOP = 0.58;
-//    public static final double BOTTOM_STOP_STOWED = 0.42;
+    public static final double BOTTOM_BALL_STOP = 0.54;
     public static final double BOTTOM_STOP_STOWED = 0.40;
     public static final double BOTTOM_STOP_OUT = 0.15;
 
