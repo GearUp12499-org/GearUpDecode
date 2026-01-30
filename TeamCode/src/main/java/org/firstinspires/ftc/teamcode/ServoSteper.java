@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.hardware.HardwareMapper;
 public class ServoSteper extends LinearOpMode {
 
     CompBot2Hardware hardware;
-    double position = CompBot2Hardware.SLIDER_IN;
+    double position = CompBot2Hardware.SLIDER_OUT;
 
     double maxServo = 1.0;
     double minServo = 0.0;
@@ -40,7 +40,7 @@ public class ServoSteper extends LinearOpMode {
                     position = minServo;
                 }
             }
-            hardware.bottomBallStop.setPosition(position);
+            hardware.slider.setPosition(position);
 
             if (gamepad1.a){
                 hardware.intake.setPower(1);

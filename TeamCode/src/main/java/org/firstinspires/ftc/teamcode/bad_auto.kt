@@ -104,6 +104,10 @@ class bad_auto() : LinearOpMode() {
         })
 
         startFlag.then(Combo.intakeBox(hw))
+            .then(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE))
+//            .then(Combo.shootBoxFirst(hw, shooter))
+            .then(Combo.shootBoxMiddle(hw, shooter))
+//            .then(Combo.shootBoxLast(hw, shooter))
 
         while (opModeInInit()) sch.tick()
 

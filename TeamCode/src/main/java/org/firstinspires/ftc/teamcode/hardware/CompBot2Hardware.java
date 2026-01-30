@@ -28,6 +28,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double DROP_DOWN_TOP = 0.64;
 
     public static final double SLIDER_OUT = 0.10;
+    public static final double SLIDER_MIDDLE = 0.25;
     public static final double SLIDER_IN = 0.95;
 
     public static final int TURRET_CW_90 = 230;
@@ -39,6 +40,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double BALL_STOP_MIDDLE = 0.47;
 
     public static final double FLIPPER_DOWN = 0.25;
+    public static final double FLIPPER_MID = 0.50;
     public static final double FLIPPER_UP = 0.70;
 
     public static final double HOOD_UP = 0.5578;
