@@ -153,9 +153,21 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                 val intake = add(Combo.intake(hw, 1.0))
                 add(REmover.drive2Pose2(hw, poseSet.set4pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(Wait.s(2))
-                    .then(REmover.drive2Pose2(hw, poseSet.set4out2, 0.35))
-                    .then(Wait.s(2))
+                    .then(Wait.s(.5))
+                    .then(VirtualGroup {
+                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                    })
+                    .then(OneShot {
+                        intake.finish()
+                    })
+            })
+            .then(Combo.shoot(hw, shooter, 0.5))
+            .then(VirtualGroup {
+                val intake = add(Combo.intake(hw, 1.0))
+                add(REmover.drive2Pose2(hw, poseSet.set4pos))
+                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                    .then(Wait.s(.5))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
