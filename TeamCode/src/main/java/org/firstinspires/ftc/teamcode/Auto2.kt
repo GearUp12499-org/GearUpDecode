@@ -37,7 +37,9 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine()
         }
 
-        telemetry.addLine("<big><big>Auto Setup</big></big>")
+        telemetry.addLine("<big><big>This is a " +
+                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
+                " auto</big></big>")
         telemetry.addLine("Collect Corner Artifacts: ${if (skip) "<strong>NO (ALTERNATE)</strong>" else "YES (MAIN)"}")
         telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")

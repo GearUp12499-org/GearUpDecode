@@ -7,6 +7,7 @@ import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
@@ -39,6 +40,13 @@ abstract class Auto3(private val red: Boolean) : LinearOpMode() {
         hw.turret.targetPosition = 0
         hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
         hw.turret.power = 1.0
+
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
+        telemetry.update()
+        telemetry.addLine("<big><big>This is a " +
+                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
+                " auto</big></big>")
+        telemetry.update()
 
         val sch = FastScheduler()
         shooter = sch.add(ShooterImpl(hw))

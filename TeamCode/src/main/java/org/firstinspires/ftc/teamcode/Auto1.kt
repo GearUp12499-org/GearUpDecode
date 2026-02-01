@@ -19,6 +19,8 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.Combo
+import org.firstinspires.ftc.teamcode.systems.remover
+import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
@@ -31,6 +33,29 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
     private var altnStart = false
     private var confTask: ITask<*>? = null
+    private var pinpointSetupTask: PinpointSetupTask? = null
+
+    fun initLog() {
+        if (StaticStore.prismBroken) {
+            telemetry.addLine("PRISM IS DISABLED")
+            telemetry.addLine()
+        }
+
+        telemetry.addLine("<big><big>This is a " +
+                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
+                " auto</big></big>")
+        telemetry.addLine("Position: <strong>${if (altnStart) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
+        telemetry.addLine("Press 1/RB to change")
+        telemetry.addLine("Press 1/X to toggle Prism")
+
+        pinpointSetupTask?.let {
+            telemetry.addLine()
+            telemetry.addData("Linear velo (in/s)", it.velocity)
+            telemetry.addData("Angular velo (rad/s)", it.angularVelocity)
+        }
+
+        telemetry.update()
+    }
 
     fun reconfigure(altn: Boolean, prismBroken: Boolean, sch: Scheduler) {
         altnStart = altn
@@ -47,18 +72,6 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
             })
         })
-
-
-        if (prismBroken) {
-            telemetry.addLine("PRISM IS DISABLED")
-            telemetry.addLine()
-        }
-
-        telemetry.addLine("<big><big>Auto Setup</big></big>")
-        telemetry.addLine("Position: <strong>${if (altn) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
-        telemetry.addLine("Press 1/RB to change")
-        telemetry.addLine("Press 1/X to toggle Prism")
-        telemetry.update()
     }
 
     override fun runOpMode() {
@@ -83,6 +96,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         reconfigure(false, StaticStore.prismBroken, sch)
 
         sch.add(Configurator())
+        pinpointSetupTask = sch.add(PinpointSetupTask(hw.pinpoint, telemetry))
+        val ticker = sch.add(compose {
+            onTick {
+                initLog()
+                false
+            }
+        })
 
         val startFlag = sch.add(SentinelTask())
         shooter = sch.add(ShooterImpl(hw))
@@ -98,6 +118,11 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 hw.pinpoint.update()
                 false
             }
+        })
+
+        startFlag.then(OneShot {
+            pinpointSetupTask?.stop()
+            ticker.stop()
         })
 
         startFlag.then(VirtualGroup {
