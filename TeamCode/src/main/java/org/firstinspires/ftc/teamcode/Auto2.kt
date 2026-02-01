@@ -7,6 +7,7 @@ import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
@@ -37,11 +38,13 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine()
         }
 
-        telemetry.addLine("<big><big>This is a " +
-                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
-                " auto</big></big>")
-        telemetry.addLine("Collect Corner Artifacts: ${if (skip) "<strong>NO (ALTERNATE)</strong>" else "YES (MAIN)"}")
-        telemetry.addLine("Press 1/RB to change")
+        telemetry.addLine(
+            "<big><big>This is a " +
+                    "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
+                    " auto</big></big>"
+        )
+//        telemetry.addLine("Collect Corner Artifacts: ${if (skip) "<strong>NO (ALTERNATE)</strong>" else "YES (MAIN)"}")
+//        telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")
         telemetry.update()
     }
@@ -90,11 +93,13 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
         })
             .then(Combo.shoot(hw, shooter, 0.5))
-            .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
-                val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set3pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
+                val intake = add(Combo.intake(hw, 1.0))
+                add(REmover.drive2Pose2(hw, poseSet.set4pos))
+                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                    .then(Wait.s(2))
+                    .then(REmover.drive2Pose2(hw, poseSet.set4out2, 0.35))
+                    .then(Wait.s(2))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
@@ -104,24 +109,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     })
             })
             .then(Combo.shoot(hw, shooter, 0.5))
-            .then(Deferred {
-                if (skipExtra) null
-                else VirtualGroup {
-                    val intake = add(Combo.intake(hw, 1.0))
-                    add(REmover.drive2Pose2(hw, poseSet.set4pos))
-                        .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                        .then(VirtualGroup {
-                            add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
-                        })
-                        .then(OneShot {
-                            intake.finish()
-                        })
-                }
-            }).then(Deferred {
-                if (skipExtra) null
-                else Combo.shoot(hw, shooter, 0.5)
-            }).then(REmover.drive2Pose2(hw, poseSet.auto2park))
+            .then(REmover.drive2Pose2(hw, poseSet.auto2park))
 
         while (opModeInInit()) sch.tick()
 

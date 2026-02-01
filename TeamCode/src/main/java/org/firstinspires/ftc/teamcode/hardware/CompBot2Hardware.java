@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
@@ -54,9 +55,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double INTAKE_POWER = 1.0;
     public static final double OUTTAKE_POWER = -0.60;
 
-    public static final double SHOOT_MID_RANGE = 1290.0;
+    public static final double SHOOT_MID_RANGE = 1280.0;
     public static final double SHOOT_MID_RANGE2 = 1310.0;
-    public static final double SHOOT_FAR_RANGE = 1840.0;
+    public static final double SHOOT_FAR_RANGE = 1800.0;
 
     public static final double SHOOT_HOOD_UP_DIST = 32.0;
     public static final double SHOOT_MIN_DIST = 20.0;
@@ -163,6 +164,13 @@ public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("middleRamp")
     @DigitalMode(DigitalChannel.Mode.INPUT)
     public DigitalChannel middleRamp;
+
+    @HardwareName("Webcam 1")
+    public WebcamName webcam1;
+
+    @HardwareName("Webcam 2")
+    public WebcamName webcam2;
+
 
     public CompBot2Hardware(HardwareMap map) {
         super(map);

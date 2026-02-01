@@ -44,7 +44,7 @@ abstract class Auto3(private val red: Boolean) : LinearOpMode() {
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
         telemetry.update()
         telemetry.addLine("<big><big>This is a " +
-                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
+                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
                 " auto</big></big>")
         telemetry.update()
 

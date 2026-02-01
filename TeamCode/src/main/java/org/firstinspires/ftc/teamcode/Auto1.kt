@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.Combo
@@ -30,6 +31,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
+    private var aprilTag: AprilTag? = null
 
     private var altnStart = false
     private var confTask: ITask<*>? = null
@@ -42,7 +44,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         }
 
         telemetry.addLine("<big><big>This is a " +
-                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}>/strong></font>" +
+                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
                 " auto</big></big>")
         telemetry.addLine("Position: <strong>${if (altnStart) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
         telemetry.addLine("Press 1/RB to change")
@@ -52,6 +54,11 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine()
             telemetry.addData("Linear velo (in/s)", it.velocity)
             telemetry.addData("Angular velo (rad/s)", it.angularVelocity)
+        }
+
+        aprilTag?.let {
+            telemetry.addLine()
+            telemetry.addData("Camera status", it.visionPortal?.cameraState)
         }
 
         telemetry.update()
@@ -93,6 +100,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         telemetry.update()
 
         val sch = FastScheduler()
+        val startFlag = sch.add(SentinelTask())
+
         reconfigure(false, StaticStore.prismBroken, sch)
 
         sch.add(Configurator())
@@ -103,8 +112,9 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 false
             }
         })
+        aprilTag = AprilTag(if (red) hw.webcam2 else hw.webcam1)
+        sch.add(aprilTag!!.setupAprilTag(0, 0)).then(startFlag)
 
-        val startFlag = sch.add(SentinelTask())
         shooter = sch.add(ShooterImpl(hw))
 
         sch.add(compose {
@@ -127,45 +137,43 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
         startFlag.then(VirtualGroup {
             add(REmover.drive2Pose2(hw, poseSet.midShoot))
+                .then(aprilTag!!.readObelisk(0.3))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
             .then(Combo.shoot(hw, shooter))
-            .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
                 add(REmover.drive2Pose2(hw, poseSet.set1pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set1out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()
                     })
             })
             .then(Combo.shoot(hw, shooter))
-            .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
                 add(REmover.drive2Pose2(hw, poseSet.set2pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set2out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()
                     })
             })
             .then(Combo.shoot(hw, shooter))
-            .then(shooter.setTargetAsync(0.0))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
                 add(REmover.drive2Pose2(hw, poseSet.set3pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set3out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot2))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE2, 0.2))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE2, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()
@@ -175,7 +183,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 
         while (opModeInInit()) sch.tick()
 
-        startFlag.finish()
+        startFlag.requestStart()
 
         while (opModeIsActive()) sch.tick()
 

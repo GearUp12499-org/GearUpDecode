@@ -11,10 +11,12 @@ class PoseSet private constructor(val invert: Boolean) {
         ) else this
 
     companion object {
-        private val farStart = RobotPose(-64.75, -17.25, Math.PI/2)
-//        private val goalStart = RobotPose(49.64, -54.48, -2.318)
+        private val farStart = RobotPose(-64.75, -17.25, Math.PI / 2)
+
+        //        private val goalStart = RobotPose(49.64, -54.48, -2.318)
 //        private val goalStart = RobotPose(49.64, -54.48, -2.5248)
-        private val goalStart = RobotPose(49.64, -54.48, -2.514076654)
+//        private val goalStart = RobotPose(49.64, -54.48, -2.514076654)
+        private val goalStart = RobotPose(55.05, -48.61, Math.PI / 2)
         private val readAT = RobotPose(46.92, -11.92, -2.55)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val midShoot = RobotPose(24.0, -24.0, 3 * Math.PI / 4)
@@ -25,12 +27,12 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set2pos = RobotPose(-12.0, -24.0, -Math.PI / 2)
         private val set2out = RobotPose(-12.0, -61.625, -Math.PI / 2)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
-        private val set3out = RobotPose(-36.0,  -61.625, -Math.PI / 2)
-        private val set4pos = RobotPose(-42.0,  -60.0, -3 * Math.PI / 4)
-        private val set4out = RobotPose(-64.0,  -61.0, -Math.PI)
-        private val set4out2 = RobotPose(-64.25,  -63.75, -Math.PI)
+        private val set3out = RobotPose(-36.0, -61.625, -Math.PI / 2)
+        private val set4pos = RobotPose(-59.5, -59.0, -Math.PI / 2)
+        private val set4out = RobotPose(-59.5, -61.0, -Math.PI / 2)
+        private val set4out2 = RobotPose(-64.5, -63.75, -Math.PI / 2)
         private val auto2park = RobotPose(-56.0, -36.0, -Math.PI)
-        private val auto1finish = RobotPose(0.0,  -48.0, Math.PI)
+        private val auto1finish = RobotPose(0.0, -48.0, Math.PI)
         private val blueBase = RobotPose(-38.0, -33.0, 0.0)
         private val gateWaypoint = RobotPose(0.0, -48.0, 0.0)
         private val gatePos = RobotPose(0.0, -55.0, 0.0)
@@ -46,48 +48,70 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val farStart = Companion.farStart.bind
+
     @JvmField
     val goalStart = Companion.goalStart.bind
+
     @JvmField
     val readAT = Companion.readAT.bind
+
     @JvmField
     val closeShoot = Companion.closeShoot.bind
+
     @JvmField
     val midShoot = Companion.midShoot.bind
+
     @JvmField
     val midShoot2 = Companion.midShoot2.bind
+
     @JvmField
     val farShoot = Companion.farShoot.bind
+
     @JvmField
     val set1pos = Companion.set1pos.bind
+
     @JvmField
     val set1out = Companion.set1out.bind
+
     @JvmField
     val set2pos = Companion.set2pos.bind
+
     @JvmField
     val set2out = Companion.set2out.bind
+
     @JvmField
     val set3pos = Companion.set3pos.bind
+
     @JvmField
     val set3out = Companion.set3out.bind
+
     @JvmField
     val set4pos = Companion.set4pos.bind
+
     @JvmField
     val set4out = Companion.set4out.bind
+
     @JvmField
     val set4out2 = Companion.set4out2.bind
+
     @JvmField
     val auto2park = Companion.auto2park.bind
+
     @JvmField
     val auto1finish = Companion.auto1finish.bind
+
     @JvmField
     val blueBase = Companion.blueBase.bind
+
     @JvmField
     val gateWaypoint = Companion.gateWaypoint.bind
+
     @JvmField
     val gatePos = Companion.gatePos.bind
+
     @JvmField
     val shootTarget = Companion.shootTarget.bind
+
     @JvmField
     val shootMeasure = Companion.shootMeasure.bind
 }

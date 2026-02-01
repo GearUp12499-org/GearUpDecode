@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import android.util.Log
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
@@ -140,6 +141,9 @@ object REmover {
                     && abs(angVelocity) < Math.PI / 4)
                     || timeoutTime > 1
                 ) {
+                    if (timeoutTime > 1) {
+                        Log.w("REMover", "Timed out %s: XYA: %.4f %.4f %.4f; speed: %.4f, angvel: %.4f".format(this, deltaX, deltaY, deltaA, speed, angVelocity))
+                    }
                     hardware.frontLeft.power = 0.0
                     hardware.frontRight.power = 0.0
                     hardware.backLeft.power = 0.0
@@ -154,8 +158,8 @@ object REmover {
 
                 deltaTime = max(currentTime - prevTime, 0.001)
 
-                val vF = cos(currentTheta) * xVelocity + sin(currentTheta) * yVelocity;
-                val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity;
+                val vF = cos(currentTheta) * xVelocity + sin(currentTheta) * yVelocity
+                val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity
                 val vW = R * angVelocity
 
                 if (abs(f) > 1) {
