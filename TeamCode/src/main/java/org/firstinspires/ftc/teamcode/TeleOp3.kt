@@ -62,7 +62,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         // Background tasks
         scheduler.add(PinpointTask(hw.pinpoint))
         val robotStartTask = scheduler.add(SentinelTask())
-        turretTrack = scheduler.add(TurretTrack(hw.limelight, hw.turret, red))
+        turretTrack = scheduler.add(TurretTrack(hw.limelight, hw.turret, hw.pinpoint, poseSet, red))
         shooter = robotStartTask.then(ShooterImpl(hw))
         robotStartTask.then(DriveTask())
         robotStartTask.then(OneShot {

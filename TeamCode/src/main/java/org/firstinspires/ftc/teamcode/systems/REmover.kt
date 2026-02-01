@@ -11,9 +11,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -135,14 +138,24 @@ object REmover {
 
                 if (
                     (abs(deltaX) < 0.5
-                    && abs(deltaY) < 0.5
-                    && abs(deltaA) < Math.PI / 48
-                    && speed < 10
-                    && abs(angVelocity) < Math.PI / 4)
+                            && abs(deltaY) < 0.5
+                            && abs(deltaA) < Math.PI / 48
+                            && speed < 10
+                            && abs(angVelocity) < Math.PI / 4)
                     || timeoutTime > 1
                 ) {
                     if (timeoutTime > 1) {
-                        Log.w("REMover", "Timed out %s: XYA: %.4f %.4f %.4f; speed: %.4f, angvel: %.4f".format(this, deltaX, deltaY, deltaA, speed, angVelocity))
+                        Log.w(
+                            "REMover",
+                            "Timed out %s: XYA: %.4f %.4f %.4f; speed: %.4f, angvel: %.4f".format(
+                                this,
+                                deltaX,
+                                deltaY,
+                                deltaA,
+                                speed,
+                                angVelocity
+                            )
+                        )
                     }
                     hardware.frontLeft.power = 0.0
                     hardware.frontRight.power = 0.0
@@ -182,21 +195,18 @@ object REmover {
 
                 var tipFactor: Double = 1.0
 
-                if(abs(f) > tipFearRatio * abs(s)){
+                if (abs(f) > tipFearRatio * abs(s)) {
                     val ratio: Double = abs(s) / abs(f)
 
                     tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
                 }
 
-                val tempFKP : Double = tipFactor * FKP
-                val tempSKP : Double = tipFactor * SKP
+                val tempFKP: Double = tipFactor * FKP
+                val tempSKP: Double = tipFactor * SKP
 
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
                 val pw: Double = WKP * w + WKI * sumW - WKD * vW
-
-
-
 
 
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
@@ -251,8 +261,25 @@ val Pose2D.remover: REmover.RobotPose
         this.getHeading(AngleUnit.RADIANS)
     )
 
-fun Double.wrapAngle() = when {
-    this > PI -> this - 2 * PI
-    this < -PI -> this + 2 * PI
-    else -> this
+const val TWO_PI = 2 * PI
+
+fun Double.wrapAngle(): Double {
+    var actual = this
+    if (actual.absoluteValue > 4 * PI)
+        actual = actual.sign * actual.absoluteValue - (floor(abs(actual) / TWO_PI)) * TWO_PI
+    while (actual >= PI) actual -= TWO_PI
+    while (actual < -PI) actual += TWO_PI
+    return actual
 }
+
+
+fun Double.wrapAngleDeg(): Double {
+    var actual = this
+    if (actual.absoluteValue > 720.0)
+        actual = actual.sign * actual.absoluteValue - (floor(abs(actual) / 360.0)) * 360.0
+    while (actual >= 180.0) actual -= 360.0
+    while (actual < -180.0) actual += 360.0
+    return actual
+}
+
+fun Number.toDeg() = this.toDouble() * 180 / Math.PI
