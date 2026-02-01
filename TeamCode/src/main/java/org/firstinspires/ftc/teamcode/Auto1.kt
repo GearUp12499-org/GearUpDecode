@@ -25,6 +25,7 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import org.firstinspires.ftc.vision.VisionPortal
 
 abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
@@ -43,22 +44,34 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine()
         }
 
-        telemetry.addLine("<big><big>This is a " +
-                "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
-                " auto</big></big>")
+        telemetry.addLine(
+            "<big><big>This is a " +
+                    "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
+                    " auto</big></big>"
+        )
         telemetry.addLine("Position: <strong>${if (altnStart) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
         telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")
 
         pinpointSetupTask?.let {
             telemetry.addLine()
-            telemetry.addData("Linear velo (in/s)", it.velocity)
-            telemetry.addData("Angular velo (rad/s)", it.angularVelocity)
+            telemetry.addData(
+                "Linear velo (in/s)",
+                problem("%.6f".format(it.velocity), it.velocity < VEL_LIM)
+            )
+            telemetry.addData(
+                "Angular velo (rad/s)",
+                problem("%.6f".format(it.angularVelocity), it.angularVelocity < VEL_LIM)
+            )
         }
 
         aprilTag?.let {
             telemetry.addLine()
-            telemetry.addData("Camera status", it.visionPortal?.cameraState)
+            val state = it.visionPortal?.cameraState
+            telemetry.addData(
+                "Camera status",
+                problem(state.toString(), state == VisionPortal.CameraState.STREAMING)
+            )
         }
 
         telemetry.update()
