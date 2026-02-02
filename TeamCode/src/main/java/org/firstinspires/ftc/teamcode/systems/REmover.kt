@@ -47,12 +47,12 @@ object REmover {
     const val FKP: Double = 0.35
     const val tipFKP: Double = 0.1
     const val FKD: Double = 0.02
-    const val FKI: Double = 0.00001
+    const val FKI: Double = 0.0005
 
     //0.4, 0.07, 0.00001
     const val SKP: Double = 0.4
     const val SKD: Double = 0.025
-    const val SKI: Double = 0.00001
+    const val SKI: Double = 0.0005
 
     const val WKP: Double = 0.4
     const val WKD: Double = 0.005
@@ -78,7 +78,8 @@ object REmover {
     fun drive2Pose2(
         hardware: CompBot2Hardware,
         pose: RobotPose,
-        maxPower: Double = 1.0
+        maxPower: Double = 1.0,
+        waypoint: Boolean = true
     ): Task<*> {
         val (tgtx, tgty, tgta) = pose
 
@@ -133,21 +134,26 @@ object REmover {
                     deltaA += 2 * PI
                 }
 
-                if (
-                    (abs(deltaX) < 0.5
-                    && abs(deltaY) < 0.5
-                    && abs(deltaA) < Math.PI / 48
-                    && speed < 10
-                    && abs(angVelocity) < Math.PI / 4)
-                    || timeoutTime > 1
-                ) {
+                if (checkStop(waypoint, deltaX, deltaY, deltaA, speed, angVelocity, timeoutTime)) {
                     if (timeoutTime > 1) {
-                        Log.w("REMover", "Timed out %s: XYA: %.4f %.4f %.4f; speed: %.4f, angvel: %.4f".format(this, deltaX, deltaY, deltaA, speed, angVelocity))
+                        Log.w(
+                            "REMover",
+                            "Timed out %s: XYA: %.4f %.4f %.4f; speed: %.4f, angvel: %.4f".format(
+                                this,
+                                deltaX,
+                                deltaY,
+                                deltaA,
+                                speed,
+                                angVelocity
+                            )
+                        )
                     }
-                    hardware.frontLeft.power = 0.0
-                    hardware.frontRight.power = 0.0
-                    hardware.backLeft.power = 0.0
-                    hardware.backRight.power = 0.0
+                    if (!waypoint) {
+                        hardware.frontLeft.power = 0.0
+                        hardware.frontRight.power = 0.0
+                        hardware.backLeft.power = 0.0
+                        hardware.backRight.power = 0.0
+                    }
                     return true
                 }
 
@@ -162,13 +168,13 @@ object REmover {
                 val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity
                 val vW = R * angVelocity
 
-                if (abs(f) > 1) {
+                if (abs(f) > 1.5) {
                     sumF = 0.0
                 } else {
                     sumF += f * deltaTime
                 }
 
-                if (abs(s) > 1) {
+                if (abs(s) > 1.5) {
                     sumS = 0.0
                 } else {
                     sumS += s * deltaTime
@@ -199,12 +205,19 @@ object REmover {
 
 
 
-                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+//                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+//
+//                if (abs(deltaAll - prevDeltaAll) > 0.5) {
+//                    prevDeltaAll = deltaAll
+//                    timeout.reset()
+//                }
+//
+//
 
-                if (abs(deltaAll - prevDeltaAll) > 0.5) {
-                    prevDeltaAll = deltaAll
+                if ((abs(hardware.pinpoint.getVelX(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getVelY(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getHeadingVelocity(
+                        UnnormalizedAngleUnit.RADIANS))>0.1)) {
                     timeout.reset()
-                }
+                    }
 
 
                 var pfl = pf + ps - pw
@@ -255,4 +268,24 @@ fun Double.wrapAngle() = when {
     this > PI -> this - 2 * PI
     this < -PI -> this + 2 * PI
     else -> this
+}
+
+fun checkStop (waypoint: Boolean, deltaX: Double, deltaY: Double, deltaA: Double, speed: Double, angVelocity: Double, timeoutTime: Double) : Boolean {
+    if (!waypoint) {
+            return (abs(deltaX) < 0.5
+            && abs(deltaY) < 0.5
+            && abs(deltaA) < Math.PI / 48
+            && speed < 10
+            && abs(angVelocity) < Math.PI / 4
+            || timeoutTime > 1)
+        }
+
+    else {
+        return(abs(deltaX) < 2.5
+                && abs(deltaY) < 2.5
+                && abs(deltaA) < Math.PI / 48
+                && speed < 10
+                && abs(angVelocity) < Math.PI / 4
+                || timeoutTime > 1)
+    }
 }
