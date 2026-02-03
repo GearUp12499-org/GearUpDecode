@@ -143,8 +143,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set1pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set1out))
+                add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
+                    .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot))
 //                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
@@ -156,7 +156,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set2pos))
+                add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set2out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot))
@@ -169,7 +169,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.intake(hw))
-                add(REmover.drive2Pose2(hw, poseSet.set3pos))
+                add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set3out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot2))

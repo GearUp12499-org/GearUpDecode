@@ -129,7 +129,7 @@ class TuneRemover : LinearOpMode() {
             }
             else if (gamepad1.x && !wasX) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(-12.0,-24.0,-Math.PI/2), waypoint = true, minPower = 1.0))
                 sch2.add(REmover.drive2Pose2(hw, poseSet.set2out))
 
             }

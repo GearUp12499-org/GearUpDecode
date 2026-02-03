@@ -46,12 +46,12 @@ object REmover {
     const val tipFearRatio: Double = 2.0
     const val FKP: Double = 0.35
     const val tipFKP: Double = 0.1
-    const val FKD: Double = 0.02
+    const val FKD: Double = 0.02 //0.02
     const val FKI: Double = 0.0005
 
     //0.4, 0.07, 0.00001
     const val SKP: Double = 0.4
-    const val SKD: Double = 0.025
+    const val SKD: Double = 0.06 // 0.06
     const val SKI: Double = 0.0005
 
     const val WKP: Double = 0.4
@@ -79,7 +79,7 @@ object REmover {
         hardware: CompBot2Hardware,
         pose: RobotPose,
         maxPower: Double = 1.0,
-        waypoint: Boolean = true
+        waypoint: Boolean = false
     ): Task<*> {
         val (tgtx, tgty, tgta) = pose
 
@@ -240,6 +240,7 @@ object REmover {
                     pbr /= scale
                 }
 
+
                 hardware.frontLeft.power = pfl
                 hardware.backLeft.power = pbl
                 hardware.frontRight.power = pfr
@@ -281,11 +282,9 @@ fun checkStop (waypoint: Boolean, deltaX: Double, deltaY: Double, deltaA: Double
         }
 
     else {
-        return(abs(deltaX) < 2.5
-                && abs(deltaY) < 2.5
-                && abs(deltaA) < Math.PI / 48
-                && speed < 10
-                && abs(angVelocity) < Math.PI / 4
+        return(abs(deltaX) < 6
+                && abs(deltaY) < 6
+                && abs(deltaA) < Math.PI / 4
                 || timeoutTime > 1)
     }
 }
