@@ -11,9 +11,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -189,14 +192,14 @@ object REmover {
 
                 var tipFactor: Double = 1.0
 
-                if(abs(f) > tipFearRatio * abs(s)){
+                if (abs(f) > tipFearRatio * abs(s)) {
                     val ratio: Double = abs(s) / abs(f)
 
                     tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
                 }
 
-                val tempFKP : Double = tipFactor * FKP
-                val tempSKP : Double = tipFactor * SKP
+                val tempFKP: Double = tipFactor * FKP
+                val tempSKP: Double = tipFactor * SKP
 
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
@@ -266,10 +269,15 @@ val Pose2D.remover: REmover.RobotPose
         this.getHeading(AngleUnit.RADIANS)
     )
 
-fun Double.wrapAngle() = when {
-    this > PI -> this - 2 * PI
-    this < -PI -> this + 2 * PI
-    else -> this
+const val TWO_PI = 2 * PI
+
+fun Double.wrapAngle(): Double {
+    var actual = this
+    if (actual.absoluteValue > 4 * PI)
+        actual = actual.sign * actual.absoluteValue - (floor(abs(actual) / TWO_PI)) * TWO_PI
+    while (actual >= PI) actual -= TWO_PI
+    while (actual < -PI) actual += TWO_PI
+    return actual
 }
 
 fun checkStop (waypoint: Boolean, deltaX: Double, deltaY: Double, deltaA: Double, speed: Double, angVelocity: Double, timeoutTime: Double) : Boolean {

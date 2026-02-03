@@ -4,36 +4,40 @@ import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
+import io.github.gearup12499.taskshark.ITask
+import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
+import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.prefabs.Wait
+import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
-import org.firstinspires.ftc.teamcode.tasks.Deferred
+import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import org.firstinspires.ftc.vision.VisionPortal
 
 abstract class Auto2(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
+    private var pinpointSetupTask: PinpointSetupTask? = null
+    private var aprilTag: AprilTag? = null
+    private var confTask: ITask<*>? = null
 
-    private var skipExtra = false
-
-    fun reconfigure(skip: Boolean, prismBroken: Boolean) {
-        skipExtra = skip
-        hw.refreshPrismState()
-
-        if (prismBroken) {
+    fun initLog() {
+        if (StaticStore.prismBroken) {
             telemetry.addLine("PRISM IS DISABLED")
             telemetry.addLine()
         }
@@ -43,10 +47,47 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
                     " auto</big></big>"
         )
-//        telemetry.addLine("Collect Corner Artifacts: ${if (skip) "<strong>NO (ALTERNATE)</strong>" else "YES (MAIN)"}")
-//        telemetry.addLine("Press 1/RB to change")
+        telemetry.addLine("Press 1/RB to recalibrate Pinpoint")
         telemetry.addLine("Press 1/X to toggle Prism")
+
+        pinpointSetupTask?.let {
+            telemetry.addLine()
+            telemetry.addData(
+                "Linear velo (in/s)",
+                problem("%.6f".format(it.velocity), it.velocity < VEL_LIM)
+            )
+            telemetry.addData(
+                "Angular velo (rad/s)",
+                problem("%.6f".format(it.angularVelocity), it.angularVelocity < VEL_LIM)
+            )
+        }
+
+        aprilTag?.let {
+            telemetry.addLine()
+            val state = it.visionPortal?.cameraState
+            telemetry.addData(
+                "Camera status",
+                problem(state.toString(), state == VisionPortal.CameraState.STREAMING)
+            )
+        }
+
         telemetry.update()
+    }
+
+    fun reconfigure(prismBroken: Boolean, sch: Scheduler) {
+        StaticStore.prismBroken = prismBroken
+        hw.refreshPrismState()
+
+        confTask?.stop()
+        confTask = sch.add(Group {
+            it.add(OneShot {
+                hw.pinpoint.recalibrateIMU()
+            }).then(WaitUntil {
+                hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
+            }).then(OneShot {
+                hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
+            })
+        })
     }
 
     override fun runOpMode() {
@@ -65,15 +106,25 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
         hw.turret.power = 1.0
 
-        val sch = FastScheduler()
-        shooter = sch.add(ShooterImpl(hw))
-        sch.add(Configurator())
-
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
         telemetry.update()
-        reconfigure(false, StaticStore.prismBroken)
 
+        val sch = FastScheduler()
         val startFlag = sch.add(SentinelTask())
+
+        reconfigure(StaticStore.prismBroken, sch)
+        sch.add(Configurator())
+        pinpointSetupTask = sch.add(PinpointSetupTask(hw.pinpoint, telemetry))
+        val ticker = sch.add(compose {
+            onTick {
+                initLog()
+                false
+            }
+        })
+        aprilTag = AprilTag(if (red) hw.webcam2 else hw.webcam1)
+        sch.add(aprilTag!!.setupAprilTag(0, 0)).then(startFlag)
+
+        shooter = sch.add(ShooterImpl(hw))
 
         sch.add(compose {
             var state: GoBildaPinpoint2Driver.DeviceStatus? = null
@@ -88,6 +139,11 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             }
         })
 
+        startFlag.then(OneShot {
+            pinpointSetupTask?.stop()
+            ticker.stop()
+        })
+
         startFlag.then(VirtualGroup {
             add(REmover.drive2Pose2(hw, poseSet.farShoot))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
@@ -97,9 +153,21 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                 val intake = add(Combo.intake(hw, 1.0))
                 add(REmover.drive2Pose2(hw, poseSet.set4pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(Wait.s(2))
-                    .then(REmover.drive2Pose2(hw, poseSet.set4out2, 0.35))
-                    .then(Wait.s(2))
+                    .then(Wait.s(.5))
+                    .then(VirtualGroup {
+                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                    })
+                    .then(OneShot {
+                        intake.finish()
+                    })
+            })
+            .then(Combo.shoot(hw, shooter, 0.5))
+            .then(VirtualGroup {
+                val intake = add(Combo.intake(hw, 1.0))
+                add(REmover.drive2Pose2(hw, poseSet.set4pos))
+                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                    .then(Wait.s(.5))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
@@ -131,10 +199,10 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             val rb = gamepad1.right_bumper
             val x = gamepad1.x
             if (rb && !rbt) {
-                reconfigure(!skipExtra, StaticStore.prismBroken)
+                reconfigure(StaticStore.prismBroken, scheduler!!)
             }
             if (x && !xt) {
-                reconfigure(skipExtra, !StaticStore.prismBroken)
+                reconfigure(!StaticStore.prismBroken, scheduler!!)
             }
 
             rbt = rb
