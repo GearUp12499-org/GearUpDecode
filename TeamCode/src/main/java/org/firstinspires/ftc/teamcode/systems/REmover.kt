@@ -158,6 +158,7 @@ object REmover {
                 }
 
 
+
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
                 val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
                 val w = R * deltaA
