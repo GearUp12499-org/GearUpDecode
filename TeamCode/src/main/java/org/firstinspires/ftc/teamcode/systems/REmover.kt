@@ -297,3 +297,15 @@ fun checkStop (waypoint: Boolean, deltaX: Double, deltaY: Double, deltaA: Double
                 || timeoutTime > 1)
     }
 }
+
+fun Double.wrapAngleDeg(): Double {
+    var actual = this
+    if (actual.absoluteValue > 720.0)
+        actual = actual.sign * actual.absoluteValue - (floor(abs(actual) / 360.0)) * 360.0
+    while (actual >= 180.0) actual -= 360.0
+    while (actual < -180.0) actual += 360.0
+    return actual
+}
+
+fun Number.toDeg() = this.toDouble() * 180 / Math.PI
+
