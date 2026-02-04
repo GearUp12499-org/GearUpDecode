@@ -190,9 +190,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
                             false
                         }
-                        onFinish {
-                            shooter.setTarget(0.0)
-                        }
                     })
                     add(shooter.awaitTarget(0.2))
                         .then(Combo.shoot(hw, shooter))

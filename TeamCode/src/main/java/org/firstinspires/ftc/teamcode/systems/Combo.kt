@@ -17,9 +17,9 @@ object Combo {
             getScheduler()
                 .add(OneShot {
                     hw.intake.power = 0.0
-                    hw.bottomBallStop.position =
-                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) BOTTOM_BALL_STOP
-                        else BOTTOM_STOP_STOWED
+                    hw.bottomBallStop.position = BOTTOM_STOP_STOWED
+//                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) BOTTOM_BALL_STOP
+//                        else BOTTOM_STOP_STOWED
                     hw.flipper.position = FLIPPER_DOWN
                     hw.shooterBallStop.position = SHOOTER_STOP_DOWN
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
@@ -32,7 +32,7 @@ object Combo {
                     hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0
                 })
                 .then(OneShot {
-                    hw.bottomBallStop.position = BOTTOM_BALL_STOP
+//                    hw.bottomBallStop.position = BOTTOM_BALL_STOP
                 })
                 .then(WaitUntilContinuous(.5) {
                     hw.frontRamp.state && hw.middleRamp.state
@@ -43,7 +43,7 @@ object Combo {
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
-            hw.bottomBallStop.position = BOTTOM_STOP_STOWED
+//            hw.bottomBallStop.position = BOTTOM_STOP_STOWED
             hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
         }

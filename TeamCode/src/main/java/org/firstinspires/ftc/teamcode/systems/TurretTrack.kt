@@ -218,8 +218,9 @@ class TurretTrack(
                 )
             )
             Log.i(
-                "TurretTrack", "Limelight meta: pipe %d".format(
+                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
                     ll.latestResult.pipelineIndex,
+                    ll.latestResult.timestamp,
                 )
             )
 
