@@ -44,6 +44,7 @@ object Combo {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
             hw.bottomBallStop.position = BOTTOM_STOP_STOWED
+            hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
         }
     }
@@ -82,7 +83,7 @@ object Combo {
             super.onFinish(completedNormally)
             hw.intake.power = 0.0
             hw.slider.position = SLIDER_OUT
-//            hw.flipper.position = FLIPPER_MID
+            hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
         }
     }

@@ -64,7 +64,7 @@ public class CompBot2Hardware extends HardwareMapper {
 
     // UP 0.13 DOWN 0.42
     public static final double SHOOTER_STOP_UP = 0.33;
-    public static final double SHOOTER_STOP_DOWN = 0.66;
+    public static final double SHOOTER_STOP_DOWN = 0.70;
 
     @HardwareName("limelight")
     public Limelight3A limelight;
