@@ -150,7 +150,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         })
             .then(Combo.shoot(hw, shooter, 0.5))
             .then(VirtualGroup {
-                val intake = add(Combo.intake(hw, 1.0))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
                 add(REmover.drive2Pose2(hw, poseSet.set4pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                     .then(Wait.s(.5))
@@ -164,7 +164,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             })
             .then(Combo.shoot(hw, shooter, 0.5))
             .then(VirtualGroup {
-                val intake = add(Combo.intake(hw, 1.0))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
                 add(REmover.drive2Pose2(hw, poseSet.set4pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                     .then(Wait.s(.5))
@@ -177,7 +177,10 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     })
             })
             .then(Combo.shoot(hw, shooter, 0.5))
-            .then(REmover.drive2Pose2(hw, poseSet.auto2park))
+            .then(VirtualGroup {
+                add(Combo.shootAfter(hw))
+                add(REmover.drive2Pose2(hw, poseSet.auto2park))
+            })
 
         while (opModeInInit()) sch.tick()
 

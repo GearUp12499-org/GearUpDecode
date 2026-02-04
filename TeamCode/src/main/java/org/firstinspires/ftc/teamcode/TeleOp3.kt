@@ -177,7 +177,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot {
                         hw.hood.position = CompBot2Hardware.HOOD_50
                     })
-                }).then(Combo.shoot(hw, shooter))
+                })
+                    .then(Combo.shoot(hw, shooter))
+                    .then(Combo.shootAfter(hw))
             }
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -185,7 +187,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     val track = add(turretTrack.track())
                     val bind = add(compose {
                         onTick {
-                            val hoodSpeed = track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                            val hoodSpeed =
+                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
                             shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
                             hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
                             false
@@ -197,6 +200,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             track.finish()
                             bind.finish()
                         })
+                        .then(Combo.shootAfter(hw))
                 })
             }
             if (x && !gp1X) {
@@ -219,7 +223,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot {
                         hw.hood.position = CompBot2Hardware.HOOD_UP
                     })
-                }).then(Combo.shoot(hw, shooter))
+                })
+                    .then(Combo.shoot(hw, shooter))
+                    .then(Combo.shootAfter(hw))
             }
             if (y2 && !gp2Y) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -299,6 +305,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 })
                 .then(shooter.setTargetAndWait(0.2) { speed })
                 .then(Combo.shoot(hw, shooter))
+                .then(Combo.shootAfter(hw))
 
             require(Locks.DRIVE_MOTORS)
             require(Locks.INTAKE_STORAGE)

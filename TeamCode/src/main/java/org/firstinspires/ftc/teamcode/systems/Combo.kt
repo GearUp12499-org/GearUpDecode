@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.Wait
@@ -49,7 +50,7 @@ object Combo {
         }
     }
 
-    fun intakeBox(hw: CompBot2Hardware, power: Double = INTAKE_POWER) = object: Group({}) {
+    fun intakeBox(hw: CompBot2Hardware, power: Double = INTAKE_POWER) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
@@ -89,7 +90,8 @@ object Combo {
     }
 
     @JvmOverloads
-    fun shootBoxLast(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) = object : Group({}) {
+    fun shootBoxLast(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) =
+        object : Group({}) {
             init {
                 getScheduler()
                     .add(OneShot {
@@ -130,134 +132,137 @@ object Combo {
             }
         }
 
-    fun shootBoxFirst(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) = object : Group({}) {
-        init {
-            getScheduler()
-                .add(OneShot {
-                    hw.intake.power = 0.0
-                    hw.slider.position = SLIDER_IN
-                    hw.shooterBallStop.position = SHOOTER_STOP_UP
-                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                })
-                .then(Wait.ms(500))
-                .then(OneShot {
-                    hw.intake.power = 1.0
-                })
-                .then(WaitUntilContinuous(flipperWait) {
-                    !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
-                            || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
-                })
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_UP
-                })
-                .then(Wait.ms(1000))
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_DOWN
-                    hw.intake.power = OUTTAKE_POWER
-                })
-                .then(Wait.ms(500))
-            this.require(Locks.INTAKE_STORAGE)
-        }
+    fun shootBoxFirst(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) =
+        object : Group({}) {
+            init {
+                getScheduler()
+                    .add(OneShot {
+                        hw.intake.power = 0.0
+                        hw.slider.position = SLIDER_IN
+                        hw.shooterBallStop.position = SHOOTER_STOP_UP
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                    })
+                    .then(Wait.ms(500))
+                    .then(OneShot {
+                        hw.intake.power = 1.0
+                    })
+                    .then(WaitUntilContinuous(flipperWait) {
+                        !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
+                                || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
+                    })
+                    .then(OneShot {
+                        hw.flipper.position = FLIPPER_UP
+                    })
+                    .then(Wait.ms(1000))
+                    .then(OneShot {
+                        hw.flipper.position = FLIPPER_DOWN
+                        hw.intake.power = OUTTAKE_POWER
+                    })
+                    .then(Wait.ms(500))
+                this.require(Locks.INTAKE_STORAGE)
+            }
 
-        override fun onFinish(completedNormally: Boolean) {
-            super.onFinish(completedNormally)
+            override fun onFinish(completedNormally: Boolean) {
+                super.onFinish(completedNormally)
 //                shooter.setTarget(0.0)
-            hw.intake.power = 0.0
-            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                hw.intake.power = 0.0
+                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+            }
         }
-    }
 
-    fun shootBoxMiddle(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) = object : Group({}) {
-        init {
-            getScheduler()
-                .add(OneShot {
-                    hw.slider.position = SLIDER_OUT
-                    hw.flipper.position = FLIPPER_UP
-                    hw.shooterBallStop.position = SHOOTER_STOP_UP
-                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                })
-                .then(Wait.ms(250))
-                .then(OneShot {
-                    hw.intake.power = 1.0
-                })
-                .then(Wait.ms(500))
-                .then(OneShot {
-                    hw.intake.power = 0.5
-                    hw.slider.position = SLIDER_IN
-                    hw.flipper.position = FLIPPER_MID
-                })
-                .then(Wait.ms(750))
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_UP
-                })
-                .then(Wait.ms(250))
-                .then(OneShot {
-                    hw.intake.power = OUTTAKE_POWER
-                    hw.flipper.position = FLIPPER_DOWN
-                })
-                .then(Wait.ms(250))
-                .then(OneShot {
-                    hw.intake.power = 1.0
-                })
-                .then(Wait.ms(750))
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_UP
-                })
-                //                .then(WaitUntilContinuous(flipperWait) {
+    fun shootBoxMiddle(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) =
+        object : Group({}) {
+            init {
+                getScheduler()
+                    .add(OneShot {
+                        hw.slider.position = SLIDER_OUT
+                        hw.flipper.position = FLIPPER_UP
+                        hw.shooterBallStop.position = SHOOTER_STOP_UP
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                    })
+                    .then(Wait.ms(250))
+                    .then(OneShot {
+                        hw.intake.power = 1.0
+                    })
+                    .then(Wait.ms(500))
+                    .then(OneShot {
+                        hw.intake.power = 0.5
+                        hw.slider.position = SLIDER_IN
+                        hw.flipper.position = FLIPPER_MID
+                    })
+                    .then(Wait.ms(750))
+                    .then(OneShot {
+                        hw.flipper.position = FLIPPER_UP
+                    })
+                    .then(Wait.ms(250))
+                    .then(OneShot {
+                        hw.intake.power = OUTTAKE_POWER
+                        hw.flipper.position = FLIPPER_DOWN
+                    })
+                    .then(Wait.ms(250))
+                    .then(OneShot {
+                        hw.intake.power = 1.0
+                    })
+                    .then(Wait.ms(750))
+                    .then(OneShot {
+                        hw.flipper.position = FLIPPER_UP
+                    })
+                    //                .then(WaitUntilContinuous(flipperWait) {
 //                    !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
 //                            || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
 //                })
 //                .then(OneShot {
 //                    hw.flipper.position = FLIPPER_UP
 //                })
-                .then(Wait.ms(1000))
-                .then(OneShot {
-                    hw.intake.power = OUTTAKE_POWER
-                    hw.flipper.position = FLIPPER_DOWN
-                })
-                .then(Wait.ms(500))
-            this.require(Locks.INTAKE_STORAGE)
-        }
+                    .then(Wait.ms(1000))
+                    .then(OneShot {
+                        hw.intake.power = OUTTAKE_POWER
+                        hw.flipper.position = FLIPPER_DOWN
+                    })
+                    .then(Wait.ms(500))
+                this.require(Locks.INTAKE_STORAGE)
+            }
 
-        override fun onFinish(completedNormally: Boolean) {
-            super.onFinish(completedNormally)
+            override fun onFinish(completedNormally: Boolean) {
+                super.onFinish(completedNormally)
 //                shooter.setTarget(0.0)
-            hw.intake.power = 0.0
-            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                hw.intake.power = 0.0
+                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+            }
         }
-    }
 
     @JvmOverloads
-    fun shoot(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) = object : Group({}) {
-        init {
-            getScheduler()
-                .add(OneShot {
-                    hw.intake.power = 1.0
-                    hw.bottomBallStop.position = BOTTOM_STOP_STOWED
-                    hw.shooterBallStop.position = SHOOTER_STOP_UP
-                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                })
-                .then(WaitUntilContinuous(flipperWait) {
-                    !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
-                            || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
-                })
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_UP
-                })
-                .then(Wait.ms(1000))
-                .then(OneShot {
-                    hw.flipper.position = FLIPPER_DOWN
-                    hw.intake.power = OUTTAKE_POWER
-                })
-                .then(Wait.ms(500))
-            this.require(Locks.INTAKE_STORAGE)
+    fun shoot(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) =
+        object : Group({}) {
+            init {
+                getScheduler()
+                    .add(OneShot {
+                        hw.intake.power = 1.0
+                        hw.bottomBallStop.position = BOTTOM_STOP_STOWED
+                        hw.shooterBallStop.position = SHOOTER_STOP_UP
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                    })
+                    .then(WaitUntilContinuous(flipperWait) {
+                        !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
+                                || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
+                    })
+                    .then(OneShot {
+                        hw.flipper.position = FLIPPER_UP
+                    })
+                    .then(Wait.ms(700))
+                this.require(Locks.INTAKE_STORAGE)
+            }
         }
 
-        override fun onFinish(completedNormally: Boolean) {
-            super.onFinish(completedNormally)
-//            shooter.setTarget(0.0)
-            hw.intake.power = 0.0
-            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
-        }
-    }
+    fun shootAfter(hw: CompBot2Hardware) = Group {
+        it.add(OneShot {
+            hw.flipper.position = FLIPPER_DOWN
+            hw.intake.power = OUTTAKE_POWER
+        })
+            .then(Wait.ms(500))
+            .then(OneShot {
+                hw.intake.power = 0.0
+                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+            })
+    }.require(Locks.INTAKE_STORAGE)
 }
