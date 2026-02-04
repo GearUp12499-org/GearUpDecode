@@ -184,6 +184,20 @@ class TurretTrack(
                     }
                 }
             }
+            Log.i(
+                "TurretTrack", when {
+                result == null -> "result is null"
+                !result.isValid -> "result is invalid"
+                else -> {
+                    val tags = result.fiducialResults
+                    val target = tags.firstOrNull { it.fiducialId == targetTag }
+                    when {
+                        tags.isEmpty() -> "no results"
+                        target == null -> "no matching result"
+                        else -> "id ${target.fiducialId}"
+                    }
+                }
+            })
 
             if (llVisible != isLimelightTracking) {
                 Log.i("TurretTrack", if (llVisible) "LOCKED IN" else "Locked out :(")
@@ -195,6 +209,19 @@ class TurretTrack(
 
             val power1 = computePower(finalError, dt)
             val power2 = limit(power1, currentEncoder)
+            Log.i(
+                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
+                    if (isLimelightTracking) "Limelight" else "IMU",
+                    finalError,
+                    power2,
+                    if (isDestinationReachable) "reachable" else "reachablen't"
+                )
+            )
+            Log.i(
+                "TurretTrack", "Limelight meta: pipe %d".format(
+                    ll.latestResult.pipelineIndex,
+                )
+            )
 
             turret.power = power2
 
