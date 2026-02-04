@@ -6,10 +6,8 @@ import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
-import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
-import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -19,7 +17,6 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
@@ -73,6 +70,18 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             hw.turret.targetPosition = 0
             hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
             hw.turret.power = 1.0
+        })
+
+
+        val track = robotStartTask.then(turretTrack.track())
+        val bind = robotStartTask.then(compose {
+            onTick {
+                val hoodSpeed =
+                    track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                false
+            }
         })
 
         while (opModeInInit()) {
@@ -161,7 +170,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val lb = gamepad1.left_bumper
             val x = gamepad1.x
             val y1 = gamepad1.y
-            val y2 = gamepad2.y
             val a2 = gamepad2.a
             val b2 = gamepad2.b
             val upD = gamepad2.dpad_up
@@ -184,22 +192,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.add(VirtualGroup {
-                    val track = add(turretTrack.track())
-                    val bind = add(compose {
-                        onTick {
-                            val hoodSpeed =
-                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                            false
-                        }
-                    })
                     add(shooter.awaitTarget(0.2))
                         .then(Combo.shoot(hw, shooter))
-                        .then(OneShot {
-                            track.finish()
-                            bind.finish()
-                        })
+//                        .then(OneShot {
+//                            track.finish()
+//                            bind.finish()
+//                        })
                         .then(Combo.shootAfter(hw))
                 })
             }
@@ -227,11 +225,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     .then(Combo.shoot(hw, shooter))
                     .then(Combo.shootAfter(hw))
             }
-            if (y2 && !gp2Y) {
-                sch.stopUsing(Locks.INTAKE_STORAGE)
-                sch.stopUsing(Locks.DRIVE_MOTORS)
-                sch.add(ShootFromHere())
-            }
             if (lb && !gp1LB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
@@ -245,7 +238,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp1LB = lb
             gp1X = x
             gp1Y = y1
-            gp2Y = y2
             gp2A = a2
             gp2B = b2
             gp2upD = upD
@@ -278,41 +270,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp2r = rb
         }
     }
-
-    private inner class ShootFromHere : Group({}) {
-        private var speed: Double = 0.0
-
-        init {
-            val that = getScheduler()
-            that
-                .add(OneShot {
-                    val distance = getDistanceToGoal()
-                    if (distance < SHOOT_MIN_DIST) {
-                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
-                        /* outer */
-                        scheduler!!.add(Wait.s(.5))
-                            .then(OneShot {
-                                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
-                            })
-                        that.getCurrentEvaluation()?.stop()
-                    }
-                })
-                .then(lookAtGoal())
-                .then(OneShot {
-                    var hoodAndSpeed = CompBot2Hardware.hoodAndSpeed(getDistanceToGoal())
-                    speed = hoodAndSpeed.second
-                    hw.hood.position = hoodAndSpeed.first
-                })
-                .then(shooter.setTargetAndWait(0.2) { speed })
-                .then(Combo.shoot(hw, shooter))
-                .then(Combo.shootAfter(hw))
-
-            require(Locks.DRIVE_MOTORS)
-            require(Locks.INTAKE_STORAGE)
-        }
-
-    }
-
 
     fun getDistanceToGoal(): Double {
         val currentPos = hw.pinpoint.position.remover
