@@ -218,8 +218,10 @@ class TurretTrack(
                 )
             )
             // pipeline: 7 = blue; 2 = red
-            // ll.pipelineSwitch(7);
-            ll.pipelineSwitch(2);
+            // ISSUE: Limelight does not work because the OnStart does not set the pipeline correctly (tries setting to pipeline6) I have to hard code for it to work
+            // ISSUE: TeleOp Blue does not work but TeleOp Red works with Blue values
+            ll.pipelineSwitch(7);
+            // ll.pipelineSwitch(2);
             Log.i(
                 "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
                     ll.latestResult.pipelineIndex,
