@@ -31,7 +31,14 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0, -61.625, -Math.PI / 2)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
-        private val set4out = RobotPose(-64.5, -59.0, -Math.PI / 2)
+        private val set4out = RobotPose(-64.5, -60.0, -Math.PI / 2)
+
+
+        private val overflowPos1 = RobotPose(-64.5, -65.6, -Math.PI/2)
+        private val overflowPos2 = RobotPose(-60.0, -65.6, 0.0)
+
+
+
         private val set4out2 = RobotPose(-64.5, -61.0, -Math.PI / 2)
         private val auto2park = RobotPose(-56.0, -36.0, -Math.PI)
         private val auto1finish = RobotPose(0.0, -48.0, Math.PI)
@@ -92,6 +99,12 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val set4out = Companion.set4out.bind
+
+    @JvmField
+    val overflowPos1 = Companion.overflowPos1.bind
+
+    @JvmField
+    val overflowPos2 = Companion.overflowPos2.bind
 
     @JvmField
     val auto2park = Companion.auto2park.bind

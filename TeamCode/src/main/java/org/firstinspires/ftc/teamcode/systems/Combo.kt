@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
 object Combo {
-    fun intake(hw: CompBot2Hardware, power: Double = INTAKE_POWER) = object : Group({}) {
+    fun intake(hw: CompBot2Hardware, power: Double = INTAKE_POWER, timeout: Double = 0.5) = object : Group({}) {
         init {
             getScheduler()
                 .add(OneShot {
@@ -35,7 +35,7 @@ object Combo {
                 .then(OneShot {
 //                    hw.bottomBallStop.position = BOTTOM_BALL_STOP
                 })
-                .then(WaitUntilContinuous(.5) {
+                .then(WaitUntilContinuous(timeout) {
                     hw.frontRamp.state && hw.middleRamp.state
                 })
             this.require(Locks.INTAKE_STORAGE)

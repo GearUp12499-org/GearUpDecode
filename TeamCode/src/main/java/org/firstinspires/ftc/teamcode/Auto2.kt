@@ -17,6 +17,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
@@ -24,6 +25,7 @@ import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
+import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.vision.VisionPortal
 
@@ -154,6 +156,9 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                 add(REmover.drive2Pose2(hw, poseSet.set4pos))
                     .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                     .then(Wait.s(.5))
+                    .then(OneShot {
+                        intake.finish()
+                    })
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
@@ -162,12 +167,36 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
+
+            //shoot #2
             .then(Combo.shoot(hw, shooter, 0.5))
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
-                add(REmover.drive2Pose2(hw, poseSet.set4pos))
-                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(Wait.s(.5))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 5.0))
+                add(REmover.drive2Pose2(hw, poseSet.overflowPos1))
+                    .then((REmover.drive2Pose2(hw, poseSet.overflowPos2))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                    .then(OneShot {
+                        intake.finish()
+                    })
+                    .then(VirtualGroup {
+                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                    })
+                    .then(OneShot {
+                        intake.finish()
+                    }))
+            })
+            .then(Combo.shoot(hw, shooter, 0.5))
+
+            //shoot #3
+            .then(VirtualGroup {
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 5.0))
+                add(REmover.drive2Pose2(hw, poseSet.overflowPos1))
+                    .then(REmover.drive2Pose2(hw, poseSet.overflowPos2))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
+                    .then(OneShot {
+                        intake.finish()
+                    })
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))

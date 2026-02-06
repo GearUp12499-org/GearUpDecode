@@ -209,19 +209,19 @@ object REmover {
 
 
 
-//                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
-//
-//                if (abs(deltaAll - prevDeltaAll) > 0.5) {
-//                    prevDeltaAll = deltaAll
-//                    timeout.reset()
-//                }
+                val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+
+                if (abs(deltaAll - prevDeltaAll) > 0.5) {
+                    prevDeltaAll = deltaAll
+                    timeout.reset()
+                }
 //
 //
 
-                if ((abs(hardware.pinpoint.getVelX(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getVelY(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getHeadingVelocity(
-                        UnnormalizedAngleUnit.RADIANS))>0.1)) {
-                    timeout.reset()
-                    }
+//                if ((abs(hardware.pinpoint.getVelX(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getVelY(DistanceUnit.INCH))>0.5) || (abs(hardware.pinpoint.getHeadingVelocity(
+//                        UnnormalizedAngleUnit.RADIANS))>0.1)) {
+//                    timeout.reset()
+//                    }
 
 
                 var pfl = pf + ps - pw
