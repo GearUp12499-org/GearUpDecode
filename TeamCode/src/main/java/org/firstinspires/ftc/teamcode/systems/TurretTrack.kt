@@ -217,6 +217,9 @@ class TurretTrack(
                     if (isDestinationReachable) "reachable" else "reachablen't"
                 )
             )
+            // pipeline: 7 = blue; 2 = red
+            // ll.pipelineSwitch(7);
+            ll.pipelineSwitch(2);
             Log.i(
                 "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
                     ll.latestResult.pipelineIndex,
