@@ -30,7 +30,7 @@ abstract class Auto3(private val red: Boolean) : LinearOpMode() {
 
         hw = CompBot2Hardware(hardwareMap)
         hw.slider.position = CompBot2Hardware.SLIDER_IN
-        hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_BALL_STOP
+        hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         hw.hood.position = 0.2756
         hw.pinpoint.setPosition(poseSet.goalStart.asPose2D)
 

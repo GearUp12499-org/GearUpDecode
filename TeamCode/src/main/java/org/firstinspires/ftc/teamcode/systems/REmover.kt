@@ -82,7 +82,8 @@ object REmover {
         hardware: CompBot2Hardware,
         pose: RobotPose,
         maxPower: Double = 1.0,
-        waypoint: Boolean = false
+        waypoint: Boolean = false,
+        timeoutAt: Double = 1.0
     ): Task<*> {
         val (tgtx, tgty, tgta) = pose
 
@@ -137,7 +138,7 @@ object REmover {
                     deltaA += 2 * PI
                 }
 
-                if (checkStop(waypoint, deltaX, deltaY, deltaA, speed, angVelocity, timeoutTime)) {
+                if (checkStop(waypoint, deltaX, deltaY, deltaA, speed, angVelocity, timeoutTime, timeoutAt)) {
                     if (timeoutTime > 1) {
                         Log.w(
                             "REMover",
@@ -159,7 +160,6 @@ object REmover {
                     }
                     return true
                 }
-
 
 
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
@@ -204,9 +204,6 @@ object REmover {
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
                 val pw: Double = WKP * w + WKI * sumW - WKD * vW
-
-
-
 
 
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
@@ -280,21 +277,28 @@ fun Double.wrapAngle(): Double {
     return actual
 }
 
-fun checkStop (waypoint: Boolean, deltaX: Double, deltaY: Double, deltaA: Double, speed: Double, angVelocity: Double, timeoutTime: Double) : Boolean {
+fun checkStop(
+    waypoint: Boolean,
+    deltaX: Double,
+    deltaY: Double,
+    deltaA: Double,
+    speed: Double,
+    angVelocity: Double,
+    timeoutTime: Double,
+    timeoutMax: Double
+): Boolean {
     if (!waypoint) {
-            return (abs(deltaX) < 0.5
-            && abs(deltaY) < 0.5
-            && abs(deltaA) < Math.PI / 48
-            && speed < 10
-            && abs(angVelocity) < Math.PI / 4
-            || timeoutTime > 1)
-        }
-
-    else {
-        return(abs(deltaX) < 6
+        return (abs(deltaX) < 0.5
+                && abs(deltaY) < 0.5
+                && abs(deltaA) < Math.PI / 48
+                && speed < 10
+                && abs(angVelocity) < Math.PI / 4
+                || timeoutTime > timeoutMax)
+    } else {
+        return (abs(deltaX) < 6
                 && abs(deltaY) < 6
                 && abs(deltaA) < Math.PI / 4
-                || timeoutTime > 1)
+                || timeoutTime > timeoutMax)
     }
 }
 
