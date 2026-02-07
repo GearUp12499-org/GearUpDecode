@@ -23,7 +23,7 @@ class PoseSet private constructor(val invert: Boolean) {
         // FIXME: onshape this
         private val goalAT = RobotPose(58.0, -56.0, -2.318)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
-        private val midShoot = RobotPose(24.0, -24.0, 3 * Math.PI / 4)
+        private val midShoot = RobotPose(24.0, -24.0, 7 * Math.PI / 9)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3)
         private val farShoot = RobotPose(-55.0, -12.39, 2.76)
 
@@ -31,9 +31,9 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set1pos = RobotPose(12.0, -18.0, -Math.PI / 2)
         private val set1out = RobotPose(12.0, -54.625, -Math.PI / 2)
         private val set2pos = RobotPose(-12.0, -24.0, -Math.PI / 2)
-        private val set2out = RobotPose(-12.0, -61.625, -Math.PI / 2)
+        private val set2out = RobotPose(-12.0, -62.625, -Math.PI / 2)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
-        private val set3out = RobotPose(-36.0, -61.625, -Math.PI / 2)
+        private val set3out = RobotPose(-36.0, -62.625, -Math.PI / 2)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
         private val set4out = RobotPose(-64.5, -60.0, -Math.PI / 2)
         private val overflowPos1 = RobotPose(-63.0, -64.6, -Math.PI / 2)

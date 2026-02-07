@@ -10,6 +10,7 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
@@ -156,6 +157,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
                     .then(VirtualGroup {
@@ -169,6 +171,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set2out))
                     .then(VirtualGroup {
@@ -182,6 +185,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set3out))
                     .then(VirtualGroup {

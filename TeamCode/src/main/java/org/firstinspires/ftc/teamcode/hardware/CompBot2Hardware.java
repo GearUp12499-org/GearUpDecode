@@ -55,7 +55,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double INTAKE_POWER = 1.0;
     public static final double OUTTAKE_POWER = -0.60;
 
-    public static final double SHOOT_MID_RANGE = 1280.0;
+    public static final double SHOOT_MID_RANGE = 1300.0;
     public static final double SHOOT_MID_RANGE2 = 1310.0;
     public static final double SHOOT_FAR_RANGE = 1820.0;
 
