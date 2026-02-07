@@ -168,62 +168,89 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             //shoot #2
             .then(Combo.shoot(hw, shooter, 0.5))
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 5.0))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.overflowPos1, maxPower = 1.0, timeoutAt = 0.3))
-                    .then(OneShot {
-                        hw.frontLeft.power = -0.5
-                        hw.frontRight.power = -0.5
-                        hw.backLeft.power = -0.5
-                        hw.backRight.power = -0.5
-                    })
-                    .then(Wait.s(0.2))
-                    .then(OneShot {
-                        hw.frontLeft.power = 0.0
-                        hw.frontRight.power = 0.0
-                        hw.backLeft.power = 0.0
-                        hw.backRight.power = 0.0
-                    })
-                    .then(Wait.s(0.1))
-                    .then(REmover.drive2Pose2(hw, poseSet.overflowPos2, timeoutAt = 0.5))
-//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
+                val grp = add(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.overflowPos1,
+                            maxPower = 1.0,
+                            timeoutAt = 0.3
+                        )
+                    )
+                        .then(OneShot {
+                            hw.frontLeft.power = -0.5
+                            hw.frontRight.power = -0.5
+                            hw.backLeft.power = -0.5
+                            hw.backRight.power = -0.5
+                        })
+                        .then(Wait.s(0.2))
+                        .then(OneShot {
+                            hw.frontLeft.power = 0.0
+                            hw.frontRight.power = 0.0
+                            hw.backLeft.power = 0.0
+                            hw.backRight.power = 0.0
+                        })
+                        .then(Wait.s(0.1))
+                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos2, timeoutAt = 0.5))
+                        .then(Wait.s(0.5))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35)
+                })
+                grp.then(VirtualGroup {
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                })
+                .then(OneShot {
+                    intake.finish()
+                })
+                intake.then(OneShot {
+                    grp.inside.forEach(ITask<*>::finish)
+                })
             })
             .then(Combo.shoot(hw, shooter, 0.5))
 
             //shoot #3
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 5.0))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.overflowPos1, maxPower = 1.0, timeoutAt = 0.3))
-                    .then(OneShot {
-                        hw.frontLeft.power = -0.5
-                        hw.frontRight.power = -0.5
-                        hw.backLeft.power = -0.5
-                        hw.backRight.power = -0.5
-                    })
-                    .then(Wait.s(0.2))
-                    .then(OneShot {
-                        hw.frontLeft.power = 0.0
-                        hw.frontRight.power = 0.0
-                        hw.backLeft.power = 0.0
-                        hw.backRight.power = 0.0
-                    })
-                    .then(REmover.drive2Pose2(hw, poseSet.overflowPos2, timeoutAt = 0.5))
-//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
-                    })
+                val grp = add(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.overflowPos1,
+                            maxPower = 1.0,
+                            timeoutAt = 0.3
+                        )
+                    )
+                        .then(OneShot {
+                            hw.frontLeft.power = -0.5
+                            hw.frontRight.power = -0.5
+                            hw.backLeft.power = -0.5
+                            hw.backRight.power = -0.5
+                        })
+                        .then(Wait.s(0.2))
+                        .then(OneShot {
+                            hw.frontLeft.power = 0.0
+                            hw.frontRight.power = 0.0
+                            hw.backLeft.power = 0.0
+                            hw.backRight.power = 0.0
+                        })
+                        .then(Wait.s(0.1))
+                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos2, timeoutAt = 0.5))
+                        .then(Wait.s(0.5))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35)
+                })
+                grp.then(VirtualGroup {
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+                })
                     .then(OneShot {
                         intake.finish()
                     })
+                intake.then(OneShot {
+                    grp.inside.forEach(ITask<*>::finish)
+                })
             })
             .then(Combo.shoot(hw, shooter, 0.5))
             .then(VirtualGroup {
