@@ -29,12 +29,14 @@ import org.firstinspires.ftc.teamcode.systems.TurretTrack
 import org.firstinspires.ftc.teamcode.systems.remover
 import org.firstinspires.ftc.teamcode.systems.toDeg
 import org.firstinspires.ftc.teamcode.systems.wrapAngle
+import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.isAliveOrQueued
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import java.util.function.LongToIntFunction
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -55,6 +57,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private var activeBind: ITask<*>? = null
     private lateinit var scheduler: FastScheduler
     private var isContinuation: Boolean = true
+    private var pinpointSetupTask: PinpointSetupTask? = null
 
     override fun runOpMode() {
         TaskSharkAndroid.setup()
@@ -74,6 +77,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
         // Background tasks
         scheduler.add(PinpointTask(hw.pinpoint))
+        pinpointSetupTask = scheduler.add(PinpointSetupTask(hw.pinpoint, telemetry))
+        val initVisual = scheduler.add(compose {
+            onTick {
+                initVisuals()
+                false
+            }
+            tag(BuiltInTags.DAEMON)
+        })
         val robotStartTask = scheduler.add(SentinelTask())
         turretTrack = scheduler.add(TurretTrack(hw.limelight, hw.turret, hw.pinpoint, poseSet, red))
         shooter = robotStartTask.then(ShooterImpl(hw))
@@ -86,8 +97,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             hw.turret.targetPosition = 0
             hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
             hw.turret.power = 1.0
+
+            pinpointSetupTask?.stop()
+            initVisual.stop()
+            startTracking()
         })
-        robotStartTask.then(OneShot { startTracking() })
         robotStartTask.then(compose {
             onTick {
                 runningVisuals()
@@ -142,6 +156,30 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         telemetry.addLine(hw.pinpoint.position.remover.let {
             "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
         })
+        telemetry.update()
+    }
+
+    fun initVisuals() {
+        if (isContinuation)
+            telemetry.addLine("<big>Localization <strong><font color=\"#40ff40\">retained</font></strong></big>")
+        else
+            telemetry.addLine("<big>Localization <strong><font color=\"#ffb040\">reset</font></strong></big>")
+
+        telemetry.addLine(hw.pinpoint.position.remover.let {
+            "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
+        })
+
+        pinpointSetupTask?.let {
+            telemetry.addLine()
+            telemetry.addData(
+                "Linear velo (in/s)",
+                problem("%.6f".format(it.velocity), it.velocity < VEL_LIM)
+            )
+            telemetry.addData(
+                "Angular velo (rad/s)",
+                problem("%.6f".format(it.angularVelocity), it.angularVelocity < VEL_LIM)
+            )
+        }
         telemetry.update()
     }
 
@@ -233,15 +271,20 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 sch.add(Combo.intake(hw))
             }
             if (a2 && !gp2A) {
-                sch.stopUsing(Locks.INTAKE_STORAGE)
-                sch.add(VirtualGroup {
-                    add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                    add(OneShot {
-                        hw.hood.position = CompBot2Hardware.HOOD_50
+                if (!(activeTrack?.isAliveOrQueued() ?: false)) {
+                    sch.stopUsing(Locks.INTAKE_STORAGE)
+                    sch.add(VirtualGroup {
+                        add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
+                        add(OneShot {
+                            hw.hood.position = CompBot2Hardware.HOOD_50
+                        })
+                        add(WaitUntil {
+                            abs(hw.turret.currentPosition) < 3
+                        })
                     })
-                })
-                    .then(Combo.shoot(hw, shooter))
-                    .then(Combo.shootAfter(hw))
+                        .then(Combo.shoot(hw, shooter))
+                        .then(Combo.shootAfter(hw))
+                }
             }
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)

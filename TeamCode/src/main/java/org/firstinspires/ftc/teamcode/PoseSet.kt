@@ -36,7 +36,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set3out = RobotPose(-36.0, -61.625, -Math.PI / 2)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
         private val set4out = RobotPose(-64.5, -60.0, -Math.PI / 2)
-        private val overflowPos1 = RobotPose(-64.5, -65.6, -Math.PI / 2)
+        private val overflowPos1 = RobotPose(-63.0, -64.6, -Math.PI / 2)
         private val overflowPos2 = RobotPose(-60.0, -65.6, 0.0)
 
         private val set4out2 = RobotPose(-64.5, -61.0, -Math.PI / 2)

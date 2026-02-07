@@ -4,6 +4,7 @@ import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
+import io.github.gearup12499.taskshark.systemPackages
 
 @DslMarker
 internal annotation class TaskComposerDsl
@@ -16,6 +17,12 @@ class ComposedTask(
     private val tags: Set<String>,
     reqLock: Set<Lock>,
 ) : Task<ComposedTask>() {
+    companion object {
+        init {
+            systemPackages.add(ComposedTask::class.qualifiedName!!)
+        }
+    }
+
     init {
         reqLock.forEach(::require)
     }
