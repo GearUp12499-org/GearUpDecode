@@ -10,6 +10,8 @@ class PoseSet private constructor(val invert: Boolean) {
             -this.a
         ) else this
 
+    // ENTER RED VALUES (usually +X -Y) ONLY!
+    // Poses will automatically be mirrored for Blue OpModes
     companion object {
         private val farStart = RobotPose(-64.75, -17.25, Math.PI / 2)
 
@@ -18,9 +20,7 @@ class PoseSet private constructor(val invert: Boolean) {
 //        private val goalStart = RobotPose(49.64, -54.48, -2.514076654)
         private val goalStart = RobotPose(55.05, -48.61, Math.PI / 2)
         // FIXME: onshape this
-        // red : private val goalAT = RobotPose(58.0, -56.0, -2.318)
-        // blue is the current goalAT. WEIRD THING. For TeleOp red this hard code works. WE NEED TO SWITCH GOALAT FOR RED AND BLUE
-        private val goalAT = RobotPose(58.0, 56.0, 2.318)
+        private val goalAT = RobotPose(58.0, -56.0, -2.318)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val midShoot = RobotPose(24.0, -24.0, 3 * Math.PI / 4)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3)

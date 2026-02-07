@@ -48,6 +48,7 @@ class TurretTrack(
 
     val targetTag = if (red) TAG_RED else TAG_BLUE
     val targetPose = poseSet.goalAT
+    val pipe = if (red) 2 else 7
 
     fun track() = TrackTask()
 
@@ -168,19 +169,25 @@ class TurretTrack(
             var refinedLLError = NaN
             var llVisible = false
             if (result != null && result.isValid) {
-                val tags = result.fiducialResults
-                val target = tags.firstOrNull { it.fiducialId == targetTag }
-                if (target != null) {
-                    distance = taToDistance(target.targetArea)
-                    llVisible = true
-                    // TODO: REUSE turret.velocity
-                    if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
-                        lastTx = target.targetXDegrees
-                        lastEncoderPosAtCapture = currentEncoder
-                        refinedLLError = lastTx
-                    } else {
-                        val deltaTicks = currentEncoder - lastEncoderPosAtCapture
-                        refinedLLError = lastTx - (deltaTicks / TICKS_PER_DEG)
+                val actualPipeline = result.pipelineIndex
+                if (actualPipeline != pipe) {
+                    Log.w("TurretTrack", "Wrong pipeline ($actualPipeline), trying to switch to $pipe")
+                    ll.pipelineSwitch(pipe)
+                } else {
+                    val tags = result.fiducialResults
+                    val target = tags.firstOrNull { it.fiducialId == targetTag }
+                    if (target != null) {
+                        distance = taToDistance(target.targetArea)
+                        llVisible = true
+                        // TODO: REUSE turret.velocity
+                        if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
+                            lastTx = target.targetXDegrees
+                            lastEncoderPosAtCapture = currentEncoder
+                            refinedLLError = lastTx
+                        } else {
+                            val deltaTicks = currentEncoder - lastEncoderPosAtCapture
+                            refinedLLError = lastTx - (deltaTicks / TICKS_PER_DEG)
+                        }
                     }
                 }
             }
@@ -217,11 +224,6 @@ class TurretTrack(
                     if (isDestinationReachable) "reachable" else "reachablen't"
                 )
             )
-            // pipeline: 7 = blue; 2 = red
-            // ISSUE: Limelight does not work because the OnStart does not set the pipeline correctly (tries setting to pipeline6) I have to hard code for it to work
-            // ISSUE: TeleOp Blue does not work but TeleOp Red works with Blue values
-            ll.pipelineSwitch(7);
-            // ll.pipelineSwitch(2);
             Log.i(
                 "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
                     ll.latestResult.pipelineIndex,
@@ -251,8 +253,7 @@ class TurretTrack(
     override fun onStart() {
         ll.stop()
         ll.setPollRateHz(150)
-        if (red) ll.pipelineSwitch(2)
-        else ll.pipelineSwitch(7)
+        ll.pipelineSwitch(pipe)
     }
 
     override fun getTags() = TAGS
