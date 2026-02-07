@@ -7,8 +7,11 @@ import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
+import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.WaitTicks
+import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -24,6 +27,7 @@ import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.TurretTrack
 import org.firstinspires.ftc.teamcode.systems.remover
+import org.firstinspires.ftc.teamcode.systems.toDeg
 import org.firstinspires.ftc.teamcode.systems.wrapAngle
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -135,6 +139,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     + "</strong></big>"
         )
         telemetry.addLine("<small>GP2 Back to enable/disable</small>")
+        telemetry.addLine(hw.pinpoint.position.remover.let {
+            "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
+        })
         telemetry.update()
     }
 
@@ -271,28 +278,53 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 else startTracking()
             }
             if (x && !gp1X) {
-                sch.stopUsing(Locks.INTAKE_STORAGE)
-                sch.stopUsing(Locks.DRIVE_MOTORS)
-                sch.add(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.midShoot))
-                    add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                    add(OneShot {
-                        hw.hood.position = CompBot2Hardware.HOOD_50
-                    })
-                }).then(Combo.shoot(hw, shooter))
+                if (!(activeTrack?.isAliveOrQueued() ?: false)) {
+                    sch.stopUsing(Locks.INTAKE_STORAGE)
+                    sch.stopUsing(Locks.DRIVE_MOTORS)
+                    sch.add(VirtualGroup {
+                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
+                        add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
+                        add(OneShot {
+                            hw.hood.position = CompBot2Hardware.HOOD_50
+                        })
+                    }).then(Combo.shoot(hw, shooter))
+                }
             }
             if (y1 && !gp1Y) {
+                // Temporarily suspend tracking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
-                sch.add(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                    add(shooter.setTargetAndWait(SHOOT_FAR_RANGE, 0.3))
-                    add(OneShot {
-                        hw.hood.position = CompBot2Hardware.HOOD_UP
-                    })
+                sch.add(object: Group({}) {
+                    var resumeAfterward = (activeTrack?.isAliveOrQueued() ?: false)
+
+                    init {
+                        getScheduler()
+                            .add(VirtualGroup {
+                                add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                                add(WaitTicks(1))
+                                    .then(shooter.setTargetAndWait(SHOOT_FAR_RANGE, 0.5))
+                                add(OneShot {
+                                    hw.hood.position = CompBot2Hardware.HOOD_UP
+                                })
+                                add(WaitUntil {
+                                    abs(hw.turret.currentPosition) < 3
+                                })
+                            })
+                            .then(Combo.shoot(hw, shooter))
+                            .then(Combo.shootAfter(hw))
+                        require(Locks.INTAKE_STORAGE)
+                        require(Locks.DRIVE_MOTORS)
+                    }
+
+                    override fun onStart() {
+                        stopTracking()
+                    }
+
+                    override fun onFinish(completedNormally: Boolean) {
+                        super.onFinish(completedNormally)
+                        if (resumeAfterward) startTracking()
+                    }
                 })
-                    .then(Combo.shoot(hw, shooter))
-                    .then(Combo.shootAfter(hw))
             }
             if (lb && !gp1LB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)

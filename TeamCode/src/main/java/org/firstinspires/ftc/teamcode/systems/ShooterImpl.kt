@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.systems
 
+import android.util.Log
 import io.github.gearup12499.taskshark.Lock
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.OneShot
@@ -7,7 +8,6 @@ import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.abs
-import kotlin.math.min
 
 class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
     companion object {
@@ -68,6 +68,7 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
                     lastMetAt = now
                     return false
                 }
+                Log.i("Shooter", "$currentVelocity -> $target = ${abs(currentVelocity - target)}")
                 return (now - lastMetAt) >= targetDuration
             }
         }
