@@ -51,6 +51,7 @@ class TurretTrack(
     val pipe = if (red) 2 else 7
 
     fun track() = TrackTask()
+    fun trackLegacy() = LegacyTrackTask()
 
     inner class TrackTask : Anonymous() {
         private var prevError = 0.0
@@ -234,6 +235,130 @@ class TurretTrack(
             turret.power = power2
 
             // TODO: Log
+            return false
+        }
+
+        override fun onFinish(completedNormally: Boolean) {
+            ll.stop()
+            turret.power = 0.0
+            turret.targetPosition = 0
+            turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+            turret.power = 1.0
+        }
+    }
+
+    inner class LegacyTrackTask : Anonymous() {
+        private var prevError = 0.0
+        private var integralError = 0.0
+        private var lastT = 0L
+        private var lastTx = 0.0
+        private var lastEncoderPosAtCapture = 0
+
+        var distance: Double? = null
+            private set
+
+        override fun onStart() {
+            ll.start()
+            lastT = System.nanoTime()
+
+            turret.power = 0.0
+            turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        }
+
+        private fun noResult() {
+            turret.power = 0.0
+            prevError = 0.0
+        }
+
+        private fun computePower(error: Double, deltaT: Double): Double {
+            if (abs(error) < DEADBAND) {
+                prevError = error
+                integralError = 0.0
+                return 0.0
+            }
+
+            integralError += error * deltaT
+            integralError = clamp(integralError, -MAX_I, MAX_I)
+
+            val p = KP * error
+            val i = KI * integralError
+            val d = if (deltaT > 0) KD * ((error - prevError) / deltaT) else 0.0
+
+            val out = p + i + d
+            return clamp(out, -MAX_POWER, MAX_POWER)
+        }
+
+        private fun limit(power: Double, pos: Int): Double {
+            var result = power
+            if (pos >= TURRET_CW_STOP - SOFT_LIMIT_BUFFER && power > 0) {
+                val distanceToLimit = TURRET_CW_STOP - pos
+                val scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER.toDouble()
+                result *= max(0.0, scaleFactor)
+            }
+
+            if (pos <= TURRET_CCW_STOP + SOFT_LIMIT_BUFFER && power < 0) {
+                val distanceToLimit = pos - TURRET_CCW_STOP
+                val scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER.toDouble()
+                result *= max(0.0, scaleFactor)
+            }
+
+            if (pos >= TURRET_CW_STOP && power > 0) {
+                return 0.0
+            }
+            if (pos <= TURRET_CCW_STOP && power < 0) {
+                return 0.0
+            }
+
+            return result
+        }
+
+        private fun taToDistance(ta: Double): Double {
+            return sqrt(56.0 / ta) - 5.82
+        }
+
+        override fun onTick(): Boolean {
+            val result = ll.latestResult
+            if (result == null || !result.isValid) {
+                noResult()
+                return false
+            }
+
+            val tags = result.fiducialResults
+            if (tags.isEmpty()) {
+                noResult()
+                return false
+            }
+
+            val target = tags.firstOrNull {
+                it.fiducialId == targetTag
+            }
+            if (target == null) {
+                noResult()
+                return false
+            }
+
+            val now = System.nanoTime()
+            val dt = (now - lastT) / 1e9
+            lastT = now
+            val ta = target.targetArea
+            distance = taToDistance(ta)
+
+            val currentEncoder = turret.currentPosition
+
+            val tx: Double
+            if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
+                lastTx = target.targetXDegrees
+                lastEncoderPosAtCapture = currentEncoder
+                tx = lastTx
+            } else {
+                val deltaTicks = currentEncoder - lastEncoderPosAtCapture
+                tx = lastTx - (deltaTicks / TICKS_PER_DEG)
+            }
+
+            val power1 = computePower(tx, dt)
+            val power2 = limit(power1, currentEncoder)
+
+            turret.power = power2
             return false
         }
 
