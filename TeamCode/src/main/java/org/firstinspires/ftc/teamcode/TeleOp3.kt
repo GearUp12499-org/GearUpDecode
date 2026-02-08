@@ -156,6 +156,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         telemetry.addLine(hw.pinpoint.position.remover.let {
             "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
         })
+        if (turretTrack.fault) {
+            telemetry.addLine("<strong><font color=\"#ff4040\">LL fault (no new reads for at least 1 second?)</font></strong>")
+        }
         telemetry.update()
     }
 

@@ -18,6 +18,9 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
+import kotlin.time.TimeSource.Monotonic.markNow
 
 class TurretTrack(
     private val ll: Limelight3A,
@@ -49,6 +52,11 @@ class TurretTrack(
     val targetTag = if (red) TAG_RED else TAG_BLUE
     val targetPose = poseSet.goalAT
     val pipe = if (red) 2 else 7
+
+    private var lastTimestamp: Double = 0.0
+    private var lastPoll = markNow()
+    var fault = false; private set
+
 
     fun track() = TrackTask()
     fun trackLegacy() = LegacyTrackTask()
@@ -192,20 +200,20 @@ class TurretTrack(
                     }
                 }
             }
-            Log.i(
-                "TurretTrack", when {
-                result == null -> "result is null"
-                !result.isValid -> "result is invalid"
-                else -> {
-                    val tags = result.fiducialResults
-                    val target = tags.firstOrNull { it.fiducialId == targetTag }
-                    when {
-                        tags.isEmpty() -> "no results"
-                        target == null -> "no matching result"
-                        else -> "id ${target.fiducialId}"
-                    }
-                }
-            })
+//            Log.i(
+//                "TurretTrack", when {
+//                result == null -> "result is null"
+//                !result.isValid -> "result is invalid"
+//                else -> {
+//                    val tags = result.fiducialResults
+//                    val target = tags.firstOrNull { it.fiducialId == targetTag }
+//                    when {
+//                        tags.isEmpty() -> "no results"
+//                        target == null -> "no matching result"
+//                        else -> "id ${target.fiducialId}"
+//                    }
+//                }
+//            })
 
             if (llVisible != isLimelightTracking) {
                 Log.i("TurretTrack", if (llVisible) "LOCKED IN" else "Locked out :(")
@@ -217,20 +225,21 @@ class TurretTrack(
 
             val power1 = computePower(finalError, dt)
             val power2 = limit(power1, currentEncoder)
-            Log.i(
-                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
-                    if (isLimelightTracking) "Limelight" else "IMU",
-                    finalError,
-                    power2,
-                    if (isDestinationReachable) "reachable" else "reachablen't"
-                )
-            )
-            Log.i(
-                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
-                    ll.latestResult.pipelineIndex,
-                    ll.latestResult.timestamp,
-                )
-            )
+//            Log.i(
+//                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
+//                    if (isLimelightTracking) "Limelight" else "IMU",
+//                    finalError,
+//                    power2,
+//                    if (isDestinationReachable) "reachable" else "reachablen't"
+//                )
+//            )
+//            Log.i(
+//                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
+//                    ll.latestResult.pipelineIndex,
+//                    ll.latestResult.timestamp,
+//                )
+//            )
+
 
             turret.power = power2
 
@@ -372,6 +381,20 @@ class TurretTrack(
     }
 
     override fun onTick(): Boolean {
+        val timestamp = ll.latestResult.timestamp
+        val nowTs = markNow()
+        if (timestamp != lastTimestamp) {
+            lastTimestamp = timestamp
+            lastPoll = nowTs
+        }
+        if (nowTs - lastPoll > 1.seconds) {
+            // IoC
+            Log.w("TurretTrack", "LL may be compromised: last stamp $timestamp, ${nowTs - lastPoll} ago")
+            fault = true
+        } else {
+            fault = false
+        }
+
         return false
     }
 
