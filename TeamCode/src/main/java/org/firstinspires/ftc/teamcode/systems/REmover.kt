@@ -99,9 +99,9 @@ object REmover {
             var prevTime = 0.0
             var prevDeltaAll = 0.0
 
-            var sumF = 0.0;
-            var sumS = 0.0;
-            var sumW = 0.0;
+            var sumF = 0.0
+            var sumS = 0.0
+            var sumW = 0.0
 
             override fun onStart() {
                 timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)

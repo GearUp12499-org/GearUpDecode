@@ -4,7 +4,6 @@ import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
-import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
