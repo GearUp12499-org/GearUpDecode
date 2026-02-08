@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.utilities
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous
 
+@Disabled
 @TeleOp
 class IntakeTest : LinearOpMode() {
     lateinit var hw: CompBot2Hardware

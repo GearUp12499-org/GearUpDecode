@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 
+@Disabled
 @TeleOp
 class TuneRemover : LinearOpMode() {
 
