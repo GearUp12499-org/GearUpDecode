@@ -15,6 +15,8 @@ import java.util.List;
 @TeleOp
 
 public class LimeLightTeleOp extends LinearOpMode {
+    final double inchespermeter = 39.37;
+    final double coordflip = -1;
     private Limelight3A limelight3A;
 
     @Override
@@ -35,9 +37,9 @@ waitForStart();
                 Pose3D botpose = result.getBotpose();
                 if (botpose != null) {
 
-                    telemetry.addData("Z", botpose.getPosition().z);
-                    telemetry.addData("X offset", botpose.getPosition().x);
-                    telemetry.addData("y offset", botpose.getPosition().y);
+                    telemetry.addData("Z", botpose.getPosition().z*inchespermeter);
+                    telemetry.addData("X offset", botpose.getPosition().x*inchespermeter*coordflip);
+                    telemetry.addData("y offset", botpose.getPosition().y*inchespermeter*coordflip);
                 } else {
                     telemetry.addLine("null");
                 }
