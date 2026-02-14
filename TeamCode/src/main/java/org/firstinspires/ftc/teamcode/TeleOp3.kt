@@ -85,7 +85,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             tag(BuiltInTags.DAEMON)
         })
         val robotStartTask = scheduler.add(SentinelTask())
-        turretTrack = scheduler.add(TurretTrack(hw.limelight, hw.turret, hw.pinpoint, poseSet, red))
         shooter = robotStartTask.then(ShooterImpl(hw))
         robotStartTask.then(DriveTask())
         robotStartTask.then(OneShot {

@@ -103,9 +103,9 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP
         hw.hood.position = CompBot2Hardware.HOOD_50
 
-        hw.turret.targetPosition = 0
-        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-        hw.turret.power = 1.0
+//        hw.turret.targetPosition = 0
+//        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+//        hw.turret.power = 1.0
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
