@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
+import com.acmerobotics.dashboard.message.redux.ReceiveRobotStatus
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
@@ -23,11 +25,11 @@ import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 
-@Disabled
+
 @TeleOp
 class TuneRemover : LinearOpMode() {
 
-    private lateinit var hw: CompBot2Hardware
+    private lateinit var hw: CompBot2HardwareNew
 
     private var pinpointSetupTask: PinpointSetupTask? = null
 
@@ -50,7 +52,7 @@ class TuneRemover : LinearOpMode() {
         TaskSharkAndroid.setup()
         val sch = FastScheduler()
         val startFlag = sch.add(SentinelTask())
-        hw = CompBot2Hardware(hardwareMap)
+        hw = CompBot2HardwareNew(hardwareMap)
 
         sch.add(Group {
             sch.add(OneShot {
@@ -58,7 +60,7 @@ class TuneRemover : LinearOpMode() {
             }).then(WaitUntil {
                 hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
             }).then(OneShot {
-                hw.pinpoint.setPosition(REmover.RobotPose(0.0,0.0,0.0).asPose2D)
+                hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
             })
 
         })
@@ -84,7 +86,7 @@ class TuneRemover : LinearOpMode() {
         })
 
         sch.add(PinpointTask(hw.pinpoint))
-        shooter = startFlag.then(ShooterImpl(hw))
+//        shooter = startFlag.then(ShooterImpl(hw))
 
         startFlag.then(OneShot {
             pinpointSetupTask?.stop()
@@ -118,7 +120,7 @@ class TuneRemover : LinearOpMode() {
 
             if (gamepad1.a && !wasA) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(5.0, 0.0, 0.0)))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(72.0, 0.0, 0.0)))
             }
             else if (gamepad1.b && !wasB) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
@@ -127,7 +129,7 @@ class TuneRemover : LinearOpMode() {
             }
             else if (gamepad1.x && !wasX) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(-12.0,-24.0,-Math.PI/2), waypoint = true))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                 sch2.add(REmover.drive2Pose2(hw, poseSet.set2out))
 
             }
@@ -137,10 +139,11 @@ class TuneRemover : LinearOpMode() {
             }
             else if (gamepad1.start) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,0.0)))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.farStart))
             }
             if (gamepad1.back && !wasBack) {
-                sch2.add(shooter.setTargetAsync(SHOOT_MID_RANGE))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
+
             }
 
             wasA = gamepad1.a

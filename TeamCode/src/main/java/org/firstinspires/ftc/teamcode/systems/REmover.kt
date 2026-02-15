@@ -9,13 +9,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -47,15 +50,15 @@ object REmover {
     const val THRESHOLD = 0.2
 
     const val tipFearRatio: Double = 2.0
-    const val FKP: Double = 0.35
+    const val FKP: Double = 0.05 //0.35
     const val tipFKP: Double = 0.1
-    const val FKD: Double = 0.02 //0.02
-    const val FKI: Double = 0.0005
+    const val FKD: Double = 0.0125 //0.02
+    const val FKI: Double = 0.0005 // 0.0005
 
     //0.4, 0.07, 0.00001
-    const val SKP: Double = 0.4
-    const val SKD: Double = 0.06 // 0.06
-    const val SKI: Double = 0.0005
+    const val SKP: Double = 0.07 // 0.4
+    const val SKD: Double = 0.0 // 0.06
+    const val SKI: Double = 0.0005 // 0.0005
 
     const val WKP: Double = 0.4
     const val WKD: Double = 0.005
@@ -79,17 +82,18 @@ object REmover {
     @JvmStatic
     @JvmOverloads
     fun drive2Pose2(
-        hardware: CompBot2Hardware,
+        hardware: CompBot2HardwareNew,
         pose: RobotPose,
         maxPower: Double = 1.0,
         waypoint: Boolean = false,
-        timeoutAt: Double = 1.0
+        timeoutAt: Double = 1.0,
+        farStrafe: Boolean = false
     ): Task<*> {
-        val (tgtx, tgty, tgta) = pose
+        var (tgtx, tgty, tgta) = pose
 
         return object : Task.Anonymous() {
             init {
-                require(CompBot2Hardware.Locks.DRIVE_MOTORS)
+                require(CompBot2HardwareNew.Locks.DRIVE_MOTORS)
             }
 
             lateinit var timeout: ElapsedTime
@@ -99,6 +103,7 @@ object REmover {
             var prevTime = 0.0
             var prevDeltaAll = 0.0
 
+            var tempTargetAngle = tgta
             var sumF = 0.0
             var sumS = 0.0
             var sumW = 0.0
@@ -108,6 +113,48 @@ object REmover {
                 runtime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
                 currentTime = runtime.time()
                 prevTime = runtime.time()
+
+                hardware.pinpoint.update()
+                val x = hardware.pinpoint.getPosX(DistanceUnit.INCH)
+                val y = hardware.pinpoint.getPosY(DistanceUnit.INCH)
+                val angle = hardware.pinpoint.getHeading(AngleUnit.RADIANS)
+                val deltaX = tgtx - x
+                val deltaY = tgty - y
+
+                val tempTargetAngle1 = atan2(deltaX,deltaY) + (3*PI)/2
+                var tempTargetAngle2 = tempTargetAngle1 + PI
+
+                tgta %= 2 * PI
+//                if (tgta > PI) {
+//                    tgta -= 2 * PI
+//                } else if (tgta < -PI) {
+//                    tgta += 2 * PI
+//                }
+//                tempTargetAngle2 %= 2 * PI
+                if (tempTargetAngle2 > PI) {
+                    tempTargetAngle2 -= 2 * PI
+                } else if (tempTargetAngle2 < -PI) {
+                    tempTargetAngle2 += 2 * PI
+                }
+
+
+                val error1 = abs(tempTargetAngle1 - angle) + abs(tgta - tempTargetAngle1)
+                val error2 = abs(tempTargetAngle2 - angle) + abs(tgta - tempTargetAngle2)
+
+                if(farStrafe){
+                  if (error1 <= error2){
+                      tempTargetAngle = tempTargetAngle1
+                  }
+                    else if (error2 < error1){
+                        tempTargetAngle = tempTargetAngle2
+                  }
+                }
+                else{
+                    tempTargetAngle = tgta
+                }
+
+
+
             }
 
             override fun onTick(): Boolean {
@@ -130,7 +177,8 @@ object REmover {
 
                 val deltaX = tgtx - currentX
                 val deltaY = tgty - currentY
-                var deltaA = tgta - currentTheta
+                var deltaA = tempTargetAngle - currentTheta
+
                 deltaA %= 2 * PI
                 if (deltaA > PI) {
                     deltaA -= 2 * PI
@@ -152,6 +200,9 @@ object REmover {
                             )
                         )
                     }
+                    else{
+                        Log.w("Remover","finished")
+                    }
                     if (!waypoint) {
                         hardware.frontLeft.power = 0.0
                         hardware.frontRight.power = 0.0
@@ -160,6 +211,7 @@ object REmover {
                     }
                     return true
                 }
+
 
 
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
@@ -172,13 +224,13 @@ object REmover {
                 val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity
                 val vW = R * angVelocity
 
-                if (abs(f) > 1.5) {
+                if (abs(f) > 2) {
                     sumF = 0.0
                 } else {
                     sumF += f * deltaTime
                 }
 
-                if (abs(s) > 1.5) {
+                if (abs(s) > 2) {
                     sumS = 0.0
                 } else {
                     sumS += s * deltaTime
@@ -192,11 +244,11 @@ object REmover {
 
                 var tipFactor: Double = 1.0
 
-                if (abs(f) > tipFearRatio * abs(s)) {
-                    val ratio: Double = abs(s) / abs(f)
-
-                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
-                }
+//                if (abs(f) > tipFearRatio * abs(s)) {
+//                    val ratio: Double = abs(s) / abs(f)
+//
+//                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
+//                }
 
                 val tempFKP: Double = tipFactor * FKP
                 val tempSKP: Double = tipFactor * SKP
@@ -206,7 +258,12 @@ object REmover {
                 val pw: Double = WKP * w + WKI * sumW - WKD * vW
 
 
+
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+
+                if(farStrafe && (hypot(deltaX, deltaY) < 20.0)){
+                    tempTargetAngle = tgta
+                }
 
                 if (abs(deltaAll - prevDeltaAll) > 0.5) {
                     prevDeltaAll = deltaAll
