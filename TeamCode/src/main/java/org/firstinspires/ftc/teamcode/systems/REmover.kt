@@ -50,18 +50,21 @@ object REmover {
     const val THRESHOLD = 0.2
 
     const val tipFearRatio: Double = 2.0
-    const val FKP: Double = 0.05 //0.35
+    const val FKP: Double = 0.1 //0.35
     const val tipFKP: Double = 0.1
-    const val FKD: Double = 0.0125 //0.02
+    const val FKD: Double = 0.02 //0.02
     const val FKI: Double = 0.0005 // 0.0005
 
     //0.4, 0.07, 0.00001
-    const val SKP: Double = 0.07 // 0.4
-    const val SKD: Double = 0.0 // 0.06
+    const val SKP: Double = 0.12// 0.4
+    const val SKD: Double = 0.02 // 0.06
     const val SKI: Double = 0.0005 // 0.0005
 
-    const val WKP: Double = 0.4
-    const val WKD: Double = 0.005
+    const val WKP: Double = 0.4 // 0.4
+
+    var Wfudge: Double = 1.0
+
+    const val WKD: Double = 0.01 //0.005
     const val WKI: Double = 0.0
 
     /**
@@ -77,6 +80,28 @@ object REmover {
         speed > 0 -> THRESHOLD + (1 - THRESHOLD) * speed
         speed < 0 -> -THRESHOLD + (1 - THRESHOLD) * speed
         else -> throw IllegalArgumentException()
+    }
+
+    @JvmStatic
+    fun normalize(angle: Double): Double {
+        var tempAngle = angle % (2 * PI)
+        if (tempAngle > PI) {
+            tempAngle -= (2 * PI)
+        } else if (tempAngle <= -PI) {
+            tempAngle += (2 * PI)
+        }
+        return tempAngle
+    }
+
+    @JvmStatic
+    fun angleDifference(angle1: Double, angle2: Double): Double {
+        var diff = normalize(angle1) - normalize(angle2)
+        diff = abs(diff)
+        if(diff > PI){
+            diff = (2*PI) - diff
+        }
+
+        return diff
     }
 
     @JvmStatic
@@ -121,27 +146,17 @@ object REmover {
                 val deltaX = tgtx - x
                 val deltaY = tgty - y
 
-                val tempTargetAngle1 = atan2(deltaX,deltaY) + (3*PI)/2
-                var tempTargetAngle2 = tempTargetAngle1 + PI
+                val tempTargetAngle1 = normalize(atan2(deltaY,deltaX))
+                val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
+                Log.i("tempA2", tempTargetAngle2.toString())
+                Log.i("tempA1", tempTargetAngle1.toString())
+                tgta = normalize(tgta)
 
-                tgta %= 2 * PI
-//                if (tgta > PI) {
-//                    tgta -= 2 * PI
-//                } else if (tgta < -PI) {
-//                    tgta += 2 * PI
-//                }
-//                tempTargetAngle2 %= 2 * PI
-                if (tempTargetAngle2 > PI) {
-                    tempTargetAngle2 -= 2 * PI
-                } else if (tempTargetAngle2 < -PI) {
-                    tempTargetAngle2 += 2 * PI
-                }
-
-
-                val error1 = abs(tempTargetAngle1 - angle) + abs(tgta - tempTargetAngle1)
-                val error2 = abs(tempTargetAngle2 - angle) + abs(tgta - tempTargetAngle2)
+                val error1 = angleDifference(tempTargetAngle1, angle) + angleDifference(tgta, tempTargetAngle1)
+                val error2 = angleDifference(tempTargetAngle2, angle) + angleDifference(tgta, tempTargetAngle2)
 
                 if(farStrafe){
+                    Wfudge = 5.0
                   if (error1 <= error2){
                       tempTargetAngle = tempTargetAngle1
                   }
@@ -224,13 +239,13 @@ object REmover {
                 val vS = sin(currentTheta) * xVelocity - cos(currentTheta) * yVelocity
                 val vW = R * angVelocity
 
-                if (abs(f) > 2) {
+                if (abs(f) > 1.5) {
                     sumF = 0.0
                 } else {
                     sumF += f * deltaTime
                 }
 
-                if (abs(s) > 2) {
+                if (abs(s) > 1.5) {
                     sumS = 0.0
                 } else {
                     sumS += s * deltaTime
@@ -255,14 +270,15 @@ object REmover {
 
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
-                val pw: Double = WKP * w + WKI * sumW - WKD * vW
+                val pw: Double = (WKP * Wfudge) * w + WKI * sumW - WKD * vW
 
 
 
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
-                if(farStrafe && (hypot(deltaX, deltaY) < 20.0)){
+                if(farStrafe && (hypot(deltaX, deltaY) < 30.0)){
                     tempTargetAngle = tgta
+                    Wfudge = 1.0
                 }
 
                 if (abs(deltaAll - prevDeltaAll) > 0.5) {

@@ -24,6 +24,7 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
+import kotlin.math.PI
 
 
 @TeleOp
@@ -120,22 +121,20 @@ class TuneRemover : LinearOpMode() {
 
             if (gamepad1.a && !wasA) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(72.0, 0.0, 0.0)))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(48.0, 0.0, 0.0)))
             }
             else if (gamepad1.b && !wasB) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, poseSet.set2pos))
-                sch2.add(REmover.drive2Pose2(hw, poseSet.set2out))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0, -48.0 , 0.0)))
             }
             else if (gamepad1.x && !wasX) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
-                sch2.add(REmover.drive2Pose2(hw, poseSet.set2out))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,0.0)))
 
             }
             else if (gamepad1.y && !wasY) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, poseSet.midShoot))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,PI)))
             }
             else if (gamepad1.start) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
