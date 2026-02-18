@@ -17,6 +17,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
@@ -30,7 +31,7 @@ import org.firstinspires.ftc.vision.VisionPortal
 abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
-    private lateinit var hw: CompBot2Hardware
+    private lateinit var hw: CompBot2HardwareNew
     private lateinit var shooter: ShooterImpl
     private var aprilTag: AprilTag? = null
 
@@ -97,15 +98,15 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     override fun runOpMode() {
         TaskSharkAndroid.setup()
 
-        hw = CompBot2Hardware(hardwareMap)
-        hw.slider.position = CompBot2Hardware.SLIDER_IN
-        hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
-        hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP
-        hw.hood.position = CompBot2Hardware.HOOD_50
+        hw = CompBot2HardwareNew(hardwareMap)
+//        hw.slider.position = CompBot2Hardware.SLIDER_IN
+//        hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+//        hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP
+//        hw.hood.position = CompBot2Hardware.HOOD_50
 
-        hw.turret.targetPosition = 0
-        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-        hw.turret.power = 1.0
+//        hw.turret.targetPosition = 0
+//        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+//        hw.turret.power = 1.0
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
@@ -129,7 +130,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         aprilTag = AprilTag(if (red) hw.webcam2 else hw.webcam1)
         sch.add(aprilTag!!.setupAprilTag(0, 0)).then(startFlag)
 
-        shooter = sch.add(ShooterImpl(hw))
+//        shooter = sch.add(ShooterImpl(hw))
 
         sch.add(compose {
             var state: GoBildaPinpoint2Driver.DeviceStatus? = null
@@ -150,14 +151,14 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         })
 
         startFlag.then(VirtualGroup {
-            add(REmover.drive2Pose2(hw, poseSet.midShoot))
+            add(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
                 .then(aprilTag!!.readObelisk(0.3))
-            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+//            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
-            .then(Combo.shoot(hw, shooter))
+//            .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
                     .then(VirtualGroup {
@@ -165,39 +166,39 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 //                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {
-                        intake.finish()
+//                        intake.finish()
                     })
             })
-            .then(Combo.shoot(hw, shooter))
+//            .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set2out))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
+                        add(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
 //                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {
-                        intake.finish()
+//                        intake.finish()
                     })
             })
-            .then(Combo.shoot(hw, shooter))
+//            .then(Combo.shoot(hw, shooter))
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set3out))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot2))
+                        add(REmover.drive2Pose2(hw, poseSet.midShoot2, farStrafe = true))
 //                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE2, 0.2))
                     })
                     .then(OneShot {
-                        intake.finish()
+//                        intake.finish()
                     })
             })
-            .then(Combo.shoot(hw, shooter))
-            .then(Combo.shootAfter(hw))
+//            .then(Combo.shoot(hw, shooter))
+//            .then(Combo.shootAfter(hw))
 
         while (opModeInInit()) sch.tick()
 
