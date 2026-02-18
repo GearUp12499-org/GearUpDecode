@@ -231,7 +231,7 @@ object Combo {
         }
 
     @JvmOverloads
-    fun shoot(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.15) =
+    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.15) =
         object : Group({}) {
             init {
                 getScheduler()

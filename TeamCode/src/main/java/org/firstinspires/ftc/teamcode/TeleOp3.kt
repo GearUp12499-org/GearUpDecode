@@ -283,7 +283,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             true
                         })
                     })
-                        .then(Combo.shoot(hw, shooter))
+                        .then(Combo.shoot(hw))
                         .then(Combo.shootAfter(hw))
                 }
             }
@@ -293,7 +293,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 if (activeTrack?.isAliveOrQueued() ?: false)
                     sch.add(VirtualGroup {
                         add(shooter.awaitTarget(0.2))
-                            .then(Combo.shoot(hw, shooter))
+                            .then(Combo.shoot(hw))
                             .then(Combo.shootAfter(hw))
                     })
                 // If we're... not
@@ -331,7 +331,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         add(OneShot {
                             hw.hood.position = CompBot2Hardware.HOOD_50
                         })
-                    }).then(Combo.shoot(hw, shooter))
+                    }).then(Combo.shoot(hw))
                 }
             }
             if (y1 && !gp1Y) {
@@ -355,7 +355,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                     true
                                 })
                             })
-                            .then(Combo.shoot(hw, shooter))
+                            .then(Combo.shoot(hw))
                             .then(Combo.shootAfter(hw))
                         require(Locks.INTAKE_STORAGE)
                         require(Locks.DRIVE_MOTORS)

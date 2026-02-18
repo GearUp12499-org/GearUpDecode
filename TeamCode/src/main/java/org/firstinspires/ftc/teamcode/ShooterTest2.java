@@ -108,10 +108,8 @@ public class ShooterTest2 extends LinearOpMode {
                 telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
             }
 
-            if (result != null ) {
-                telemetry.addData("tx", result.getTx());
-                telemetry.addData("ty", result.getTy());
-            }
+            telemetry.addData("tx", result.getTx());
+            telemetry.addData("ty", result.getTy());
             telemetry.addData("target velocity", targetvel);
             telemetry.addData("Current Vel: ", currentVel);
             telemetry.addData("at target", Math.abs(targetvel - currentVel) < 20);
