@@ -9,7 +9,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
-import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -18,7 +17,6 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -107,7 +105,7 @@ object REmover {
     @JvmStatic
     @JvmOverloads
     fun drive2Pose2(
-        hardware: CompBot2HardwareNew,
+        hardware: CompBot2Hardware,
         pose: RobotPose,
         maxPower: Double = 1.0,
         waypoint: Boolean = false,
@@ -118,7 +116,7 @@ object REmover {
 
         return object : Task.Anonymous() {
             init {
-                require(CompBot2HardwareNew.Locks.DRIVE_MOTORS)
+                require(CompBot2Hardware.Locks.DRIVE_MOTORS)
             }
 
             lateinit var timeout: ElapsedTime

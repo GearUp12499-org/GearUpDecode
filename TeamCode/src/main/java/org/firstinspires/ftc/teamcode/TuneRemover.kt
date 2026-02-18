@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Log
-import com.acmerobotics.dashboard.message.redux.ReceiveRobotStatus
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -15,7 +13,6 @@ import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
@@ -30,7 +27,7 @@ import kotlin.math.PI
 @TeleOp
 class TuneRemover : LinearOpMode() {
 
-    private lateinit var hw: CompBot2HardwareNew
+    private lateinit var hw: CompBot2Hardware
 
     private var pinpointSetupTask: PinpointSetupTask? = null
 
@@ -53,7 +50,7 @@ class TuneRemover : LinearOpMode() {
         TaskSharkAndroid.setup()
         val sch = FastScheduler()
         val startFlag = sch.add(SentinelTask())
-        hw = CompBot2HardwareNew(hardwareMap)
+        hw = CompBot2Hardware(hardwareMap)
 
         sch.add(Group {
             sch.add(OneShot {
