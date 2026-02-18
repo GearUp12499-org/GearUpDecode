@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<Robot type="FirstInspires-FTC">
+    <Webcam name="Webcam 2" serialNumber="E51E06E0" />
+    <EthernetDevice name="limelight" serialNumber="EthernetOverUsb:eth0:172.29.0.30" port="-1" ipAddress="172.29.0.1" />
+    <Webcam name="Webcam 1" serialNumber="ED8ECA10" />
+    <LynxUsbDevice name="Control Hub Portal" serialNumber="(embedded)" parentModuleAddress="173">
+        <LynxModule name="Expansion Hub 2" port="2">
+            <goBILDA5202SeriesMotor name="frontLeft" port="0" />
+            <goBILDA5202SeriesMotor name="backLeft" port="1" />
+            <goBILDA5202SeriesMotor name="shoot1" port="2" />
+            <goBILDA5202SeriesMotor name="shoot2" port="3" />
+            <Servo name="hood" port="0" />
+            <Servo name="shooterBallStop" port="2" />
+            <Servo name="slider" port="5" />
+            <AnalogInput name="dropDownEncoder" port="0" />
+            <AnalogInput name="sliderEncoder" port="1" />
+            <AnalogInput name="hoodEncoder" port="2" />
+            <goBILDAPrism name="prism" port="0" bus="0" />
+            <REV_VL53L0X_RANGE_SENSOR name="distanceLeft" port="0" bus="1" />
+            <RevColorSensorV3 name="colorBottomLeft" port="0" bus="3" />
+            <RevColorSensorV3 name="colorTopLeft" port="0" bus="2" />
+        </LynxModule>
+        <LynxModule name="Control Hub" port="173">
+            <goBILDA5202SeriesMotor name="frontRight" port="0" />
+            <goBILDA5202SeriesMotor name="backRight" port="1" />
+            <goBILDA5202SeriesMotor name="intake1" port="2" />
+            <goBILDA5202SeriesMotor name="intake2" port="3" />
+            <ContinuousRotationServo name="turret1" port="0" />
+            <ContinuousRotationServo name="turret2" port="1" />
+            <Servo name="flipper" port="2" />
+            <Servo name="bottomBallStop" port="4" />
+            <AnalogInput name="ballStopEncoder" port="0" />
+            <DigitalDevice name="frontRamp" port="0" />
+            <DigitalDevice name="middleRamp" port="2" />
+            <LynxEmbeddedIMU name="imu" port="0" bus="0" />
+            <goBILDAPinpoint2 name="pinpoint" port="1" bus="0" />
+            <RevColorSensorV3 name="colorBottomRight" port="0" bus="3" />
+            <RevColorSensorV3 name="colorTopRight" port="0" bus="2" />
+        </LynxModule>
+    </LynxUsbDevice>
+</Robot>

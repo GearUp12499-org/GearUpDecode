@@ -9,7 +9,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
-import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew;
 
 import java.util.List;
 
@@ -17,12 +16,12 @@ import java.util.List;
 
 public class ShooterTest3 extends LinearOpMode {
 
-    CompBot2HardwareNew hardware;
+    CompBot2Hardware hardware;
 
     @Override
 
     public void runOpMode() throws InterruptedException {
-        hardware = new CompBot2HardwareNew(hardwareMap);
+        hardware = new CompBot2Hardware(hardwareMap);
 
         hardware.initMotion();
 
@@ -60,13 +59,11 @@ public class ShooterTest3 extends LinearOpMode {
             if (gamepad1.dpad_up) {
                 hardware.flipper.setPosition(0.68);
                 sleep(1000);
-                hardware.intake.setPower(-0.8);
-                hardware.intake2.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.dpad_right && !wasdpad) {
                 targetpos += 0.094;
@@ -86,18 +83,15 @@ public class ShooterTest3 extends LinearOpMode {
                 sleep(500);
                 hardware.flipper.setPosition(0.68);
                 sleep(800);
-                hardware.intake.setPower(-0.8);
-                hardware.intake2.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.a) {
                 hardware.setShoot1Vel(targetvel);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
 
             if (gamepad1.b && !wasb) {
@@ -112,8 +106,7 @@ public class ShooterTest3 extends LinearOpMode {
 
             if (gamepad1.y) {
                 hardware.setShoot1Vel(0);
-                hardware.intake.setPower(0);
-                hardware.intake2.setPower(0);
+                hardware.setIntakePower(0);
             }
 
             wasb = gamepad1.b;

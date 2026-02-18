@@ -2,10 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
-import org.firstinspires.ftc.teamcode.hardware.HardwareMapper;
 
 @TeleOp
 public class ServoSteper extends LinearOpMode {
@@ -22,6 +21,8 @@ public class ServoSteper extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         hardware = new CompBot2Hardware(hardwareMap);
+
+        Servo theServo = hardware.shooterBallStop;
 
         waitForStart();
 
@@ -40,13 +41,13 @@ public class ServoSteper extends LinearOpMode {
                     position = minServo;
                 }
             }
-            hardware.shooterBallStop.setPosition(position);
+            theServo.setPosition(position);
 
             if (gamepad1.a){
-                hardware.intake.setPower(1);
+                hardware.setIntakePower(1);
             }
             else {
-                hardware.intake.setPower(0);
+                hardware.setIntakePower(0);
             }
 
             if (gamepad1.right_trigger > 0.5){
@@ -60,7 +61,7 @@ public class ServoSteper extends LinearOpMode {
 
 
 
-            telemetry.addData("motorPosition",hardware.turret.getCurrentPosition());
+//            telemetry.addData("motorPosition", hardware.turret.getCurrentPosition());
             telemetry.addData("position",position);
             telemetry.update();
 

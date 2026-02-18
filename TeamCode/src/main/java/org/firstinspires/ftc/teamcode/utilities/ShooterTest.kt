@@ -41,7 +41,7 @@ class ShooterTest : LinearOpMode() {
         var wasRB = false
         var wasLB = false
 
-        hw.intake.power = 1.0
+        hw.setIntakePower(1.0)
 
         while (opModeIsActive()) {
             sch.tick()
@@ -70,12 +70,12 @@ class ShooterTest : LinearOpMode() {
             if (isLB && !wasLB) {
                 sch
                     .add(OneShot {
-                        hw.intake.power = -0.8
+                        hw.setIntakePower(-0.8)
                         hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
                     })
                     .then(Wait.s(0.5))
                     .then(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                     })
             }
 

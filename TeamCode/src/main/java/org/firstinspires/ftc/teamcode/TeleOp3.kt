@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
@@ -51,7 +50,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
-    private lateinit var turretTrack: TurretTrack
+//    private lateinit var turretTrack: TurretTrack
     private var activeTrack: TurretTrack.TrackTask? = null
     private var activeBind: ITask<*>? = null
     private lateinit var scheduler: FastScheduler
@@ -92,13 +91,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
 
-            hw.turret.targetPosition = 0
-            hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-            hw.turret.power = 1.0
+//            hw.turret.targetPosition = 0
+//            hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+//            hw.turret.power = 1.0
 
             pinpointSetupTask?.stop()
             initVisual.stop()
-            startTracking()
+//            startTracking()
         })
         robotStartTask.then(compose {
             onTick {
@@ -118,29 +117,29 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     }
 
     fun startTracking() {
-        activeTrack?.stop()
-        activeBind?.stop()
-        activeTrack = scheduler.add(turretTrack.track())
-        activeBind = scheduler.add(compose {
-            onTick {
-                activeTrack ?: return@onTick true
-                val hoodSpeed =
-                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                false
-            }
-        })
+//        activeTrack?.stop()
+//        activeBind?.stop()
+//        activeTrack = scheduler.add(turretTrack.track())
+//        activeBind = scheduler.add(compose {
+//            onTick {
+//                activeTrack ?: return@onTick true
+//                val hoodSpeed =
+//                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+//                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+//                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+//                false
+//            }
+//        })
     }
 
     fun stopTracking() {
-        activeTrack?.stop()
-        activeBind?.stop()
-        activeTrack = null
-        activeBind = null
-        hw.turret.power = 1.0
-        hw.turret.targetPosition = 0
-        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
+//        activeTrack?.stop()
+//        activeBind?.stop()
+//        activeTrack = null
+//        activeBind = null
+//        hw.turret.power = 1.0
+//        hw.turret.targetPosition = 0
+//        hw.turret.mode = DcMotor.RunMode.RUN_TO_POSITION
     }
 
     fun runningVisuals() {
@@ -154,9 +153,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         telemetry.addLine(hw.pinpoint.position.remover.let {
             "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
         })
-        if (turretTrack.fault) {
-            telemetry.addLine("<strong><font color=\"#ff4040\">LL fault (no new reads for at least 1 second?)</font></strong>")
-        }
+//        if (turretTrack.fault) {
+//            telemetry.addLine("<strong><font color=\"#ff4040\">LL fault (no new reads for at least 1 second?)</font></strong>")
+//        }
         telemetry.update()
     }
 
@@ -280,7 +279,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             hw.hood.position = CompBot2Hardware.HOOD_50
                         })
                         add(WaitUntil {
-                            abs(hw.turret.currentPosition) < 3
+//                            abs(hw.turret.currentPosition) < 3
+                            true
                         })
                     })
                         .then(Combo.shoot(hw, shooter))
@@ -298,23 +298,23 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     })
                 // If we're... not
                 else sch.add(VirtualGroup {
-                    val track = add(turretTrack.trackLegacy())
-                    val bind = add(compose {
-                        onTick {
-                            val hoodSpeed =
-                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                            false
-                        }
-                    })
-                    add(shooter.awaitTarget(0.2))
-                        .then(Combo.shoot(hw, shooter))
-                        .then(OneShot {
-                            track.finish()
-                            bind.finish()
-                        })
-                        .then(Combo.shootAfter(hw))
+//                    val track = add(turretTrack.trackLegacy())
+//                    val bind = add(compose {
+//                        onTick {
+//                            val hoodSpeed =
+//                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+//                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+//                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+//                            false
+//                        }
+//                    })
+//                    add(shooter.awaitTarget(0.2))
+//                        .then(Combo.shoot(hw, shooter))
+//                        .then(OneShot {
+//                            track.finish()
+//                            bind.finish()
+//                        })
+//                        .then(Combo.shootAfter(hw))
                 })
             }
             if (back2 && !gp2back) {
@@ -351,7 +351,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                     hw.hood.position = CompBot2Hardware.HOOD_UP
                                 })
                                 add(WaitUntil {
-                                    abs(hw.turret.currentPosition) < 3
+//                                    abs(hw.turret.currentPosition) < 3
+                                    true
                                 })
                             })
                             .then(Combo.shoot(hw, shooter))
@@ -402,13 +403,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
             if (lb || rb) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
-                hw.intake.power = if (lb) 0.8 else -0.8
+                hw.setIntakePower(if (lb) 0.8 else -0.8)
                 if (rb && !gp2r) {
                     shooter.setTarget(-500.0)
                 }
                 if (!rb && gp2r) shooter.setTarget(0.0)
             } else if (gp2l || gp2r) {
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
                 shooter.setTarget(0.0)
             }
 

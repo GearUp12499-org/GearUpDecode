@@ -5,9 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
-import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew;
-
 @TeleOp
 public class TurretSteeper extends LinearOpMode {
     private double negLimit;
