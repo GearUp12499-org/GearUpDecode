@@ -50,21 +50,21 @@ object REmover {
     const val THRESHOLD = 0.2
 
     const val tipFearRatio: Double = 2.0
-    const val FKP: Double = 0.35 //0.05
+    const val FKP: Double = 0.1 //0.35
     const val tipFKP: Double = 0.1
-    const val FKD: Double = 0.02 //0.0125
+    const val FKD: Double = 0.02 //0.02
     const val FKI: Double = 0.0005 // 0.0005
 
     //0.4, 0.07, 0.00001
-    const val SKP: Double = 0.4// 0.07
-    const val SKD: Double = 0.06 // 0.0
+    const val SKP: Double = 0.12// 0.4
+    const val SKD: Double = 0.02 // 0.06
     const val SKI: Double = 0.0005 // 0.0005
 
-    const val WKP: Double = 0.4
+    const val WKP: Double = 0.4 // 0.4
 
     var Wfudge: Double = 1.0
 
-    const val WKD: Double = 0.005
+    const val WKD: Double = 0.01 //0.005
     const val WKI: Double = 0.0
 
     /**
@@ -259,11 +259,11 @@ object REmover {
 
                 var tipFactor: Double = 1.0
 
-                if (abs(f) > tipFearRatio * abs(s)) {
-                    val ratio: Double = abs(s) / abs(f)
-
-                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
-                }
+//                if (abs(f) > tipFearRatio * abs(s)) {
+//                    val ratio: Double = abs(s) / abs(f)
+//
+//                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
+//                }
 
                 val tempFKP: Double = tipFactor * FKP
                 val tempSKP: Double = tipFactor * SKP
@@ -276,7 +276,7 @@ object REmover {
 
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
-                if(farStrafe && (hypot(deltaX, deltaY) < 20.0)){
+                if(farStrafe && (hypot(deltaX, deltaY) < 30.0)){
                     tempTargetAngle = tgta
                     Wfudge = 1.0
                 }
