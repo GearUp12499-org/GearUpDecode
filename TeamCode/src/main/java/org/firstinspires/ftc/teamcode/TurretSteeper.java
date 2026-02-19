@@ -15,12 +15,11 @@ public class TurretSteeper extends LinearOpMode {
     CRServo servoTurret1;
     CRServo servoTurret2;
     DcMotorEx intake2;
-    double basePower = 0.14;
+    double basePower = 0.1;
     double P = 0.001;
-    double I = 0.000005;
-    double D = 0.000030;
-//    double D = 0.001;
-    double maxI = 10000.0;
+    double I = 0.000007;
+    double D = 0.000062;
+    double maxI = 20000.0;
     double deadbandTicks = 136.0;
     double minPowerErrorTicks = 320.0;
     double iZoneTicks = 650.0;

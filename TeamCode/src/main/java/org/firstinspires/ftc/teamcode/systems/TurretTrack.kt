@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
 import io.github.gearup12499.taskshark.systemPackages
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.PoseSet
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
@@ -71,6 +72,7 @@ class TurretTrack(
         private var isDestinationReachable = true
         private var isLimelightTracking = false
         private var resetPID = false
+        private var globalCorrection = 0.0
 
         var distance: Double? = null
             private set
@@ -196,6 +198,10 @@ class TurretTrack(
                             val deltaTicks = currentEncoder - lastEncoderPosAtCapture
                             refinedLLError = lastTx - (deltaTicks / TICKS_PER_DEG)
                         }
+                        var botpose = result.getBotpose()
+                        var x = botpose.position.x
+                        var y = botpose.position.y
+                        Log.i("Limelight Thinks", "(%.4f, %.4f)".format(x, y))
                     }
                 }
             }
@@ -220,7 +226,12 @@ class TurretTrack(
                 resetPID = true
             }
 
-            val finalError = if (llVisible) refinedLLError else refinedIMUError
+            if (isLimelightTracking) {
+                globalCorrection = abs(refinedIMUError) - abs(refinedIMUError)
+            }
+
+            val finalError = if (llVisible) refinedLLError else (refinedIMUError + globalCorrection)
+            // val finalError = refinedIMUError
 
             val power1 = computePower(finalError, dt)
             val power2 = limit(power1, currentEncoder)
