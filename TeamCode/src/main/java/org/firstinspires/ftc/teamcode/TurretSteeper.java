@@ -18,8 +18,9 @@ public class TurretSteeper extends LinearOpMode {
     private static final double TICKS_PER_DEGREE = (double) 67.9;
 
     private void turnTurret(double power, CRServo t1, CRServo t2){
-        t1.setPower(power);
-        t2.setPower(power);
+        double appliedpower = -power;
+        t1.setPower(appliedpower);
+        t2.setPower(appliedpower);
     }
 
     private double limit(int currentPos, double power){
@@ -27,10 +28,10 @@ public class TurretSteeper extends LinearOpMode {
         telemetry.addData("Current Pos: ", currentPos);
         telemetry.addData("Current Power: ", power);
         telemetry.update();
-        if(currentPos > posLimit && power < 0){
+        if(currentPos > posLimit && power > 0){
             return 0.0;
         }
-        if(currentPos < negLimit && power > 0) {
+        if(currentPos < negLimit && power < 0) {
             return 0.0;
         }
         return power;

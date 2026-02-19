@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 
 import java.util.List;
 
-@TeleOp
 
 public class LimeLightTeleOp extends LinearOpMode {
     final double inchespermeter = 39.37;
