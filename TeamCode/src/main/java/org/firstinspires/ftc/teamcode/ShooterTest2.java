@@ -46,11 +46,11 @@ public class ShooterTest2 extends LinearOpMode {
             if (gamepad1.dpad_up) {
                 hardware.flipper.setPosition(0.68);
                 sleep(1000);
-                hardware.intake.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.dpad_right && !wasdpad) {
                 targetpos += 0.094;
@@ -70,15 +70,15 @@ public class ShooterTest2 extends LinearOpMode {
                 sleep(500);
                 hardware.flipper.setPosition(0.68);
                 sleep(800);
-                hardware.intake.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.a) {
                 hardware.setShoot1Vel(targetvel);
-                hardware.intake.setPower(1);
+                hardware.setIntakePower(1);
             }
 
             if (gamepad1.b && !wasb) {
@@ -93,7 +93,7 @@ public class ShooterTest2 extends LinearOpMode {
 
             if (gamepad1.y) {
                 hardware.setShoot1Vel(0);
-                hardware.intake.setPower(0);
+                hardware.setIntakePower(0);
             }
 
             wasb = gamepad1.b;
@@ -108,10 +108,8 @@ public class ShooterTest2 extends LinearOpMode {
                 telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
             }
 
-            if (result != null ) {
-                telemetry.addData("tx", result.getTx());
-                telemetry.addData("ty", result.getTy());
-            }
+            telemetry.addData("tx", result.getTx());
+            telemetry.addData("ty", result.getTy());
             telemetry.addData("target velocity", targetvel);
             telemetry.addData("Current Vel: ", currentVel);
             telemetry.addData("at target", Math.abs(targetvel - currentVel) < 20);

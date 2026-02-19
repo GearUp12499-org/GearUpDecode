@@ -6,6 +6,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -88,14 +89,15 @@ public class CompBot2Hardware extends HardwareMapper {
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
     public DcMotorEx backLeft;
 
-    @HardwareName("turret")
-    @AutoClearEncoder
-    @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
-    public DcMotorEx turret;
+    @HardwareName("intake1")
+    private DcMotorEx intake1;
 
-    @HardwareName("intake")
+    @HardwareName("intake2")
     @Reversed
-    public DcMotorEx intake;
+    private DcMotorEx intake2;
+
+    @EncoderFor("intake2")
+    public Encoder turretEncoder;
 
     @HardwareName("shoot1")
     @Reversed
@@ -103,9 +105,6 @@ public class CompBot2Hardware extends HardwareMapper {
 
     @HardwareName("shoot2")
     private DcMotorEx shoot2;
-
-    @HardwareName("ballStop")
-    public ServoImplEx ballStop;
 
     @HardwareName("flipper")
     public ServoImplEx flipper;
@@ -171,6 +170,12 @@ public class CompBot2Hardware extends HardwareMapper {
     @HardwareName("Webcam 2")
     public WebcamName webcam2;
 
+    @HardwareName("turret1")
+    public CRServo servoTurret1;
+
+    @HardwareName("turret2")
+    public CRServo servoTurret2;
+
 
     public CompBot2Hardware(HardwareMap map) {
         super(map);
@@ -213,6 +218,11 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public double gethoodpos(){
         return hood.getPosition();
+    }
+
+    public void setIntakePower(double power) {
+        intake1.setPower(power);
+        intake2.setPower(power);
     }
 
     private void setupShooterVel1() {

@@ -1,5 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.BOTTOM_STOP_STOWED;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_DOWN;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_UP;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.OUTTAKE_POWER;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_DOWN;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_UP;
+import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SLIDER_OUT;
+
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -8,21 +16,31 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
-import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew;
+import org.firstinspires.ftc.teamcode.systems.Combo;
+import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous;
+import org.firstinspires.ftc.teamcode.utilities.StaticStore;
 
 import java.util.List;
+
+import io.github.gearup12499.taskshark.FastScheduler;
+import io.github.gearup12499.taskshark.prefabs.Group;
+import io.github.gearup12499.taskshark.prefabs.OneShot;
+import io.github.gearup12499.taskshark.prefabs.Wait;
 
 @TeleOp
 
 public class ShooterTest3 extends LinearOpMode {
 
-    CompBot2HardwareNew hardware;
+    CompBot2Hardware hardware;
+    FastScheduler sch;
 
     @Override
 
     public void runOpMode() throws InterruptedException {
-        hardware = new CompBot2HardwareNew(hardwareMap);
+        hardware = new CompBot2Hardware(hardwareMap);
+        sch = new FastScheduler();
 
         hardware.initMotion();
 
@@ -32,15 +50,15 @@ public class ShooterTest3 extends LinearOpMode {
         hardware.limelight.pipelineSwitch(2);
         hardware.limelight.start();
 
-
-
+        hardware.flipper.setPosition(FLIPPER_DOWN);
+        hardware.slider.setPosition(SLIDER_OUT);
         hardware.bottomBallStop.setPosition(0.42);
 
         boolean wasb = false;
         boolean wasx = false;
         boolean wasdpad = false;
 
-      //  double ticks_per_degree = TURRET_CW_90 / 90.0;
+        //  double ticks_per_degree = TURRET_CW_90 / 90.0;
         double targetvel = 1200;
         double targetpos = 0.182;
 
@@ -60,13 +78,11 @@ public class ShooterTest3 extends LinearOpMode {
             if (gamepad1.dpad_up) {
                 hardware.flipper.setPosition(0.68);
                 sleep(1000);
-                hardware.intake.setPower(-0.8);
-                hardware.intake2.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.dpad_right && !wasdpad) {
                 targetpos += 0.094;
@@ -86,18 +102,15 @@ public class ShooterTest3 extends LinearOpMode {
                 sleep(500);
                 hardware.flipper.setPosition(0.68);
                 sleep(800);
-                hardware.intake.setPower(-0.8);
-                hardware.intake2.setPower(-0.8);
+                hardware.setIntakePower(-0.8);
 
                 hardware.flipper.setPosition(0.25);
                 sleep(500);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
             if (gamepad1.a) {
                 hardware.setShoot1Vel(targetvel);
-                hardware.intake.setPower(1);
-                hardware.intake2.setPower(1);
+                hardware.setIntakePower(1);
             }
 
             if (gamepad1.b && !wasb) {
@@ -112,8 +125,47 @@ public class ShooterTest3 extends LinearOpMode {
 
             if (gamepad1.y) {
                 hardware.setShoot1Vel(0);
-                hardware.intake.setPower(0);
-                hardware.intake2.setPower(0);
+                hardware.setIntakePower(0);
+            }
+
+            // hold LB to intake w/ shooter stop
+            if (gamepad1.leftBumperWasPressed()) {
+                hardware.flipper.setPosition(FLIPPER_DOWN);
+                hardware.shooterBallStop.setPosition(SHOOTER_STOP_DOWN);
+                hardware.setIntakePower(0.8);
+            }
+            if (gamepad1.leftBumperWasReleased()) {
+                hardware.setIntakePower(0.0);
+                hardware.shooterBallStop.setPosition(SHOOTER_STOP_UP);
+            }
+
+            if (gamepad1.rightBumperWasPressed()) {
+                sch.add(new Group(it -> {
+                }) {{
+                    // reimplementation of Combo.shoot + Combo.shootAfter
+                    // combine with pressing X / B to change speed
+                    getScheduler()
+                            .add(new OneShot(() -> {
+                                hardware.setIntakePower(1.0);
+                                hardware.bottomBallStop.setPosition(BOTTOM_STOP_STOWED);
+                                hardware.shooterBallStop.setPosition(SHOOTER_STOP_UP);
+                                hardware.prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_4);
+                            }))
+                            .then(new WaitUntilContinuous(0.3, () -> !hardware.frontRamp.getState() && (hardware.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
+                                    || hardware.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)))
+                            .then(new OneShot(() -> hardware.flipper.setPosition(FLIPPER_UP)))
+                            .then(Wait.ms(700))
+                            .then(new OneShot(() -> {
+                                hardware.setIntakePower(OUTTAKE_POWER);
+                                hardware.flipper.setPosition(FLIPPER_DOWN);
+                            }))
+                            .then(Wait.ms(500))
+                            .then(new OneShot(() -> {
+                                hardware.setIntakePower(0.0);
+                                hardware.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard);
+                            }));
+                    this.require(CompBot2Hardware.Locks.INTAKE_STORAGE);
+                }});
             }
 
             wasb = gamepad1.b;
@@ -128,10 +180,8 @@ public class ShooterTest3 extends LinearOpMode {
                 telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
             }
 
-            if (result != null ) {
-                telemetry.addData("tx", result.getTx());
-                telemetry.addData("ty", result.getTy());
-            }
+            telemetry.addData("tx", result.getTx());
+            telemetry.addData("ty", result.getTy());
             telemetry.addData("target velocity", targetvel);
             telemetry.addData("Current Vel: ", currentVel);
             telemetry.addData("at target", Math.abs(targetvel - currentVel) < 20);
@@ -143,8 +193,7 @@ public class ShooterTest3 extends LinearOpMode {
             telemetry.update();
 
             hardware.pinpoint.update();
-
-
+            sch.tick();
         }
     }
 }

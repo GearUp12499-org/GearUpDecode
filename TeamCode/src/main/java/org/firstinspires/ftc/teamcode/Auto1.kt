@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode
 
 import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.DcMotor
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Scheduler
@@ -10,16 +9,13 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
-import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
-import org.firstinspires.ftc.teamcode.hardware.CompBot2HardwareNew
 import org.firstinspires.ftc.teamcode.systems.AprilTag
-import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
@@ -31,7 +27,7 @@ import org.firstinspires.ftc.vision.VisionPortal
 abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
-    private lateinit var hw: CompBot2HardwareNew
+    private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
     private var aprilTag: AprilTag? = null
 
@@ -98,7 +94,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
     override fun runOpMode() {
         TaskSharkAndroid.setup()
 
-        hw = CompBot2HardwareNew(hardwareMap)
+        hw = CompBot2Hardware(hardwareMap)
 //        hw.slider.position = CompBot2Hardware.SLIDER_IN
 //        hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
 //        hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP

@@ -44,13 +44,13 @@ class IntakeTest : LinearOpMode() {
     fun doTheIntakeThing() = Group {
         // prime the system
         it.add(OneShot {
-            hw.intake.power = 0.0
+            hw.setIntakePower(0.0)
             hw.slider.position = CompBot2Hardware.SLIDER_IN
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         })
             .then(Wait.ms(250))
             .then(OneShot {
-                hw.intake.power = CompBot2Hardware.INTAKE_POWER
+                hw.setIntakePower(CompBot2Hardware.INTAKE_POWER)
             })
             .then(WaitUntil {
                 hw.colorTopLeft.getDistance(DistanceUnit.MM) < 110.0
@@ -62,13 +62,13 @@ class IntakeTest : LinearOpMode() {
                 hw.frontRamp.state && hw.middleRamp.state
             })
             .then(OneShot {
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
             })
     }
 
     fun doTheOuttakeThing() = Group {
         it.add(OneShot {
-            hw.intake.power = 1.0
+            hw.setIntakePower(1.0)
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         })
             .then(Wait.ms(750))
@@ -78,11 +78,11 @@ class IntakeTest : LinearOpMode() {
             .then(Wait.ms(800))
             .then(OneShot {
                 hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
-                hw.intake.power = CompBot2Hardware.OUTTAKE_POWER
+                hw.setIntakePower(CompBot2Hardware.OUTTAKE_POWER)
             })
             .then(Wait.ms(500))
             .then(OneShot {
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
             })
     }
 }

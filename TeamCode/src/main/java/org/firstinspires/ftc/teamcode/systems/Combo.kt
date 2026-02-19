@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.systems
 
-import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.Wait
@@ -17,7 +16,7 @@ object Combo {
         init {
             getScheduler()
                 .add(OneShot {
-                    hw.intake.power = 0.0
+                    hw.setIntakePower(0.0)
                     hw.bottomBallStop.position = BOTTOM_STOP_STOWED
 //                        if (hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0) BOTTOM_BALL_STOP
 //                        else BOTTOM_STOP_STOWED
@@ -27,7 +26,7 @@ object Combo {
                 })
                 .then(Wait.ms(250))
                 .then(OneShot {
-                    hw.intake.power = power
+                    hw.setIntakePower(power)
                 })
                 .then(WaitUntil {
                     hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0
@@ -43,7 +42,7 @@ object Combo {
 
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
-            hw.intake.power = 0.0
+            hw.setIntakePower(0.0)
 //            hw.bottomBallStop.position = BOTTOM_STOP_STOWED
             hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
@@ -54,8 +53,8 @@ object Combo {
         init {
             getScheduler()
                 .add(OneShot {
-                    hw.intake.power = 0.0
-                    hw.ballStop.position = BALL_STOP_MIDDLE
+                    hw.setIntakePower(0.0)
+//                    hw.ballStop.position = BALL_STOP_MIDDLE
                     hw.slider.position = SLIDER_IN
                     hw.flipper.position = FLIPPER_DOWN
                     hw.bottomBallStop.position = BOTTOM_STOP_OUT
@@ -64,7 +63,7 @@ object Combo {
                 })
                 .then(Wait.ms(250))
                 .then(OneShot {
-                    hw.intake.power = power
+                    hw.setIntakePower(power)
                 })
                 .then(WaitUntil {
                     hw.middleRamp.state
@@ -72,7 +71,7 @@ object Combo {
                 .then(Wait.s(0.60))
                 .then(OneShot {
                     hw.slider.position = SLIDER_MIDDLE
-                    hw.ballStop.position = BALL_STOP_STOWED
+//                    hw.ballStop.position = BALL_STOP_STOWED
                 })
                 .then(WaitUntilContinuous(.5) {
                     hw.frontRamp.state && hw.middleRamp.state
@@ -82,7 +81,7 @@ object Combo {
 
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
-            hw.intake.power = 0.0
+            hw.setIntakePower(0.0)
             hw.slider.position = SLIDER_OUT
             hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
@@ -95,7 +94,7 @@ object Combo {
             init {
                 getScheduler()
                     .add(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                         hw.slider.position = SLIDER_OUT
                         hw.shooterBallStop.position = SHOOTER_STOP_UP
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
@@ -119,7 +118,7 @@ object Combo {
                     .then(Wait.ms(500))
                     .then(OneShot {
                         hw.flipper.position = FLIPPER_DOWN
-                        hw.intake.power = OUTTAKE_POWER
+                        hw.setIntakePower(OUTTAKE_POWER)
                     })
                     .then(Wait.ms(500))
             }
@@ -127,7 +126,7 @@ object Combo {
             override fun onFinish(completedNormally: Boolean) {
                 super.onFinish(completedNormally)
 //                shooter.setTarget(0.0)
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
             }
         }
@@ -137,14 +136,14 @@ object Combo {
             init {
                 getScheduler()
                     .add(OneShot {
-                        hw.intake.power = 0.0
+                        hw.setIntakePower(0.0)
                         hw.slider.position = SLIDER_IN
                         hw.shooterBallStop.position = SHOOTER_STOP_UP
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                     })
                     .then(Wait.ms(500))
                     .then(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                     })
                     .then(WaitUntilContinuous(flipperWait) {
                         !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
@@ -156,7 +155,7 @@ object Combo {
                     .then(Wait.ms(1000))
                     .then(OneShot {
                         hw.flipper.position = FLIPPER_DOWN
-                        hw.intake.power = OUTTAKE_POWER
+                        hw.setIntakePower(OUTTAKE_POWER)
                     })
                     .then(Wait.ms(500))
                 this.require(Locks.INTAKE_STORAGE)
@@ -165,7 +164,7 @@ object Combo {
             override fun onFinish(completedNormally: Boolean) {
                 super.onFinish(completedNormally)
 //                shooter.setTarget(0.0)
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
             }
         }
@@ -182,11 +181,11 @@ object Combo {
                     })
                     .then(Wait.ms(250))
                     .then(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                     })
                     .then(Wait.ms(500))
                     .then(OneShot {
-                        hw.intake.power = 0.5
+                        hw.setIntakePower(0.5)
                         hw.slider.position = SLIDER_IN
                         hw.flipper.position = FLIPPER_MID
                     })
@@ -196,12 +195,12 @@ object Combo {
                     })
                     .then(Wait.ms(250))
                     .then(OneShot {
-                        hw.intake.power = OUTTAKE_POWER
+                        hw.setIntakePower(OUTTAKE_POWER)
                         hw.flipper.position = FLIPPER_DOWN
                     })
                     .then(Wait.ms(250))
                     .then(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                     })
                     .then(Wait.ms(750))
                     .then(OneShot {
@@ -216,7 +215,7 @@ object Combo {
 //                })
                     .then(Wait.ms(1000))
                     .then(OneShot {
-                        hw.intake.power = OUTTAKE_POWER
+                        hw.setIntakePower(OUTTAKE_POWER)
                         hw.flipper.position = FLIPPER_DOWN
                     })
                     .then(Wait.ms(500))
@@ -226,18 +225,18 @@ object Combo {
             override fun onFinish(completedNormally: Boolean) {
                 super.onFinish(completedNormally)
 //                shooter.setTarget(0.0)
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
             }
         }
 
     @JvmOverloads
-    fun shoot(hw: CompBot2Hardware, shooter: ShooterImpl, flipperWait: Double = 0.3) =
+    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.15) =
         object : Group({}) {
             init {
                 getScheduler()
                     .add(OneShot {
-                        hw.intake.power = 1.0
+                        hw.setIntakePower(1.0)
                         hw.bottomBallStop.position = BOTTOM_STOP_STOWED
                         hw.shooterBallStop.position = SHOOTER_STOP_UP
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
@@ -257,11 +256,11 @@ object Combo {
     fun shootAfter(hw: CompBot2Hardware) = Group {
         it.add(OneShot {
             hw.flipper.position = FLIPPER_DOWN
-            hw.intake.power = OUTTAKE_POWER
+            hw.setIntakePower(OUTTAKE_POWER)
         })
             .then(Wait.ms(500))
             .then(OneShot {
-                hw.intake.power = 0.0
+                hw.setIntakePower(0.0)
                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
             })
     }.require(Locks.INTAKE_STORAGE)

@@ -7,7 +7,7 @@ import kotlin.time.TimeSource
 object StaticStore {
     private val timeSource = TimeSource.Monotonic
     var lastOpMode: TimeSource.Monotonic.ValueTimeMark? = null
-    var fallbackArtboard = GoBildaPrismDriver.Artboard.ARTBOARD_0
+    @JvmField var fallbackArtboard = GoBildaPrismDriver.Artboard.ARTBOARD_0
 
     var prismBroken = false
 
