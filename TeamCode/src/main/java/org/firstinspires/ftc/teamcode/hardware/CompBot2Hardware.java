@@ -101,6 +101,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public Encoder turretEncoder;
 
     @HardwareName("shoot1")
+    @Reversed
     private DcMotorEx shoot1;
 
     @HardwareName("shoot2")
