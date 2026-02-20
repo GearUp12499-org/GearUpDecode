@@ -24,7 +24,7 @@ import kotlin.time.TimeSource.Monotonic.markNow
 
 class TurretTrack(
     private val ll: Limelight3A,
-    private val turret: DcMotorEx,
+    private val turret: TurretImpl,
     private val pinpoint: GoBildaPinpoint2Driver,
     poseSet: PoseSet,
     private val red: Boolean
@@ -39,14 +39,14 @@ class TurretTrack(
         const val TAG_RED = 24
         const val TAG_BLUE = 20
         const val VELOCITY_THRESHOLD = 50
-        const val TICKS_PER_DEG = CompBot2Hardware.TURRET_CW_90 / 90.0
+        const val TICKS_PER_DEG = CompBot2Hardware.TICKS_PER_DEG
         const val DEADBAND = 1.0
-        const val MAX_I = 0.2
-        const val KP = 0.06
-        const val KI = 0.0003
-        const val KD = 0.0005
-        const val MAX_POWER = 0.8
-        const val SOFT_LIMIT_BUFFER = 20
+        const val MAX_I = 20_000.0
+        const val KP = 0.02
+        const val KI = 0.000_07
+        const val KD = 0.005
+        const val MAX_POWER = .6
+        const val SOFT_LIMIT_BUFFER = 200
     }
 
     val targetTag = if (red) TAG_RED else TAG_BLUE
@@ -80,9 +80,7 @@ class TurretTrack(
         override fun onStart() {
             ll.start()
             lastT = System.nanoTime()
-
-            turret.power = 0.0
-            turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            turret.suspend()
         }
 
         private fun computePower(error: Double, deltaT: Double): Double {
@@ -106,6 +104,8 @@ class TurretTrack(
             val d = if (deltaT > 0) KD * ((error - prevError) / deltaT) else 0.0
 
             val out = p + i + d
+            Log.i("TurretTrack", "p: raw %.1f factored %.2f, i: raw %.1f factored %.2f, d: raw %.1f factored %.2f, total %.2f"
+                .format(error, p, integralError, i, ((error - prevError) / deltaT), d, out))
             return clamp(out, -MAX_POWER, MAX_POWER)
         }
 
@@ -163,10 +163,10 @@ class TurretTrack(
             val dt = (now - lastT) / 1e9
             lastT = now
 
-            val currentEncoder = turret.currentPosition
+            val currentEncoder = turret.currentPosition()
             val rawIMUError = getPinpointGoalYawDiff(currentEncoder)
             val refinedIMUError: Double
-            if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
+            if (abs(turret.velocity()) < VELOCITY_THRESHOLD) {
                 lastIMUError = rawIMUError
                 lastIMUEncoderPosAtCapture = currentEncoder
                 refinedIMUError = rawIMUError
@@ -190,7 +190,7 @@ class TurretTrack(
                         distance = taToDistance(target.targetArea)
                         llVisible = true
                         // TODO: REUSE turret.velocity
-                        if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
+                        if (abs(turret.velocity()) < VELOCITY_THRESHOLD) {
                             lastTx = target.targetXDegrees
                             lastEncoderPosAtCapture = currentEncoder
                             refinedLLError = lastTx
@@ -198,10 +198,10 @@ class TurretTrack(
                             val deltaTicks = currentEncoder - lastEncoderPosAtCapture
                             refinedLLError = lastTx - (deltaTicks / TICKS_PER_DEG)
                         }
-                        var botpose = result.getBotpose()
-                        var x = botpose.position.x
-                        var y = botpose.position.y
-                        Log.i("Limelight Thinks", "(%.4f, %.4f)".format(x, y))
+                        val botpose = result.botpose
+                        val x = botpose.position.x
+                        val y = botpose.position.y
+//                        Log.i("Limelight Thinks", "(%.4f, %.4f)".format(x, y))
                     }
                 }
             }
@@ -235,23 +235,23 @@ class TurretTrack(
 
             val power1 = computePower(finalError, dt)
             val power2 = limit(power1, currentEncoder)
-//            Log.i(
-//                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
-//                    if (isLimelightTracking) "Limelight" else "IMU",
-//                    finalError,
-//                    power2,
-//                    if (isDestinationReachable) "reachable" else "reachablen't"
-//                )
-//            )
-//            Log.i(
-//                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
-//                    ll.latestResult.pipelineIndex,
-//                    ll.latestResult.timestamp,
-//                )
-//            )
+            Log.i(
+                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
+                    if (isLimelightTracking) "Limelight" else "IMU",
+                    finalError,
+                    power2,
+                    if (isDestinationReachable) "reachable" else "reachablen't"
+                )
+            )
+            Log.i(
+                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
+                    ll.latestResult.pipelineIndex,
+                    ll.latestResult.timestamp,
+                )
+            )
 
 
-            turret.power = power2
+            turret.setPower(power2)
 
             // TODO: Log
             return false
@@ -259,10 +259,7 @@ class TurretTrack(
 
         override fun onFinish(completedNormally: Boolean) {
             ll.stop()
-            turret.power = 0.0
-            turret.targetPosition = 0
-            turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-            turret.power = 1.0
+            turret.resume()
         }
     }
 
@@ -280,12 +277,11 @@ class TurretTrack(
             ll.start()
             lastT = System.nanoTime()
 
-            turret.power = 0.0
-            turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            turret.suspend()
         }
 
         private fun noResult() {
-            turret.power = 0.0
+            turret.setPower(0.0)
             prevError = 0.0
         }
 
@@ -362,10 +358,10 @@ class TurretTrack(
             val ta = target.targetArea
             distance = taToDistance(ta)
 
-            val currentEncoder = turret.currentPosition
+            val currentEncoder = turret.currentPosition()
 
             val tx: Double
-            if (abs(turret.velocity) < VELOCITY_THRESHOLD) {
+            if (abs(turret.velocity()) < VELOCITY_THRESHOLD) {
                 lastTx = target.targetXDegrees
                 lastEncoderPosAtCapture = currentEncoder
                 tx = lastTx
@@ -377,16 +373,13 @@ class TurretTrack(
             val power1 = computePower(tx, dt)
             val power2 = limit(power1, currentEncoder)
 
-            turret.power = power2
+            turret.setPower(power2)
             return false
         }
 
         override fun onFinish(completedNormally: Boolean) {
             ll.stop()
-            turret.power = 0.0
-            turret.targetPosition = 0
-            turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-            turret.power = 1.0
+            turret.resume()
         }
     }
 

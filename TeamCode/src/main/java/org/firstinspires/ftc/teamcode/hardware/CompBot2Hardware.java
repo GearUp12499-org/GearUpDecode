@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.util.Log;
 import android.util.Pair;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -33,10 +34,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double SLIDER_MIDDLE = 0.25;
     public static final double SLIDER_IN = 0.95;
 
-    public static final int TURRET_CW_90 = 230;
-    public static final int TURRET_CW_STOP = 345;
-    public static final int TURRET_CCW_90 = -230;
-    public static final int TURRET_CCW_STOP = -345;
+    public static final double TICKS_PER_DEG = 67.9;
+    public static final int TURRET_CW_STOP = 9400;
+    public static final int TURRET_CCW_STOP = -9400;
 
     public static final double BALL_STOP_STOWED = 0.37;
     public static final double BALL_STOP_MIDDLE = 0.47;
@@ -97,10 +97,10 @@ public class CompBot2Hardware extends HardwareMapper {
     private DcMotorEx intake2;
 
     @EncoderFor("intake2")
+    @Reversed
     public Encoder turretEncoder;
 
     @HardwareName("shoot1")
-    @Reversed
     private DcMotorEx shoot1;
 
     @HardwareName("shoot2")
@@ -223,6 +223,13 @@ public class CompBot2Hardware extends HardwareMapper {
     public void setIntakePower(double power) {
         intake1.setPower(power);
         intake2.setPower(power);
+    }
+
+    public void setTurretPower(double power) {
+        // TODO: negate?
+        Log.i("Hardware", String.format("set the power to %.2f", -power));
+        servoTurret1.setPower(-power);
+        servoTurret2.setPower(-power);
     }
 
     private void setupShooterVel1() {

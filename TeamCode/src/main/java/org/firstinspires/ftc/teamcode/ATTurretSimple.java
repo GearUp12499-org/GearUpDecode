@@ -25,7 +25,7 @@ public class ATTurretSimple extends LinearOpMode {
     private static final double TURRET_POWER = 0.8;
     private static final int SOFT_LIMIT_BUFFER = 20;
 
-    private static final double TICKS_PER_DEGREE = CompBot2Hardware.TURRET_CW_90 / 90.0; // approx 2.55
+    private static final double TICKS_PER_DEGREE = CompBot2Hardware.TICKS_PER_DEG; // approx 2.55
 
     private Limelight3A limelight;
     private DcMotorEx turretMotor;

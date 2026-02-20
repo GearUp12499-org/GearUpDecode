@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardware;
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -190,7 +191,7 @@ public abstract class HardwareMapper {
     }
 
     private void matchEncoderFor(@NotNull Field field, @NotNull Class<?> targetType, @NotNull EncoderFor annotation, boolean optional) {
-        DcMotor result = thisMap.tryGet(DcMotor.class, annotation.value());
+        DcMotorEx result = thisMap.tryGet(DcMotorEx.class, annotation.value());
         if (!targetType.isAssignableFrom(Encoder.class)) throw new ClassCastException(String.format(
                 "Hardware: cannot assign Encoder to field '%s' with type %s, in class %s",
                 field.getName(), targetType.getSimpleName(), this.getClass().getSimpleName()

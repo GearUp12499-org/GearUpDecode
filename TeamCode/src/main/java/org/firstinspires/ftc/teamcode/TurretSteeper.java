@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.teamcode.systems.TurretImpl;
+
 @TeleOp
 public class TurretSteeper extends LinearOpMode {
     private double negLimit;
@@ -16,9 +18,9 @@ public class TurretSteeper extends LinearOpMode {
     CRServo servoTurret2;
     DcMotorEx intake2;
     double basePower = 0.1;
-    double P = 0.001;
-    double I = 0.000007;
-    double D = 0.000062;
+    double P = TurretImpl.P;
+    double I = TurretImpl.I;
+    double D = TurretImpl.D;
     double maxI = 20000.0;
     double deadbandTicks = 136.0;
     double minPowerErrorTicks = 320.0;
