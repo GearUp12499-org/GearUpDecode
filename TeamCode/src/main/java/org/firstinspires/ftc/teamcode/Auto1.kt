@@ -102,7 +102,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         hw.slider.position = CompBot2Hardware.SLIDER_IN
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP
-        hw.hood.position = CompBot2Hardware.HOOD_50
+        hw.hood.position = CompBot2Hardware.HOOD_25
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
@@ -150,9 +150,9 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         })
 
         startFlag.then(VirtualGroup {
-            add(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
+            add(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = true))
                 .then(aprilTag!!.readObelisk(0.3))
-            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
         })
             .then(Combo.shoot(hw))
             .then(VirtualGroup {
@@ -162,10 +162,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.gatePos2, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.gatePos))
+                            .then(REmover.drive2Pose2(hw, poseSet.gatePos, timeoutAt = 0.5))
                             .then(REmover.drive2Pose2(hw, poseSet.gatePos3, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = false))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+                            .then(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = false))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()
@@ -179,8 +179,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     .then(REmover.drive2Pose2(hw, poseSet.set2out))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+                            .then(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = true))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()
@@ -193,8 +193,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set3out))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot2, farStrafe = true))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE2, 0.2))
+                        add(REmover.drive2Pose2(hw, poseSet.closeShoot3, farStrafe = true))
+                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
                     })
                     .then(OneShot {
                         intake.finish()

@@ -47,6 +47,7 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public static final double HOOD_UP = 0.5578;
     public static final double HOOD_50 = 0.3700;
+    public static final double HOOD_25 = 0.2756;
     public static final double HOOD_DOWN = 0.1817;
 
     public static final double BOTTOM_BALL_STOP = 0.54;
@@ -56,6 +57,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double INTAKE_POWER = 1.0;
     public static final double OUTTAKE_POWER = -0.60;
 
+    public static final double SHOOT_CLOSE_RANGE = 1260.0;
     public static final double SHOOT_MID_RANGE = 1340.0;
     public static final double SHOOT_MID_RANGE2 = 1360.0;
     public static final double SHOOT_FAR_RANGE = 1840.0; // 1820

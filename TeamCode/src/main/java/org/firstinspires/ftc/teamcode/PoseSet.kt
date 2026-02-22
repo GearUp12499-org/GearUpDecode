@@ -23,6 +23,8 @@ class PoseSet private constructor(val invert: Boolean) {
         // FIXME: onshape this
         private val goalAT = RobotPose(58.0, -56.0, -2.318)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
+        private val closeShoot2 = RobotPose(36.0, -36.0, 71/90.0 * Math.PI)
+        private val closeShoot3 = RobotPose(48.66, -25.0, 2.06)
         private val midShoot = RobotPose(24.0, -24.0, 7 * Math.PI / 9)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3)
         private val farShoot = RobotPose(-55.0, -12.39, 2.76)
@@ -45,7 +47,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val auto1finish = RobotPose(0.0, -48.0, Math.PI)
         private val blueBase = RobotPose(-38.0, -33.0, 0.0)
         private val gateWaypoint = RobotPose(0.0, -48.0, 0.0)
-        private val gatePos = RobotPose(3.0, -58.0, 0.0)
+        private val gatePos = RobotPose(3.0, -59.0, 0.0)
         private val gatePos2 = RobotPose(3.0, -53.0, 0.0)
         private val gatePos3 = RobotPose(3.0, -49.0, 0.0)
         private val shootTarget = RobotPose(72.0 - 6.0, -(72.0 - 6.0), 0.0)
@@ -69,6 +71,12 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val closeShoot = Companion.closeShoot.bind
+
+    @JvmField
+    val closeShoot2 = Companion.closeShoot2.bind
+
+    @JvmField
+    val closeShoot3 = Companion.closeShoot3.bind
 
     @JvmField
     val midShoot = Companion.midShoot.bind
