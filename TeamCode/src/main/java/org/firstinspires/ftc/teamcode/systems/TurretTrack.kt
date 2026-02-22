@@ -62,17 +62,8 @@ class TurretTrack(
     fun trackLegacy() = LegacyTrackTask()
 
     inner class TrackTask : Anonymous() {
-        private var prevError = 0.0
-        private var integralError = 0.0
         private var lastT = 0L
-        private var lastTx = 0.0
-        private var lastIMUError = 0.0
-        private var lastIMUEncoderPosAtCapture = 0
-        private var lastEncoderPosAtCapture = 0
         private var isDestinationReachable = true
-        private var isLimelightTracking = false
-        private var resetPID = false
-        private var globalCorrection = 0.0
 
         var distance: Double? = null
             private set
@@ -81,56 +72,6 @@ class TurretTrack(
             ll.start()
             lastT = System.nanoTime()
             turret.suspend()
-        }
-
-        private fun computePower(error: Double, deltaT: Double): Double {
-            if (abs(error) < DEADBAND) {
-                prevError = error
-                integralError = 0.0
-                return 0.0
-            }
-
-            if (resetPID) {
-                prevError = error
-                integralError = 0.0
-                resetPID = false
-            }
-
-            integralError += error * deltaT
-            integralError = clamp(integralError, -MAX_I, MAX_I)
-
-            val p = KP * error
-            val i = KI * integralError
-            val d = if (deltaT > 0) KD * ((error - prevError) / deltaT) else 0.0
-
-            val out = p + i + d
-            Log.i("TurretTrack", "p: raw %.1f factored %.2f, i: raw %.1f factored %.2f, d: raw %.1f factored %.2f, total %.2f"
-                .format(error, p, integralError, i, ((error - prevError) / deltaT), d, out))
-            return clamp(out, -MAX_POWER, MAX_POWER)
-        }
-
-        private fun limit(power: Double, pos: Int): Double {
-            var result = power
-            if (pos >= TURRET_CW_STOP - SOFT_LIMIT_BUFFER && power > 0) {
-                val distanceToLimit = TURRET_CW_STOP - pos
-                val scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER.toDouble()
-                result *= max(0.0, scaleFactor)
-            }
-
-            if (pos <= TURRET_CCW_STOP + SOFT_LIMIT_BUFFER && power < 0) {
-                val distanceToLimit = pos - TURRET_CCW_STOP
-                val scaleFactor = distanceToLimit / SOFT_LIMIT_BUFFER.toDouble()
-                result *= max(0.0, scaleFactor)
-            }
-
-            if (pos >= TURRET_CW_STOP && power > 0) {
-                return 0.0
-            }
-            if (pos <= TURRET_CCW_STOP && power < 0) {
-                return 0.0
-            }
-
-            return result
         }
 
         private fun taToDistance(ta: Double): Double {
@@ -159,102 +100,41 @@ class TurretTrack(
         }
 
         override fun onTick(): Boolean {
-            val now = System.nanoTime()
-            val dt = (now - lastT) / 1e9
-            lastT = now
+            // Determine whether to use pinpoint or limelight
+            val result = ll.latestResult
+            var useLL = false
 
-            val currentEncoder = turret.currentPosition()
-            val rawIMUError = getPinpointGoalYawDiff(currentEncoder)
-            val refinedIMUError: Double
-            if (abs(turret.velocity()) < VELOCITY_THRESHOLD) {
-                lastIMUError = rawIMUError
-                lastIMUEncoderPosAtCapture = currentEncoder
-                refinedIMUError = rawIMUError
-            } else {
-                val deltaTicks = currentEncoder - lastIMUEncoderPosAtCapture
-                refinedIMUError = lastIMUError - (deltaTicks / TICKS_PER_DEG)
+            // TODO: If turret moving too fast, keep useLL false
+            if (result != null && result.isValid) {
+                useLL = true
             }
 
-            val result = ll.latestResult
-            var refinedLLError = NaN
-            var llVisible = false
-            if (result != null && result.isValid) {
+            if (useLL) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
-                    Log.w("TurretTrack", "Wrong pipeline ($actualPipeline), trying to switch to $pipe")
+                    Log.w(
+                        "TurretTrack",
+                        "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
+                    )
                     ll.pipelineSwitch(pipe)
-                } else {
-                    val tags = result.fiducialResults
-                    val target = tags.firstOrNull { it.fiducialId == targetTag }
-                    if (target != null) {
-                        distance = taToDistance(target.targetArea)
-                        llVisible = true
-                        // TODO: REUSE turret.velocity
-                        if (abs(turret.velocity()) < VELOCITY_THRESHOLD) {
-                            lastTx = target.targetXDegrees
-                            lastEncoderPosAtCapture = currentEncoder
-                            refinedLLError = lastTx
-                        } else {
-                            val deltaTicks = currentEncoder - lastEncoderPosAtCapture
-                            refinedLLError = lastTx - (deltaTicks / TICKS_PER_DEG)
-                        }
-                        val botpose = result.botpose
-                        val x = botpose.position.x
-                        val y = botpose.position.y
-//                        Log.i("Limelight Thinks", "(%.4f, %.4f)".format(x, y))
-                    }
+                    return false
                 }
-            }
-//            Log.i(
-//                "TurretTrack", when {
-//                result == null -> "result is null"
-//                !result.isValid -> "result is invalid"
-//                else -> {
-//                    val tags = result.fiducialResults
-//                    val target = tags.firstOrNull { it.fiducialId == targetTag }
-//                    when {
-//                        tags.isEmpty() -> "no results"
-//                        target == null -> "no matching result"
-//                        else -> "id ${target.fiducialId}"
-//                    }
-//                }
-//            })
+                val tags = result.fiducialResults
+                val target = tags.firstOrNull { it.fiducialId == targetTag }
+                if (target == null) {
+                    return false
+                }
 
-            if (llVisible != isLimelightTracking) {
-                Log.i("TurretTrack", if (llVisible) "LOCKED IN" else "Locked out :(")
-                isLimelightTracking = llVisible
-                resetPID = true
+                // TODO: Use pinpoint distance
+                distance = taToDistance(target.targetArea)
+                turret.setDeltaTarget(target.targetXDegrees)
+                return false
             }
 
-            if (isLimelightTracking) {
-                globalCorrection = abs(refinedIMUError) - abs(refinedIMUError)
-            }
-
-            val finalError = if (llVisible) refinedLLError else (refinedIMUError + globalCorrection)
-            // val finalError = refinedIMUError
-
-            val power1 = computePower(finalError, dt)
-            val power2 = limit(power1, currentEncoder)
-            Log.i(
-                "TurretTrack", "mode %s err %.2f pow %.3f %s".format(
-                    if (isLimelightTracking) "Limelight" else "IMU",
-                    finalError,
-                    power2,
-                    if (isDestinationReachable) "reachable" else "reachablen't"
-                )
-            )
-            Log.i(
-                "TurretTrack", "Limelight meta: pipe %d timestamp %.4f".format(
-                    ll.latestResult.pipelineIndex,
-                    ll.latestResult.timestamp,
-                )
-            )
-
-
-            turret.setPower(power2)
-
-            // TODO: Log
+            val currentEncoder = turret.currentPosition()
+            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder))
             return false
+
         }
 
         override fun onFinish(completedNormally: Boolean) {
@@ -384,6 +264,7 @@ class TurretTrack(
     }
 
     override fun onTick(): Boolean {
+        assert(false)
         val timestamp = ll.latestResult.timestamp
         val nowTs = markNow()
         if (timestamp != lastTimestamp) {

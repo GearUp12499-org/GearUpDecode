@@ -31,6 +31,10 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         }
     }
 
+    fun setDeltaTarget(angle: Double) {
+        setTarget(targetAngle + angle)
+    }
+
     fun setTarget(angle: Double) {
         targetAngle = when {
             angle > POSITIVE_LIMIT -> POSITIVE_LIMIT
