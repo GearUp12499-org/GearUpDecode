@@ -100,6 +100,7 @@ class TurretTrack(
         }
 
         override fun onTick(): Boolean {
+            Log.w("TurretTrack", "is running")
             // Determine whether to use pinpoint or limelight
             val result = ll.latestResult
             var useLL = false
@@ -264,7 +265,7 @@ class TurretTrack(
     }
 
     override fun onTick(): Boolean {
-        assert(false)
+        Log.w("TurretTrackLegacy", "is running")
         val timestamp = ll.latestResult.timestamp
         val nowTs = markNow()
         if (timestamp != lastTimestamp) {

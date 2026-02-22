@@ -14,7 +14,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val TICKS_PER_DEGREE = 67.9
         const val POSITIVE_LIMIT = 9400.0
         const val NEGATIVE_LIMIT = -9400.0
-        const val DEADBAND_TICKS = 136.0
+        const val DEADBAND_TICKS = 136.0 // TODO: Try to revise these values
         const val MIN_POWER_ERROR_TICKS = 320.0
         const val I_ZONE_TICKS = 650.0
         const val NEAR_TARGET_I_CLAMP = 2500.0
@@ -23,8 +23,6 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val P = 0.001
         const val I = 0.000_007
         const val D = 0.000_062
-
-        const val BASE_POWER = 0.1
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)
@@ -48,6 +46,8 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     private var lastPidTime = 0L
     private var prevError = 0.0
     private var integralError = 0.0
+    private var prevOutput = 0.0
+    private val SLEW_RATE_LIMITER = 0.1 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
 
     val lock = LOCK_ROOT.derive()
 
@@ -112,11 +112,18 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         val output2 = when {
             output > 1.0 -> 1.0
             output < -1.0 -> -1.0
-            abs(error) > MIN_POWER_ERROR_TICKS && abs(output) < BASE_POWER -> output.sign * BASE_POWER
             else -> output
         }
 
-        hw.setTurretPower(output2)
+        val output3 = when {
+            output2 > prevOutput + SLEW_RATE_LIMITER -> prevOutput + SLEW_RATE_LIMITER
+            output2 < prevOutput - SLEW_RATE_LIMITER -> prevOutput - SLEW_RATE_LIMITER
+            else -> output2
+        }
+
+        prevOutput = output3
+
+        hw.setTurretPower(output3)
 
         return false
     }
