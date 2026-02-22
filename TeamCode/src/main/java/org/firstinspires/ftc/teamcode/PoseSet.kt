@@ -32,6 +32,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set1out = RobotPose(12.0, -54.625, -Math.PI / 2)
         private val set2pos = RobotPose(-12.0, -24.0, -Math.PI / 2)
         private val set2out = RobotPose(-12.0, -62.625, -Math.PI / 2)
+        private val set2exit = RobotPose(-12.0, -48.0, -3 * Math.PI / 4)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0, -62.625, -Math.PI / 2)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
@@ -87,6 +88,9 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val set2out = Companion.set2out.bind
+
+    @JvmField
+    val set2exit = Companion.set2exit.bind
 
     @JvmField
     val set3pos = Companion.set3pos.bind
