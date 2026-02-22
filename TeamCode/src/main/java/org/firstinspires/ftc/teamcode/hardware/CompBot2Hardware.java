@@ -187,7 +187,8 @@ public class CompBot2Hardware extends HardwareMapper {
         pinpoint.setEncoderResolution(GoBildaPinpoint2Driver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(GoBildaPinpoint2Driver.EncoderDirection.REVERSED, GoBildaPinpoint2Driver.EncoderDirection.FORWARD);
 
-        shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
+//        shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(380, 40, 20, 0));
+        shoot1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(760, 40, 20, 0));
 
         refreshPrismState();
     }
@@ -217,6 +218,9 @@ public class CompBot2Hardware extends HardwareMapper {
     }
     public double getShoot1Vel() {
         return shoot1.getVelocity();
+    }
+    public double getShoot1Power() {
+        return shoot1.getPower();
     }
 
     public double gethoodpos(){

@@ -26,18 +26,25 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
     val lock = LOCK_ROOT.derive()
     private var target = 0.0
 
+    var mode = false
+
     override fun onStart() {
         hw.setupShooterVel()
     }
 
     override fun onTick(): Boolean {
+        val targetMode = target - hw.shoot1Vel <= 200
+        if (targetMode != mode) if (targetMode) hw.shoot1Vel = target
+        mode = targetMode
+        if (!mode)
+            hw.setShooterPower(1.0)
         hw.copyShooterPower()
         return false
     }
 
     fun setTarget(vel: Double) {
         target = vel
-        hw.setShoot1Vel(vel)
+        mode = false
     }
 
     fun setTargetAsync(vel: Double) = setTargetAsync { vel }

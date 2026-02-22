@@ -144,6 +144,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             }
         })
 
+//        sch.add(compose {
+//            onTick {
+//                Log.i("power", "power %.2f mode ${shooter.mode} vel %f".format(hw.shoot1Power, hw.shoot1Vel))
+//                false
+//            }
+//        })
+
         startFlag.then(OneShot {
             pinpointSetupTask?.stop()
             ticker.stop()
