@@ -161,7 +161,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.midShoot))
+                        add(REmover.drive2Pose2(hw, poseSet.gatePos2, waypoint = true))
+                            .then(REmover.drive2Pose2(hw, poseSet.gatePos))
+                            .then(REmover.drive2Pose2(hw, poseSet.gatePos3, waypoint = true))
+                            .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = false))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {

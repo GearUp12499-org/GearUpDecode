@@ -32,7 +32,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set1out = RobotPose(12.0, -54.625, -Math.PI / 2)
         private val set2pos = RobotPose(-12.0, -24.0, -Math.PI / 2)
         private val set2out = RobotPose(-12.0, -62.625, -Math.PI / 2)
-        private val set2exit = RobotPose(-12.0, -48.0, -3 * Math.PI / 4)
+        private val set2exit = RobotPose(0.0, -32.0, -Math.PI)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0, -62.625, -Math.PI / 2)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
@@ -45,7 +45,9 @@ class PoseSet private constructor(val invert: Boolean) {
         private val auto1finish = RobotPose(0.0, -48.0, Math.PI)
         private val blueBase = RobotPose(-38.0, -33.0, 0.0)
         private val gateWaypoint = RobotPose(0.0, -48.0, 0.0)
-        private val gatePos = RobotPose(0.0, -55.0, 0.0)
+        private val gatePos = RobotPose(3.0, -58.0, 0.0)
+        private val gatePos2 = RobotPose(3.0, -53.0, 0.0)
+        private val gatePos3 = RobotPose(3.0, -49.0, 0.0)
         private val shootTarget = RobotPose(72.0 - 6.0, -(72.0 - 6.0), 0.0)
         private val shootMeasure = RobotPose(57.0, -57.0, 0.0)
 
@@ -124,6 +126,12 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val gatePos = Companion.gatePos.bind
+
+    @JvmField
+    val gatePos2 = Companion.gatePos2.bind
+
+    @JvmField
+    val gatePos3 = Companion.gatePos3.bind
 
     @JvmField
     val shootTarget = Companion.shootTarget.bind
