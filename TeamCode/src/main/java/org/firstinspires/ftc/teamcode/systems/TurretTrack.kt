@@ -21,6 +21,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
+import org.firstinspires.ftc.robotcore.external.Telemetry
 
 class TurretTrack(
     private val ll: Limelight3A,
@@ -61,7 +62,7 @@ class TurretTrack(
     fun track() = TrackTask()
     fun trackLegacy() = LegacyTrackTask()
 
-    inner class TrackTask : Anonymous() {
+    inner class LegacyTrackTask : Anonymous() {
         private var lastT = 0L
         private var isDestinationReachable = true
 
@@ -71,7 +72,6 @@ class TurretTrack(
         override fun onStart() {
             ll.start()
             lastT = System.nanoTime()
-            turret.suspend()
         }
 
         private fun taToDistance(ta: Double): Double {
@@ -144,7 +144,7 @@ class TurretTrack(
         }
     }
 
-    inner class LegacyTrackTask : Anonymous() {
+    inner class TrackTask : Anonymous() {
         private var prevError = 0.0
         private var integralError = 0.0
         private var lastT = 0L

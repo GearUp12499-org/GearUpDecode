@@ -58,6 +58,9 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
 
         val targetTicks = -targetAngle * TICKS_PER_DEGREE
         val error = targetTicks - hw.turretEncoder.getCurrentPosition()
+        Log.w("Error", "%.2f".format(error))
+        Log.w("Target Ticks", "%.2f".format(targetTicks))
+        Log.w("Current Position", "%d".format(hw.turretEncoder.getCurrentPosition()))
         val now = System.nanoTime()
         var dt = 0.0
         if (lastPidTime != 0L) {
