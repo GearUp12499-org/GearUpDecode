@@ -231,12 +231,12 @@ object Combo {
         }
 
     @JvmOverloads
-    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.15) =
+    fun shoot(hw: CompBot2Hardware, flipperWait: Double = 0.15, intakePower: Double = 1.0) =
         object : Group({}) {
             init {
                 getScheduler()
                     .add(OneShot {
-                        hw.setIntakePower(1.0)
+                        hw.setIntakePower(intakePower)
                         hw.bottomBallStop.position = BOTTOM_STOP_STOWED
                         hw.shooterBallStop.position = SHOOTER_STOP_UP
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
