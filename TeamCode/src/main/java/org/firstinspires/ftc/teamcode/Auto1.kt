@@ -166,10 +166,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
-                    .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 0.7))
+                    .then(REmover.drive2Pose2(hw, poseSet.set1out, maxPower = 1.0))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.gatePos2, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.gatePos, timeoutAt = 0.5))
+                        add(REmover.drive2Pose2(hw, poseSet.gatePos2))
+                            .then(REmover.drive2Pose2(hw, poseSet.gatePos, timeoutAt = 0.2))
                             .then(REmover.drive2Pose2(hw, poseSet.gatePos3, waypoint = true))
                             .then(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = false))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
