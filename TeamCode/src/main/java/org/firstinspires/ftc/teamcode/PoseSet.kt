@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import org.firstinspires.ftc.teamcode.systems.REmover.RobotPose
+import kotlin.math.PI
 
 class PoseSet private constructor(val invert: Boolean) {
     private val RobotPose.bind: RobotPose
@@ -25,7 +26,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val closeShoot2 = RobotPose(36.0, -36.0, 71/90.0 * Math.PI)
         private val closeShoot3 = RobotPose(48.66, -25.0, 2.06)
-        private val midShoot = RobotPose(24.0, -24.0, 7 * Math.PI / 9)
+        private val midShoot = RobotPose(24.0, -24.0, 2.39)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3)
         private val farShoot = RobotPose(-55.0, -12.39, 2.76)
 
@@ -50,6 +51,17 @@ class PoseSet private constructor(val invert: Boolean) {
         private val gatePos = RobotPose(3.0, -65.0, 0.0)
         private val gatePos2 = RobotPose(3.0, -53.0, 0.0)
         private val gatePos3 = RobotPose(3.0, -49.0, 0.0)
+
+        private val gobble1 = RobotPose(-3.42, -60.0, -PI/2)
+
+        private val gobble2 = RobotPose(-17.11, -66.08, -0.023)
+
+        private val gobble3 = RobotPose(-14.11, -66.08, -0.023)
+
+        private val gobble4 = RobotPose(-9.15, -59.16,-1.07)
+        private val gobble5 = RobotPose(-10.42, -60.36,-PI/2)
+
+        private val gobble6 = RobotPose(-18.03,-60.52,-0.57)
         private val shootTarget = RobotPose(72.0 - 6.0, -(72.0 - 6.0), 0.0)
         private val shootMeasure = RobotPose(57.0, -57.0, 0.0)
 
@@ -140,6 +152,26 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val gatePos3 = Companion.gatePos3.bind
+
+    @JvmField
+    val gobble1 = Companion.gobble1.bind
+
+    @JvmField
+    val gobble2 = Companion.gobble2.bind
+
+    @JvmField
+    val gobble3 = Companion.gobble3.bind
+
+    @JvmField
+    val gobble4 = Companion.gobble4.bind
+
+    @JvmField
+    val gobble5 = Companion.gobble5.bind
+
+    @JvmField
+    val gobble6 = Companion.gobble6.bind
+
+
 
     @JvmField
     val shootTarget = Companion.shootTarget.bind

@@ -131,6 +131,7 @@ object REmover {
             var sumS = 0.0
             var sumW = 0.0
 
+
             override fun onStart() {
                 timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)
                 runtime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
@@ -279,7 +280,7 @@ object REmover {
                     Wfudge = 1.0
                 }
 
-                if (abs(deltaAll - prevDeltaAll) > 0.5) {
+                if (abs(deltaAll - prevDeltaAll) > 0.5 || currentTime < 1000) {
                     prevDeltaAll = deltaAll
                     timeout.reset()
                 }
