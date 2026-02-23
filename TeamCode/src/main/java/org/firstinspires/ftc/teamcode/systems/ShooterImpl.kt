@@ -33,7 +33,7 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
     }
 
     override fun onTick(): Boolean {
-        val targetMode = target - hw.shoot1Vel <= 200
+        val targetMode = target - hw.shoot1Vel <= 60
         if (targetMode != mode) if (targetMode) hw.shoot1Vel = target
         mode = targetMode
         if (!mode)

@@ -147,7 +147,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             add(REmover.drive2Pose2(hw, poseSet.farShoot))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
         })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.4))
+            .then(Combo.shoot(hw, 0.5, intakePower = 1.0))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -163,7 +163,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             })
 
             //shoot #2
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.4))
+            .then(Combo.shoot(hw, 0.5, intakePower = 1.0))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -189,7 +189,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     grp.inside.forEach(ITask<*>::finish)
                 })
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.4))
+            .then(Combo.shoot(hw, 0.5, intakePower = 1.0))
 
             //shoot #3
             .then(VirtualGroup {
@@ -218,7 +218,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     grp.inside.forEach(ITask<*>::finish)
                 })
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.4))
+            .then(Combo.shoot(hw, 0.5, intakePower = 1.0))
 
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
@@ -246,7 +246,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     grp.inside.forEach(ITask<*>::finish)
                 })
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.4))
+            .then(Combo.shoot(hw, 0.5, intakePower = 1.0))
 
             .then(VirtualGroup {
                 add(Combo.shootAfter(hw))
