@@ -96,7 +96,7 @@ class TurretTrack(
                 useLL = true
             }
 
-            useLL = false
+//            useLL = false
             if (useLL) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
@@ -113,13 +113,30 @@ class TurretTrack(
                     return false
                 }
 
+                Log.w(
+                    "Tracking Mode",
+                    ">>> LIMELIGHT MODE"
+                )
+
                 // TODO: Use pinpoint distance
                 distance = taToDistance(target.targetArea)
-                turret.setDeltaTarget(target.targetXDegrees)
+                Log.w(
+                    "Limelight Predicted Distance",
+                    "%.4f".format(distance)
+                )
+                Log.w(
+                    "Limelight Baring",
+                    "%.4f".format(target.targetXDegrees)
+                )
+                turret.setDeltaTarget(-target.targetXDegrees)
                 return false
             }
 
             val currentEncoder = turret.currentPosition()
+            Log.w(
+                "Tracking Mode",
+                ">>> PINPOINT MODE"
+            )
             Log.w(
                 "Pinpoint Yaw Diff",
                 "%.4f".format(getPinpointGoalYawDiff(currentEncoder))
