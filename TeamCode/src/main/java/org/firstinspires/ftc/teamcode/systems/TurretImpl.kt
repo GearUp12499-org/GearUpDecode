@@ -6,23 +6,23 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.abs
-import kotlin.math.sign
 
 class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     companion object {
         private val LOCK_ROOT = Lock.StrLock("turret_impl")
         const val TICKS_PER_DEGREE = 67.9
-        const val POSITIVE_LIMIT = 9400.0
-        const val NEGATIVE_LIMIT = -9400.0
+        const val POSITIVE_LIMIT_DEG = 135.0
+        const val POSITIVE_LIMIT_TICK = POSITIVE_LIMIT_DEG * TICKS_PER_DEGREE
+        const val NEGATIVE_LIMIT_DEG = -135.0
+        const val NEGATIVE_LIMIT_TICK = NEGATIVE_LIMIT_DEG * TICKS_PER_DEGREE
         const val DEADBAND_TICKS = 136.0 // TODO: Try to revise these values
-        const val MIN_POWER_ERROR_TICKS = 320.0
-        const val I_ZONE_TICKS = 650.0
-        const val NEAR_TARGET_I_CLAMP = 2500.0
-        const val MAX_I = 20_000.0
+        const val I_SPEED_LIMIT = 5_000.0
+        const val SLEW_RATE_LIMITER =
+            0.2 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
 
-        const val P = 0.001
-        const val I = 0.000_007
-        const val D = 0.000_062
+        const val P = 0.000_1
+        const val I = 0.000_2 // 0.000_007
+        const val D = 0.000_000 // 0.000_062
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)
@@ -30,37 +30,33 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     }
 
     fun setDeltaTarget(angle: Double) {
-        setTarget(targetAngle + angle)
+        setTarget(targetAngleDeg + angle)
     }
 
     fun setTarget(angle: Double) {
-        targetAngle = when {
-            angle > POSITIVE_LIMIT -> POSITIVE_LIMIT
-            angle < NEGATIVE_LIMIT -> NEGATIVE_LIMIT
+        targetAngleDeg = when {
+            angle > POSITIVE_LIMIT_DEG -> POSITIVE_LIMIT_DEG
+            angle < NEGATIVE_LIMIT_DEG -> NEGATIVE_LIMIT_DEG
             else -> angle
         }
     }
 
     private var resetPid = true
-    private var targetAngle = 0.0
+    private var targetAngleDeg = 0.0
     private var lastPidTime = 0L
     private var prevError = 0.0
     private var integralError = 0.0
     private var prevOutput = 0.0
-    private val SLEW_RATE_LIMITER = 0.1 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
 
     val lock = LOCK_ROOT.derive()
 
-    private var suspended = false
-
     override fun onTick(): Boolean {
-        if (suspended) return false
-
-        val targetTicks = -targetAngle * TICKS_PER_DEGREE
-        val error = targetTicks - hw.turretEncoder.getCurrentPosition()
+        val targetTicks = -targetAngleDeg * TICKS_PER_DEGREE
+        val currentPosition = hw.turretEncoder.getCurrentPosition()
+        val error = targetTicks - currentPosition
         Log.w("Error", "%.2f".format(error))
         Log.w("Target Ticks", "%.2f".format(targetTicks))
-        Log.w("Current Position", "%d".format(hw.turretEncoder.getCurrentPosition()))
+        Log.w("Current Position", "%d".format(currentPosition))
         val now = System.nanoTime()
         var dt = 0.0
         if (lastPidTime != 0L) {
@@ -85,21 +81,14 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
             integralError = 0.0
         }
 
-        if (abs(error) <= I_ZONE_TICKS) {
+        val derivative = if (dt > 0.0) (error - prevError) / dt else 0.0
+
+        if (abs(derivative) <= I_SPEED_LIMIT) {
             integralError += error * dt
-            val activeIClamp: Double =
-                if (abs(error) <= MIN_POWER_ERROR_TICKS) NEAR_TARGET_I_CLAMP
-                else MAX_I
-            integralError = when {
-                integralError > activeIClamp -> activeIClamp
-                integralError < -activeIClamp -> -activeIClamp
-                else -> integralError
-            }
         } else {
-            integralError *= 0.9
+            integralError = 0.0
         }
 
-        val derivative = if (dt > 0.0) (error - prevError) / dt else 0.0
         prevError = error
         val output: Double = (P * error) + (I * integralError) + (D * derivative)
 
@@ -118,13 +107,16 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
             else -> output
         }
 
-        val output3 = when {
+        var output3 = when {
             output2 > prevOutput + SLEW_RATE_LIMITER -> prevOutput + SLEW_RATE_LIMITER
             output2 < prevOutput - SLEW_RATE_LIMITER -> prevOutput - SLEW_RATE_LIMITER
             else -> output2
         }
 
         prevOutput = output3
+
+        if (currentPosition < NEGATIVE_LIMIT_TICK && output3 < 0) output3 = 0.0
+        if (currentPosition > POSITIVE_LIMIT_TICK && output3 > 0) output3 = 0.0
 
         hw.setTurretPower(output3)
 
@@ -133,12 +125,6 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
 
     fun currentPosition() = hw.turretEncoder.getCurrentPosition()
     fun velocity() = hw.turretEncoder.getVelocity()
-    fun suspend() {
-        suspended = true
-    }
-    fun resume() {
-        suspended = false
-    }
     fun setPower(power: Double) {
         hw.setTurretPower(power)
     }
