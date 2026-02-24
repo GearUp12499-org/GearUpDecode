@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.systems.TurretImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
@@ -32,6 +33,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
+    private lateinit var turret: TurretImpl
     private var pinpointSetupTask: PinpointSetupTask? = null
     private var aprilTag: AprilTag? = null
     private var confTask: ITask<*>? = null
@@ -103,8 +105,6 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
 
-
-
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
         telemetry.update()
 
@@ -124,6 +124,9 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         sch.add(aprilTag!!.setupAprilTag(0, 0)).then(startFlag)
 
         shooter = sch.add(ShooterImpl(hw))
+
+        turret = sch.add(TurretImpl(hw))
+        turret.setTarget(0.0)
 
         sch.add(compose {
             var state: GoBildaPinpoint2Driver.DeviceStatus? = null
