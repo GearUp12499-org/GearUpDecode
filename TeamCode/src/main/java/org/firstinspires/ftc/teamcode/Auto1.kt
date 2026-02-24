@@ -162,32 +162,33 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
             .then(Combo.shoot(hw))
-            .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
-                    .then(REmover.drive2Pose2(hw, poseSet.set2out, maxPower = 1.0))
-                    .then(VirtualGroup {
+//            .then(VirtualGroup {
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set2out, maxPower = 1.0))
+//                    .then(VirtualGroup {
 //                        add(REmover.drive2Pose2(hw, poseSet.gatePos2))
 //                            .then(REmover.drive2Pose2(hw, poseSet.gatePos, timeoutAt = 0.2))
 //                            .then(REmover.drive2Pose2(hw, poseSet.gatePos3, waypoint = true))
-                        add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.midShoot,farStrafe = true))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
+//                        add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
+//                            .then(REmover.drive2Pose2(hw, poseSet.midShoot,farStrafe = true))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
             .then(Combo.shoot(hw))
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.gobble4))
-                    .then(Wait.s(0.25))
-                    .then(REmover.drive2Pose2(hw, poseSet.gobble6))
-                    .then(REmover.drive2Pose2(hw, poseSet.gobble3, maxPower = 0.7))
+                    .then(Wait.s(1.5))
+                    .then(REmover.drive2Pose2(hw, poseSet.gobble6, maxPower = 0.5))
+                    .then(Wait.s(0.5))
+                    //.then(REmover.drive2Pose2(hw, poseSet.gobble3, maxPower = 0.7))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
                             .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
@@ -199,35 +200,35 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     })
             })
             .then(Combo.shoot(hw))
-            .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
-                    .then(REmover.drive2Pose2(hw, poseSet.set1out))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = true))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-            .then(Combo.shoot(hw))
-            .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
-                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.closeShoot3, farStrafe = true))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-            .then(Combo.shoot(hw))
-            .then(Combo.shootAfter(hw))
+//            .then(VirtualGroup {
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                add(REmover.drive2Pose2(hw, poseSet.set1pos, waypoint = true))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set1out))
+//                    .then(VirtualGroup {
+//                        add(REmover.drive2Pose2(hw, poseSet.closeShoot2, farStrafe = true))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
+//            .then(Combo.shoot(hw))
+//            .then(VirtualGroup {
+//                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
+//                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+//                add(REmover.drive2Pose2(hw, poseSet.set3pos, waypoint = true))
+//                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
+//                    .then(VirtualGroup {
+//                        add(REmover.drive2Pose2(hw, poseSet.closeShoot3, farStrafe = true))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
+//                    })
+//                    .then(OneShot {
+//                        intake.finish()
+//                    })
+//            })
+//            .then(Combo.shoot(hw))
+//            .then(Combo.shootAfter(hw))
 
         while (opModeInInit()) sch.tick()
 
