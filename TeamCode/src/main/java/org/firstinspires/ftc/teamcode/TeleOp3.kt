@@ -99,8 +99,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
             pinpointSetupTask?.stop()
             initVisual.stop()
-            turret.setTarget(45.0)
-//            startTracking()
+//            turret.setTarget(45.0)
+            startTracking()
         })
         robotStartTask.then(compose {
             onTick {

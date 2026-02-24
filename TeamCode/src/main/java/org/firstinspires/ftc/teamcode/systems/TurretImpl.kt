@@ -20,6 +20,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val SLEW_RATE_LIMITER =
             0.2 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
 
+        // TODO: Tune the PID coefficients and SLEW_RATE_LIMITER further
         const val P = 0.000_1
         const val I = 0.000_2 // 0.000_007
         const val D = 0.000_000 // 0.000_062
@@ -30,7 +31,12 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     }
 
     fun setDeltaTarget(angle: Double) {
-        setTarget(targetAngleDeg + angle)
+        val currentAngleDeg = -hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEGREE
+        Log.w(
+            "Current Angle Deg",
+            "%.4f".format(currentAngleDeg)
+        )
+        setTarget(currentAngleDeg + angle)
     }
 
     fun setTarget(angle: Double) {

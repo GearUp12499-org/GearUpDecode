@@ -64,6 +64,7 @@ class TurretTrack(
         }
 
         private fun getPinpointGoalYawDiff(currentTurretEncoder: Int): Double {
+            // TODO: Possibly change this to getPinpointGoalYaw. Return a raw angle
             val currentPose = pinpoint.position.remover
 
             val x = targetPose.x - currentPose.x
@@ -81,7 +82,7 @@ class TurretTrack(
             val targetTicks = currentTurretEncoder + (llConventionError * TICKS_PER_DEG).toInt()
             isDestinationReachable = targetTicks in TURRET_CCW_STOP..TURRET_CW_STOP
 
-            return llConventionError
+            return -llConventionError // TODO: Why is this backwards
         }
 
         override fun onTick(): Boolean {
@@ -95,6 +96,7 @@ class TurretTrack(
                 useLL = true
             }
 
+            useLL = false
             if (useLL) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
@@ -118,6 +120,10 @@ class TurretTrack(
             }
 
             val currentEncoder = turret.currentPosition()
+            Log.w(
+                "Pinpoint Yaw Diff",
+                "%.4f".format(getPinpointGoalYawDiff(currentEncoder))
+            )
             turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder))
             return false
 
