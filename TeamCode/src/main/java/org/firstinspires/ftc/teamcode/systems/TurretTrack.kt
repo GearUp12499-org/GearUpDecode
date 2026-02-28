@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.systems
 
 import android.util.Log
 import com.qualcomm.hardware.limelightvision.Limelight3A
+import com.qualcomm.hardware.limelightvision.LLResult
 import io.github.gearup12499.taskshark.ITask
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.api.BuiltInTags
@@ -11,8 +12,14 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.TURRET_CCW_STOP
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.TURRET_CW_STOP
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D
 import kotlin.math.atan2
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.math.pow
+import kotlin.math.PI
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
 
@@ -43,7 +50,6 @@ class TurretTrack(
     private var lastPoll = markNow()
     var fault = false; private set
 
-
     fun track() = TrackTask()
     fun trackLegacy(): ITask<*> = throw IllegalStateException("don't do it") // LegacyTrackTask()
 
@@ -57,6 +63,43 @@ class TurretTrack(
         override fun onStart() {
             ll.start()
             lastT = System.nanoTime()
+        }
+
+        private fun getPoseRobotFromLL(xLL: Double, yLL: Double, thetaTurret: Double, thetaRobot: Double): Pair<Double, Double> {
+            // thetaRobot MUST be in radians
+
+            val rTurret = 6.5
+            val tOffset = 0.5
+
+            val d = sqrt(
+                (rTurret).pow(2.0) +
+                (tOffset).pow(2.0) -
+                2 * (rTurret) * (tOffset) * cos(PI - thetaTurret)
+            )
+
+            val x = asin(
+                sin(PI - thetaTurret) * rTurret / d
+            )
+
+            val f = d * cos(x)
+            val s = d * sin(x)
+
+            val xOff = f * cos(thetaRobot) - s * sin(thetaRobot)
+            val yOff = f * sin(thetaRobot) + s * cos(thetaRobot)
+
+            val xRobot = xLL + xOff
+            val yRobot = yLL + yOff
+
+            return Pair(xRobot,yRobot)
+        }
+
+        private fun getLimelightPose2D(result: LLResult): REmover.RobotPose {
+            // Do NOT call if result is not sanitized for being null; Risk of NullObjectReference
+            val robotPose: Pose3D = result.botpose
+            val limelightX = robotPose.position.x * 39.37 * -1
+            val limelightY = robotPose.position.y * 39.37 * -1
+            val limelightTheta = robotPose.orientation.yaw
+            return REmover.RobotPose(limelightX, limelightY, limelightTheta)
         }
 
         private fun taToDistance(ta: Double): Double {
@@ -107,6 +150,30 @@ class TurretTrack(
                     ll.pipelineSwitch(pipe)
                     return false
                 }
+                val llPose = getLimelightPose2D(result)
+                val pinpointPose = pinpoint.position.remover
+                Log.w(
+                    "Limelight Camera",
+                    "(%.2f, %.2f)".format(llPose.x, llPose.y)
+                )
+                val (ll2RobotX, ll2RobotY) = getPoseRobotFromLL(
+                    llPose.x,
+                    llPose.y,
+                    (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180),
+                    pinpointPose.a
+                )
+                Log.w(
+                    "Thetas",
+                    "[turret = %.2f, robot = %.2f]".format((-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180), pinpointPose.a)
+                )
+                Log.w(
+                    "Limelight Robot",
+                    "(%.2f, %.2f)".format(ll2RobotX, ll2RobotY)
+                )
+                Log.w(
+                    "Pinpoint Pose",
+                    "(%.2f, %.2f)".format(pinpointPose.x,  pinpointPose.y)
+                )
                 val tags = result.fiducialResults
                 val target = tags.firstOrNull { it.fiducialId == targetTag }
                 if (target == null) {
