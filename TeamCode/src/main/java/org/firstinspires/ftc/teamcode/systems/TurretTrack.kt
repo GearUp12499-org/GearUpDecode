@@ -107,7 +107,7 @@ class TurretTrack(
         }
 
         private fun taToDistance(ta: Double): Double {
-            return sqrt(56.0 / ta) - 5.82
+            return sqrt(56.0 / ta) - 5.82//use for legacy task
         }
 
         private fun getPinpointGoalYawDiff(currentTurretEncoder: Int, ppErrX: Double, ppErrY: Double): Double {
@@ -142,8 +142,8 @@ class TurretTrack(
             if (result != null && result.isValid) {
                 useLL = true
             }
-
-//            useLL = false
+            val pinpointPose = pinpoint.position.remover
+            //useLL = false //force pinpoint mode
             if (useLL) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
@@ -208,7 +208,11 @@ class TurretTrack(
                 )
 
                 // TODO: Use pinpoint distance
-                distance = taToDistance(target.targetArea)
+                val deltaX = targetPose.x - pinpointX
+                val deltaY = targetPose.y - pinpointY
+                val shootOffset = 6 // corrected center of robot
+                distance = hypot(deltaX,deltaY) - shootOffset
+
                 Log.w(
                     "Limelight Distance",
                     "%.4f".format(distance)
@@ -231,8 +235,18 @@ class TurretTrack(
                 "%.4f".format(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
             )
             turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
-            return false
+            val pinpointX = pinpointPose.x + pinpointErrorX
+            val pinpointY = pinpointPose.y + pinpointErrorY
+            val dx = targetPose.x - pinpointX
+            val dy = targetPose.y - pinpointY
+            val shootOffset = 6 // corrected center of robot
+            distance = hypot(dx,dy) - shootOffset
 
+            Log.w(
+                "Pinpoint distance",
+                "%.4f".format(distance)
+            )
+            return false
         }
 
         override fun onFinish(completedNormally: Boolean) {
