@@ -18,11 +18,11 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val DEADBAND_TICKS = 136.0 // TODO: Try to revise these values
         const val I_SPEED_LIMIT = 5_000.0
         const val SLEW_RATE_LIMITER =
-            0.2 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
+            0.3 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
 
         // TODO: Tune the PID coefficients and SLEW_RATE_LIMITER further
         const val P = 0.000_1
-        const val I = 0.000_2 // 0.000_007
+        const val I = 0.000_2 // 0.000_2
         const val D = 0.000_000 // 0.000_062
 
         init {
@@ -51,8 +51,10 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     private var targetAngleDeg = 0.0
     private var lastPidTime = 0L
     private var prevError = 0.0
-    private var integralError = 0.0
+    private var integralErrorSum = 0.0
     private var prevOutput = 0.0
+    private var maxIntegralErrorSum = 0.0
+    private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 // DEPENDS ON kI
 
     val lock = LOCK_ROOT.derive()
 
@@ -72,37 +74,57 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
 
         if (abs(error) <= DEADBAND_TICKS) {
             prevError = error
-            integralError = 0.0
+            integralErrorSum = 0.0
             hw.setTurretPower(0.0)
             return false
         }
 
         if (resetPid) {
             prevError = error
-            integralError = 0.0
+            integralErrorSum = 0.0
             resetPid = false
         }
 
         if (error * prevError < 0.0) {
-            integralError = 0.0
+            integralErrorSum = 0.0
         }
 
         val derivative = if (dt > 0.0) (error - prevError) / dt else 0.0
 
         if (abs(derivative) <= I_SPEED_LIMIT) {
-            integralError += error * dt
+            val integralError = error * dt
+            integralErrorSum += integralError
+
+            integralErrorSum = when {
+                integralErrorSum > INTEGRAL_ERROR_SUM_LIMIT -> INTEGRAL_ERROR_SUM_LIMIT
+                integralErrorSum < -INTEGRAL_ERROR_SUM_LIMIT -> -INTEGRAL_ERROR_SUM_LIMIT
+                else -> integralErrorSum
+            }
+
+            if (integralErrorSum > maxIntegralErrorSum) {
+                maxIntegralErrorSum = integralErrorSum
+            }
+
+            if (-integralErrorSum > maxIntegralErrorSum) {
+                maxIntegralErrorSum = -integralErrorSum
+            }
+
+            Log.w(
+                "maxIntegralErrorSum",
+                "%.2f".format(maxIntegralErrorSum)
+            )
         } else {
-            integralError = 0.0
+            integralErrorSum = 0.0
         }
 
         prevError = error
-        val output: Double = (P * error) + (I * integralError) + (D * derivative)
+        val output: Double = (P * error) + (I * integralErrorSum) + (D * derivative)
 
         Log.i(
             "TurretImpl",
             "P %.2f I %.2f D %.2f => %.2f".format(
                 P * error,
-                I * integralError,
+                I * integralErrorSum,
                 D * derivative,
                 output
             )
