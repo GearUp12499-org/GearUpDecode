@@ -19,6 +19,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.pow
+import kotlin.math.hypot
 import kotlin.math.PI
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
@@ -55,6 +56,9 @@ class TurretTrack(
 
     inner class TrackTask : Anonymous() {
         private var lastT = 0L
+        private var lastPinpointUpdate = lastT
+        private var pinpointErrorX = 0.0
+        private var pinpointErrorY = 0.0
         private var isDestinationReachable = true
 
         var distance: Double? = null
@@ -106,12 +110,12 @@ class TurretTrack(
             return sqrt(56.0 / ta) - 5.82
         }
 
-        private fun getPinpointGoalYawDiff(currentTurretEncoder: Int): Double {
+        private fun getPinpointGoalYawDiff(currentTurretEncoder: Int, ppErrX: Double, ppErrY: Double): Double {
             // TODO: Possibly change this to getPinpointGoalYaw. Return a raw angle
             val currentPose = pinpoint.position.remover
 
-            val x = targetPose.x - currentPose.x
-            val y = targetPose.y - currentPose.y
+            val x = targetPose.x - (currentPose.x + ppErrX)
+            val y = targetPose.y - (currentPose.y + ppErrY)
             val goalAngle = atan2(y, x)
             val goalAngleDeg = goalAngle.wrapAngle().toDeg()
             val botHeading = currentPose.a.toDeg()
@@ -152,15 +156,29 @@ class TurretTrack(
                 }
                 val llPose = getLimelightPose2D(result)
                 val pinpointPose = pinpoint.position.remover
-                Log.w(
-                    "Limelight Camera",
-                    "(%.2f, %.2f)".format(llPose.x, llPose.y)
-                )
                 val (ll2RobotX, ll2RobotY) = getPoseRobotFromLL(
                     llPose.x,
                     llPose.y,
                     (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180),
                     pinpointPose.a
+                )
+                val pinpointX = pinpointPose.x + pinpointErrorX
+                val pinpointY = pinpointPose.y + pinpointErrorY
+                val dx = ll2RobotX - pinpointX
+                val dy = ll2RobotY - pinpointY
+                val distanceLL2pp = hypot(dx.pow(2.0), dy.pow(2.0))
+                val llErr = 2.44 // avg error from data collect on 2/28
+                if  (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
+                    lastPinpointUpdate = lastT
+                    val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
+                    val guessPointX = (alpha * pinpointX) + ((1 - alpha) * ll2RobotX)
+                    val guessPointY = (alpha * pinpointY) + ((1 - alpha) * ll2RobotY)
+                    pinpointErrorX += (guessPointX - pinpointX)
+                    pinpointErrorY += (guessPointY - pinpointY)
+                }
+                Log.w(
+                    "Limelight Camera",
+                    "(%.2f, %.2f)".format(llPose.x, llPose.y)
                 )
                 Log.w(
                     "Thetas",
@@ -172,7 +190,11 @@ class TurretTrack(
                 )
                 Log.w(
                     "Pinpoint Pose",
-                    "(%.2f, %.2f)".format(pinpointPose.x,  pinpointPose.y)
+                    "(%.2f, %.2f)".format(pinpointX,  pinpointY)
+                )
+                Log.w(
+                    "Pinpoint Errors",
+                    "(%.2f, %.2f)".format(pinpointErrorX,  pinpointErrorY)
                 )
                 val tags = result.fiducialResults
                 val target = tags.firstOrNull { it.fiducialId == targetTag }
@@ -188,7 +210,7 @@ class TurretTrack(
                 // TODO: Use pinpoint distance
                 distance = taToDistance(target.targetArea)
                 Log.w(
-                    "Limelight Predicted Distance",
+                    "Limelight Distance",
                     "%.4f".format(distance)
                 )
                 Log.w(
@@ -206,9 +228,9 @@ class TurretTrack(
             )
             Log.w(
                 "Pinpoint Yaw Diff",
-                "%.4f".format(getPinpointGoalYawDiff(currentEncoder))
+                "%.4f".format(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
             )
-            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder))
+            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
             return false
 
         }
