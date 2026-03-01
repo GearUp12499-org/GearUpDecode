@@ -173,7 +173,10 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
 //                            .then(REmover.drive2Pose2(hw, poseSet.gatePos, timeoutAt = 0.2))
 //                            .then(REmover.drive2Pose2(hw, poseSet.gatePos3, waypoint = true))
                         add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
-                            .then(REmover.drive2Pose2(hw, poseSet.midShoot,farStrafe = true))
+                            .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
+                        add(OneShot {
+                            turret.setTarget(poseSet.midShoot.turret!!)
+                        })
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
                     })
                     .then(OneShot {
