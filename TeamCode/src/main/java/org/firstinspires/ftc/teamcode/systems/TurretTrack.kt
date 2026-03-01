@@ -52,7 +52,7 @@ class TurretTrack(
     var fault = false; private set
 
     fun track() = TrackTask()
-    fun trackLegacy(): ITask<*> = throw IllegalStateException("don't do it") // LegacyTrackTask()
+    fun trackLegacy() = LegacyTrackTask() // : ITask<*> = throw IllegalStateException("don't do it")
 
     inner class TrackTask : Anonymous() {
         private var lastT = 0L
@@ -254,8 +254,73 @@ class TurretTrack(
         }
     }
 
+    inner class LegacyTrackTask : Anonymous() {
+        private var lastT = 0L
+
+        var distance: Double? = null
+            private set
+
+        override fun onStart() {
+            ll.start()
+            lastT = System.nanoTime()
+        }
+
+        private fun taToDistance(ta: Double): Double {
+            return sqrt(56.0 / ta) - 5.82 // use for legacy task
+        }
+
+        override fun onTick(): Boolean {
+            Log.w(TrackTask::class.simpleName, "(Legacy) is running")
+            val result = ll.latestResult
+
+            // TODO: If turret moving too fast, keep useLL false
+            if (result != null && result.isValid) {
+                return false
+            }
+
+            val actualPipeline = result.pipelineIndex
+            if (actualPipeline != pipe) {
+                Log.w(
+                    TrackTask::class.simpleName,
+                    "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
+                )
+                ll.pipelineSwitch(pipe)
+                return false
+            }
+            val tags = result.fiducialResults
+            val target = tags.firstOrNull { it.fiducialId == targetTag }
+
+            if (target == null) {
+                return false
+            }
+
+            Log.w(
+                "Tracking Mode",
+                ">>> LIMELIGHT MODE"
+            )
+
+            distance = taToDistance(target.targetArea)
+
+            Log.w(
+                "Limelight Distance",
+                "%.4f".format(distance)
+            )
+            Log.w(
+                "Limelight Baring",
+                "%.4f".format(target.targetXDegrees)
+            )
+            turret.setDeltaTarget(-target.targetXDegrees)
+            return false
+        }
+
+        override fun onFinish(completedNormally: Boolean) {
+            ll.stop()
+        }
+    }
+
     override fun onTick(): Boolean {
         Log.w(TurretTrack::class.simpleName, "is running")
+        Log.w("LegacyTrackTask", "gurt 67")
         val timestamp = ll.latestResult.timestamp
         val nowTs = markNow()
         if (timestamp != lastTimestamp) {

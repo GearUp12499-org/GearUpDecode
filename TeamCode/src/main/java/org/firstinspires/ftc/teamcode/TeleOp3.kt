@@ -298,23 +298,23 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     })
                 // If we're... not
                 else sch.add(VirtualGroup {
-//                    val track = add(turretTrack.trackLegacy())
-//                    val bind = add(compose {
-//                        onTick {
-//                            val hoodSpeed =
-//                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-//                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-//                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-//                            false
-//                        }
-//                    })
-//                    add(shooter.awaitTarget(0.2))
-//                        .then(Combo.shoot(hw))
-//                        .then(OneShot {
-//                            track.finish()
-//                            bind.finish()
-//                        })
-//                        .then(Combo.shootAfter(hw))
+                    val track = add(turretTrack.trackLegacy())
+                    val bind = add(compose {
+                        onTick {
+                            val hoodSpeed =
+                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                            false
+                        }
+                    })
+                    add(shooter.awaitTarget(0.2))
+                        .then(Combo.shoot(hw))
+                        .then(OneShot {
+                            track.finish()
+                            bind.finish()
+                        })
+                        .then(Combo.shootAfter(hw))
                 })
             }
             if (back2 && !gp2back) {
