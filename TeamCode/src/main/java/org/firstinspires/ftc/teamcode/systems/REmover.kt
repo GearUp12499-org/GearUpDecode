@@ -39,7 +39,11 @@ object REmover {
         /**
          * radians
          */
-        @JvmField val a: Double
+        @JvmField val a: Double,
+        /**
+         * degrees
+         */
+        @JvmField val turret: Double? = null
     ) {
         @get:JvmName("asPose2D")
         val asPose2D: Pose2D get() = Pose2D(DistanceUnit.INCH, x, y, AngleUnit.RADIANS, a)

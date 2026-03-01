@@ -23,7 +23,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         // TODO: Tune the PID coefficients and SLEW_RATE_LIMITER further
         const val P = 0.000_1
         const val I = 0.000_2 // 0.000_2
-        const val D = 0.000_000 // 0.000_062
+        const val D = 0.000_062 // 0.000_062
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)

@@ -69,6 +69,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
         if (StaticStore.duration() > 30.seconds) {
             hw.pinpoint.resetPosAndIMU()
+            hw.turretEncoder.reset()
             isContinuation = false
         }
 

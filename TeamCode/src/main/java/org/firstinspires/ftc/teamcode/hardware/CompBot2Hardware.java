@@ -100,7 +100,6 @@ public class CompBot2Hardware extends HardwareMapper {
 
     @EncoderFor("intake2")
     @Reversed
-    @AutoClearEncoder
     public Encoder turretEncoder;
 
     @HardwareName("shoot1")

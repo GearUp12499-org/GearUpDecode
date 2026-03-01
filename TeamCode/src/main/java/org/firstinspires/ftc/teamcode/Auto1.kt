@@ -87,6 +87,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         confTask = sch.add(Group {
             it.add(OneShot {
                 hw.pinpoint.recalibrateIMU()
+                hw.turretEncoder.reset()
             }).then(WaitUntil {
                 hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
             }).then(OneShot {
@@ -186,8 +187,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 add(REmover.drive2Pose2(hw, poseSet.set2pos, waypoint = true))
                     .then(REmover.drive2Pose2(hw, poseSet.gobble4))
                     .then(Wait.s(0.25))
-                    .then(REmover.drive2Pose2(hw, poseSet.gobble6))
-                    .then(REmover.drive2Pose2(hw, poseSet.gobble3, maxPower = 0.7))
+                    .then(REmover.drive2Pose2(hw, poseSet.gobble6, maxPower = 0.5))
+//                    .then(REmover.drive2Pose2(hw, poseSet.gobble3, maxPower = 0.7, timeoutAt = 0.5))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.set2exit, waypoint = true))
                             .then(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))

@@ -8,7 +8,8 @@ class PoseSet private constructor(val invert: Boolean) {
         get() = if (invert) RobotPose(
             this.x,
             -this.y,
-            -this.a
+            -this.a,
+            this.turret?.let { -it }
         ) else this
 
     // ENTER RED VALUES (usually +X -Y) ONLY!
@@ -60,7 +61,7 @@ class PoseSet private constructor(val invert: Boolean) {
 
         private val gobble3 = RobotPose(-14.11, -66.08, -0.023)
 
-        private val gobble4 = RobotPose(-9.15, -59.16,-1.07)
+        private val gobble4 = RobotPose(-10.14, -59.79,-0.8987)
         private val gobble5 = RobotPose(-10.42, -60.36,-PI/2)
 
         private val gobble6 = RobotPose(-18.03,-60.52,-0.57)

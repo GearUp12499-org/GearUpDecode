@@ -29,10 +29,8 @@ object Combo {
                     hw.setIntakePower(power)
                 })
                 .then(WaitUntil {
-                    hw.colorTopLeft.getDistance(DistanceUnit.MM) < 100.0
-                })
-                .then(OneShot {
-//                    hw.bottomBallStop.position = BOTTOM_BALL_STOP
+                    hw.colorTopLeft.getDistance(DistanceUnit.MM) < 95.0
+                            || hw.colorTopRight.getDistance(DistanceUnit.MM) < 95.0
                 })
                 .then(WaitUntilContinuous(timeout) {
                     hw.frontRamp.state && hw.middleRamp.state
