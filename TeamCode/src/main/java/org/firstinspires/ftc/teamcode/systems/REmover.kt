@@ -173,9 +173,6 @@ object REmover {
                 }
 
 
-                Log.i("REmover", (tempTargetAngle-tgta).toString())
-
-
             }
 
             override fun onTick(): Boolean {
