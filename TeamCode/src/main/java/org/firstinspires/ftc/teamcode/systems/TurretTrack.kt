@@ -69,6 +69,11 @@ class TurretTrack(
             lastT = System.nanoTime()
         }
 
+        fun resetPinpointXY() {
+            pinpointErrorX = 0.0
+            pinpointErrorY = 0.0
+        }
+
         private fun getPoseRobotFromLL(xLL: Double, yLL: Double, thetaTurret: Double, thetaRobot: Double): Pair<Double, Double> {
             // thetaRobot MUST be in radians
 
@@ -210,7 +215,7 @@ class TurretTrack(
                 // TODO: Use pinpoint distance
                 val deltaX = targetPose.x - pinpointX
                 val deltaY = targetPose.y - pinpointY
-                val shootOffset = 6 // corrected center of robot
+                val shootOffset = 0 // corrected center of robot
                 distance = hypot(deltaX,deltaY) - shootOffset
 
                 Log.w(
