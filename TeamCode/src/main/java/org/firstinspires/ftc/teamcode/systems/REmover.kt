@@ -114,7 +114,8 @@ object REmover {
         maxPower: Double = 1.0,
         waypoint: Boolean = false,
         timeoutAt: Double = 1.0,
-        farStrafe: Boolean = false
+        farStrafe: Boolean = false,
+        rotateBack: Boolean = true
     ): Task<*> {
         var (tgtx, tgty, tgta) = pose
 
@@ -171,6 +172,8 @@ object REmover {
                     tempTargetAngle = tgta
                 }
 
+
+                Log.i("REmover", (tempTargetAngle-tgta).toString())
 
 
             }
@@ -280,7 +283,9 @@ object REmover {
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
                 if(farStrafe && (hypot(deltaX, deltaY) < 30.0)){
-                    tempTargetAngle = tgta
+                    if (rotateBack) {
+                        tempTargetAngle = tgta
+                    }
                     Wfudge = 1.0
                 }
 
