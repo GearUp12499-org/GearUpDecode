@@ -239,6 +239,12 @@ public class CompBot2Hardware extends HardwareMapper {
         servoTurret2.setPower(-power);
     }
 
+    public double getTurretPower() {
+        double pow1 = servoTurret1.getPower();
+        double pow2 = servoTurret2.getPower();
+        return (pow1 + pow2) / 2;
+    }
+
     private void setupShooterVel1() {
         shoot1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMode = true;

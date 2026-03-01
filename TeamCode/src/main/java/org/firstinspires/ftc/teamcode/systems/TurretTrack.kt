@@ -60,6 +60,7 @@ class TurretTrack(
         private var pinpointErrorX = 0.0
         private var pinpointErrorY = 0.0
         private var isDestinationReachable = true
+        private var TURRET_POWER_THRESHOLD = 0.8
 
         var distance: Double? = null
             private set
@@ -147,7 +148,8 @@ class TurretTrack(
             }
             val pinpointPose = pinpoint.position.remover
 
-            if (useLL) {
+            // Set const threshold for power
+            if (useLL && turret.getPower() < TURRET_POWER_THRESHOLD) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
                     Log.w(
@@ -275,7 +277,6 @@ class TurretTrack(
             Log.w(TrackTask::class.simpleName, "(Legacy) is running")
             val result = ll.latestResult
 
-            // TODO: If turret moving too fast, keep useLL false
             if (result != null && result.isValid) {
                 return false
             }
