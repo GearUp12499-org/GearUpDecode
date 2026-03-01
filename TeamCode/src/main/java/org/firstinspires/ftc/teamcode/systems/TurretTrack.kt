@@ -115,15 +115,13 @@ class TurretTrack(
             return sqrt(56.0 / ta) - 5.82//use for legacy task
         }
 
-        private fun getPinpointGoalYawDiff(currentTurretEncoder: Int, ppErrX: Double, ppErrY: Double): Double {
+        private fun getPinpointGoalYawDiff(currentTurretEncoder: Int, ppPose: REmover.RobotPose, ppErrX: Double, ppErrY: Double): Double {
             // TODO: Possibly change this to getPinpointGoalYaw. Return a raw angle
-            val currentPose = pinpoint.position.remover
-
-            val x = targetPose.x - (currentPose.x + ppErrX)
-            val y = targetPose.y - (currentPose.y + ppErrY)
+            val x = targetPose.x - (ppPose.x + ppErrX)
+            val y = targetPose.y - (ppPose.y + ppErrY)
             val goalAngle = atan2(y, x)
             val goalAngleDeg = goalAngle.wrapAngle().toDeg()
-            val botHeading = currentPose.a.toDeg()
+            val botHeading = ppPose.a.toDeg()
             val turretRotation = currentTurretEncoder / TICKS_PER_DEG
             val turretWorldHeading = (botHeading + 180.0 - turretRotation).wrapAngleDeg()
 
@@ -148,7 +146,7 @@ class TurretTrack(
                 useLL = true
             }
             val pinpointPose = pinpoint.position.remover
-            //useLL = false //force pinpoint mode
+
             if (useLL) {
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
@@ -160,7 +158,6 @@ class TurretTrack(
                     return false
                 }
                 val llPose = getLimelightPose2D(result)
-                val pinpointPose = pinpoint.position.remover
                 val (ll2RobotX, ll2RobotY) = getPoseRobotFromLL(
                     llPose.x,
                     llPose.y,
@@ -237,9 +234,9 @@ class TurretTrack(
             )
             Log.w(
                 "Pinpoint Yaw Diff",
-                "%.4f".format(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
+                "%.4f".format(getPinpointGoalYawDiff(currentEncoder, pinpointPose, pinpointErrorX, pinpointErrorY))
             )
-            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder, pinpointErrorX, pinpointErrorY))
+            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder, pinpointPose, pinpointErrorX, pinpointErrorY))
             val pinpointX = pinpointPose.x + pinpointErrorX
             val pinpointY = pinpointPose.y + pinpointErrorY
             val dx = targetPose.x - pinpointX
@@ -325,7 +322,6 @@ class TurretTrack(
 
     override fun onTick(): Boolean {
         Log.w(TurretTrack::class.simpleName, "is running")
-        Log.w("LegacyTrackTask", "gurt 67")
         val timestamp = ll.latestResult.timestamp
         val nowTs = markNow()
         if (timestamp != lastTimestamp) {
