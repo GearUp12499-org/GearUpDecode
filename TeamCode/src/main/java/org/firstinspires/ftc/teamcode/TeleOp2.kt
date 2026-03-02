@@ -176,7 +176,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
 
     var wasA2 = false
     var wasB2 = false
-    var wasX2 = false
+    var wasY1 = false
     var wasX = false
     var wasA = false
     var wasY2 = false
@@ -232,88 +232,90 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             scheduler.add(indexer.goToPosition(getNextIn(indexer.lastPosition)))
         }
 
-        val x2 = gamepad2.x
-        if (x2 && !wasX2) {
-            scheduler.stopAllWith(indexer.lock)
-            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
-            scheduler.add(OneShot {
-                val distance = getDistanceToGoal()
-                if (distance < CompBotHardware.SHOOT_MIN_DIST) {
-                    scheduler.add(OneShot {
-                        hardware.indicator1.position = CompBotHardware.COLOR_RED
-                        hardware.indicator2.position = CompBotHardware.COLOR_RED
-                    }).then(Wait.s(0.5)).then(OneShot {
-                        hardware.indicator1.position = 0.0
-                        hardware.indicator2.position = 0.0
-                    })
-                    scheduler.getCurrentEvaluation()?.stop() // holy jank lmao
-                }
-            })
-                .then(lookAtGoal())
-                .then(OneShot {
-                    val distance = getDistanceToGoal()
-                    hardware.shooterHood1.position =
-                        if (CompBotHardware.isHoodUp(distance)) CompBotHardware.HOOD_UP else CompBotHardware.HOOD_DOWN
-                })
-                .then(shootThree(
-                    {
-                        val distance = getDistanceToGoal()
-                        val hood = CompBotHardware.isHoodUp(distance)
-                        if (hood) {
-                            CompBotHardware.speedForHoodUp(distance)
-                        } else {
-                            CompBotHardware.speedForHoodDown(distance)
-                        }
-                    },
-                    bundle
-                ))
-        }
+//        val y1 = gamepad1.y
+//        if (y1 && !wasY1) {
+//            scheduler.stopAllWith(indexer.lock)
+//            scheduler.stopAllWith(Locks.DRIVE_MOTORS)
+//            scheduler.add(OneShot {
+//                val distance = getDistanceToGoal()
+//                if (distance < CompBotHardware.SHOOT_MIN_DIST) {
+//                    scheduler.add(OneShot {
+//                        hardware.indicator1.position = CompBotHardware.COLOR_RED
+//                        hardware.indicator2.position = CompBotHardware.COLOR_RED
+//                    }).then(Wait.s(0.5)).then(OneShot {
+//                        hardware.indicator1.position = 0.0
+//                        hardware.indicator2.position = 0.0
+//                    })
+//                    scheduler.getCurrentEvaluation()?.stop() // holy jank lmao
+//                }
+//            })
+//                .then(lookAtGoal())
+//                .then(OneShot {
+//                    val distance = getDistanceToGoal()
+//                    hardware.shooterHood1.position =
+//                        if (CompBotHardware.isHoodUp(distance)) CompBotHardware.HOOD_UP else CompBotHardware.HOOD_DOWN
+//                })
+//                .then(shootThree(
+//                    {
+//                        val distance = getDistanceToGoal()
+//                        val hood = CompBotHardware.isHoodUp(distance)
+//                        if (hood) {
+//                            CompBotHardware.speedForHoodUp(distance)
+//                        } else {
+//                            CompBotHardware.speedForHoodDown(distance)
+//                        }
+//                    },
+//                    bundle
+//                ))
+//        }
 
         val x = gamepad1.x
         if (x && !wasX) {
             scheduler.stopAllWith(indexer.lock)
             scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.midShoot))
-                    .then(OneShot {
-                        aprilTag.readPosition()?.let(hardware::integratePositionData)
-                    })
+//                add(REmover.drive2Pose2(hardware, poseSet.midShoot))
+//                    .then(OneShot {
+//                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+//                    })
                 add(OneShot {
-                    shooter.setTarget(SHOOT_MID_RANGE)
+//                    shooter.setTarget(75
+                        3
+//                        00.0)
                 })
-            }).then(shootThree(SHOOT_MID_RANGE, bundle))
+            }).then(shootThree(750.0, bundle))
         }
 
-        val a = gamepad1.a
-        if (a && !wasA2) {
-            scheduler.stopAllWith(indexer.lock)
-            scheduler.add(VirtualGroup {
-                add(REmover.drive2Pose2(hardware, poseSet.farShoot))
-                    .then(OneShot {
-                        aprilTag.readPosition()?.let(hardware::integratePositionData)
-                    })
-                add(OneShot {
-                    shooter.setTarget(SHOOT_FAR_RANGE)
-                    hardware.shooterHood1.position = CompBotHardware.HOOD_UP
-                })
-            }).then(shootThree(SHOOT_FAR_RANGE, bundle))
-        }
+       // val a = gamepad1.a
+       // if (a && !wasA2) {
+//            scheduler.stopAllWith(indexer.lock)
+//            scheduler.add(VirtualGroup {
+//                add(REmover.drive2Pose2(hardware, poseSet.farShoot))
+//                    .then(OneShot {
+//                        aprilTag.readPosition()?.let(hardware::integratePositionData)
+//                    })
+//                add(OneShot {
+//                    shooter.setTarget(SHOOT_FAR_RANGE)
+//                    hardware.shooterHood1.position = CompBotHardware.HOOD_UP
+//                })
+//            }).then(shootThree(SHOOT_FAR_RANGE, bundle))
+//        }
 
-        val y2 = gamepad2.y
-        if (y2 && !wasY2) {
-            scheduler.stopAllWith(indexer.lock)
-            scheduler.add(OneShot {
-                hardware.shooterHood1.position = CompBotHardware.HOOD_UP
-            }).then(shootThree(SHOOT_MID_RANGE, bundle))
-        }
+//        val y2 = gamepad2.y
+//        if (y2 && !wasY2) {
+//            scheduler.stopAllWith(indexer.lock)
+//            scheduler.add(OneShot {
+//                hardware.shooterHood1.position = CompBotHardware.HOOD_UP
+//            }).then(shootThree(SHOOT_MID_RANGE, bundle))
+//        }
 
         if (gamepad2.dpad_left) {
             if (scheduler.getLockOwner(shooter.lock) == null) shooter.setTarget(SHOOT_MID_RANGE)
         }
 
         wasA2 = a2
-        wasA = a
+//        wasA = a
         wasB2 = b2
-        wasX2 = x2
+//        wasY1 = y1
     }
 
     var gp1lStickX = 0.0f
@@ -364,7 +366,7 @@ abstract class TeleOp2(isRed: Boolean) : LinearOpMode() {
             if (gamepad1.left_trigger > TeleOpOptions.SLOW_BUTTON_SENSITIVITY) TeleOpOptions.SLOW_BUTTON_MULTIPLIER
             else 1.0
 
-        val finalDiv = denominator / postFactor
+        val finalDiv = (denominator / postFactor) * 3
 
         val flP = (forward + strafe + rx) / finalDiv
         val blP = (forward - strafe + rx) / finalDiv
