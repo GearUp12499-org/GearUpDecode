@@ -99,8 +99,8 @@ object REmover {
     fun angleDifference(angle1: Double, angle2: Double): Double {
         var diff = normalize(angle1) - normalize(angle2)
         diff = abs(diff)
-        if(diff > PI){
-            diff = (2*PI) - diff
+        if (diff > PI) {
+            diff = (2 * PI) - diff
         }
 
         return diff
@@ -112,7 +112,7 @@ object REmover {
         hardware: CompBot2Hardware,
         pose: RobotPose,
         maxPower: Double = 1.0,
-        waypoint: Boolean = false,
+        stopCond: StopConditions = StopConditions.Default,
         timeoutAt: Double = 1.0,
         farStrafe: Boolean = false,
         rotateBack: Boolean = true
@@ -150,25 +150,29 @@ object REmover {
                 val deltaX = tgtx - x
                 val deltaY = tgty - y
 
-                val tempTargetAngle1 = normalize(atan2(deltaY,deltaX))
+                val tempTargetAngle1 = normalize(atan2(deltaY, deltaX))
                 val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
                 Log.i("tempA2", tempTargetAngle2.toString())
                 Log.i("tempA1", tempTargetAngle1.toString())
                 tgta = normalize(tgta)
 
-                val error1 = angleDifference(tempTargetAngle1, angle) + angleDifference(tgta, tempTargetAngle1)
-                val error2 = angleDifference(tempTargetAngle2, angle) + angleDifference(tgta, tempTargetAngle2)
+                val error1 = angleDifference(tempTargetAngle1, angle) + angleDifference(
+                    tgta,
+                    tempTargetAngle1
+                )
+                val error2 = angleDifference(tempTargetAngle2, angle) + angleDifference(
+                    tgta,
+                    tempTargetAngle2
+                )
 
-                if(farStrafe){
+                if (farStrafe) {
                     Wfudge = 5.0
-                  if (error1 <= error2){
-                      tempTargetAngle = tempTargetAngle1
-                  }
-                    else if (error2 < error1){
+                    if (error1 <= error2) {
+                        tempTargetAngle = tempTargetAngle1
+                    } else if (error2 < error1) {
                         tempTargetAngle = tempTargetAngle2
-                  }
-                }
-                else{
+                    }
+                } else {
                     tempTargetAngle = tgta
                 }
 
@@ -204,7 +208,14 @@ object REmover {
                     deltaA += 2 * PI
                 }
 
-                if (checkStop(waypoint, deltaX, deltaY, deltaA, speed, angVelocity, timeoutTime, timeoutAt)) {
+                if (stopCond.evaluate.check(
+                        deltaX,
+                        deltaY,
+                        deltaA,
+                        speed,
+                        angVelocity
+                    ) || timeoutTime > timeoutAt
+                ) {
                     if (timeoutTime > 1) {
                         Log.w(
                             "REMover",
@@ -217,11 +228,10 @@ object REmover {
                                 angVelocity
                             )
                         )
+                    } else {
+                        Log.w("Remover", "finished")
                     }
-                    else{
-                        Log.w("Remover","finished")
-                    }
-                    if (!waypoint) {
+                    if (stopCond.stopAtEnd) {
                         hardware.frontLeft.power = 0.0
                         hardware.frontRight.power = 0.0
                         hardware.backLeft.power = 0.0
@@ -229,7 +239,6 @@ object REmover {
                     }
                     return true
                 }
-
 
 
                 val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
@@ -276,10 +285,9 @@ object REmover {
                 val pw: Double = (WKP * Wfudge) * w + WKI * sumW - WKD * vW
 
 
-
                 val deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
-                if(farStrafe && (hypot(deltaX, deltaY) < 30.0)){
+                if (farStrafe && (hypot(deltaX, deltaY) < 30.0)) {
                     if (rotateBack) {
                         tempTargetAngle = tgta
                     }
@@ -353,6 +361,65 @@ fun Double.wrapAngle(): Double {
     while (actual >= PI) actual -= TWO_PI
     while (actual < -PI) actual += TWO_PI
     return actual
+}
+
+internal interface StopCondition {
+    fun check(
+        deltaX: Double,
+        deltaY: Double,
+        deltaA: Double,
+        speed: Double,
+        angVelocity: Double
+    ): Boolean
+}
+
+enum class StopConditions(internal val evaluate: StopCondition, val stopAtEnd: Boolean) {
+    Default(
+        evaluate = object : StopCondition {
+            override fun check(
+                deltaX: Double,
+                deltaY: Double,
+                deltaA: Double,
+                speed: Double,
+                angVelocity: Double
+            ) = (abs(deltaX) < 0.5
+                    && abs(deltaY) < 0.5
+                    && abs(deltaA) < Math.PI / 48
+                    && speed < 10
+                    && abs(angVelocity) < Math.PI / 4)
+        },
+        stopAtEnd = true
+    ),
+    Waypoint(
+        evaluate = object : StopCondition {
+            override fun check(
+                deltaX: Double,
+                deltaY: Double,
+                deltaA: Double,
+                speed: Double,
+                angVelocity: Double
+            ) = (abs(deltaX) < 6
+                    && abs(deltaY) < 6
+                    && abs(deltaA) < Math.PI / 4)
+        },
+        stopAtEnd = false
+    ),
+    Precision(
+        evaluate = object : StopCondition {
+            override fun check(
+                deltaX: Double,
+                deltaY: Double,
+                deltaA: Double,
+                speed: Double,
+                angVelocity: Double
+            ) = (abs(deltaX) < 0.25
+                    && abs(deltaY) < 0.25
+                    && abs(deltaA) < Math.PI / 96
+                    && speed < 5
+                    && abs(angVelocity) < Math.PI / 8)
+        },
+        stopAtEnd = true
+    ),
 }
 
 fun checkStop(

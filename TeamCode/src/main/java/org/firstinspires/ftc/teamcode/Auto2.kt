@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.systems.StopConditions
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -187,7 +188,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                             hw,
                             poseSet.overflowPos3,
                             maxPower = 1.0,
-                            waypoint = true
+                            stopCond = StopConditions.Waypoint
                         )
                     )
                         .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
@@ -221,7 +222,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                             hw,
                             poseSet.overflowPos3,
                             maxPower = 1.0,
-                            waypoint = true
+                            stopCond = StopConditions.Waypoint
                         )
                     )
                         .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
@@ -255,7 +256,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                             hw,
                             poseSet.overflowPos3,
                             maxPower = 1.0,
-                            waypoint = true
+                            stopCond = StopConditions.Waypoint
                         )
                     )
                         .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
