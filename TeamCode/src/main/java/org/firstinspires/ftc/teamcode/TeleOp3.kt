@@ -283,7 +283,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             abs(turret.currentPosition()) < 10
                         })
                     })
+                        .then(OneShot {
+                            shooter.pushThreshold = 0
+                        })
                         .then(Combo.shoot(hw))
+                        .then(OneShot {
+                            shooter.pushThreshold = shooter.defaultPushThreshold
+                        })
                         .then(Combo.shootAfter(hw))
                 }
             }
@@ -293,7 +299,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 if (activeTrack?.isAliveOrQueued() ?: false)
                     sch.add(VirtualGroup {
                         add(shooter.awaitTarget(0.2))
+                            .then(OneShot {
+                                shooter.pushThreshold = 0
+                            })
                             .then(Combo.shoot(hw))
+                            .then(OneShot {
+                                shooter.pushThreshold = shooter.defaultPushThreshold
+                            })
                             .then(Combo.shootAfter(hw))
                     })
                 // If we're... not
@@ -309,7 +321,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         }
                     })
                     add(shooter.awaitTarget(0.2))
+                        .then(OneShot {
+                            shooter.pushThreshold = 0
+                        })
                         .then(Combo.shoot(hw))
+                        .then(OneShot {
+                            shooter.pushThreshold = shooter.defaultPushThreshold
+                        })
                         .then(OneShot {
                             track.finish()
                             bind.finish()
@@ -331,7 +349,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         add(OneShot {
                             hw.hood.position = CompBot2Hardware.HOOD_50
                         })
-                    }).then(Combo.shoot(hw))
+                    })
+                        .then(OneShot {
+                            shooter.pushThreshold = 0
+                        })
+                        .then(Combo.shoot(hw))
+                        .then(OneShot {
+                            shooter.pushThreshold = shooter.defaultPushThreshold
+                        })
                 }
             }
             if (y1 && !gp1Y) {
@@ -354,7 +379,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                     abs(turret.currentPosition()) < 10
                                 })
                             })
+                            .then(OneShot {
+                                shooter.pushThreshold = 0
+                            })
                             .then(Combo.shoot(hw))
+                            .then(OneShot {
+                                shooter.pushThreshold = shooter.defaultPushThreshold
+                            })
                             .then(Combo.shootAfter(hw))
                         require(Locks.INTAKE_STORAGE)
                         require(Locks.DRIVE_MOTORS)

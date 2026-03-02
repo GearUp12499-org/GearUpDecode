@@ -26,6 +26,9 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
     val lock = LOCK_ROOT.derive()
     private var target = 0.0
 
+    val defaultPushThreshold = 200
+    var pushThreshold = defaultPushThreshold
+
     var mode = false
 
     override fun onStart() {
@@ -33,7 +36,7 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
     }
 
     override fun onTick(): Boolean {
-        val targetMode = target - hw.shoot1Vel <= 200
+        val targetMode = target - hw.shoot1Vel <= pushThreshold
         if (targetMode != mode) if (targetMode) hw.shoot1Vel = target
         mode = targetMode
         if (!mode)

@@ -162,7 +162,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 .then(aprilTag!!.readObelisk(0.3))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
             .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -183,7 +189,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
             .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -201,7 +213,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         hw.hood.position = CompBot2Hardware.HOOD_25
                     })
             })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
             .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -215,7 +233,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
             .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw))
                 intake.then(Wait.s(0.25)) // wait for shooter stop to release
@@ -232,7 +256,13 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         intake.finish()
                     })
             })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
             .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
             .then(Combo.shootAfter(hw))
 
         while (opModeInInit()) sch.tick()
