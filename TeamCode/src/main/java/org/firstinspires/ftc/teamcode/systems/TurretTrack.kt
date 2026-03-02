@@ -243,7 +243,7 @@ class TurretTrack(
             val pinpointY = pinpointPose.y + pinpointErrorY
             val dx = targetPose.x - pinpointX
             val dy = targetPose.y - pinpointY
-            val shootOffset = 6 // corrected center of robot
+            val shootOffset = 0 // corrected center of robot
             distance = hypot(dx,dy) - shootOffset
 
             Log.w(
