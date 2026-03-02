@@ -139,6 +139,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     fun stopTracking() {
         activeTrack?.stop()
         activeBind?.stop()
+        turret.setTarget(0.0)
         activeTrack = null
         activeBind = null
     }

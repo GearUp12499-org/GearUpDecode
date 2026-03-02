@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import android.util.Log;
 import android.util.Pair;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -234,7 +233,7 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public void setTurretPower(double power) {
         // TODO: negate?
-        Log.i("Hardware", String.format("set the power to %.2f", -power));
+//        Log.i("Hardware", String.format("set the power to %.2f", -power));
         servoTurret1.setPower(-power);
         servoTurret2.setPower(-power);
     }

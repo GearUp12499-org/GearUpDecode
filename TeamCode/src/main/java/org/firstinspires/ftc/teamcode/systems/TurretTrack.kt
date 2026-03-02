@@ -75,7 +75,12 @@ class TurretTrack(
             pinpointErrorY = 0.0
         }
 
-        private fun getPoseRobotFromLL(xLL: Double, yLL: Double, thetaTurret: Double, thetaRobot: Double): Pair<Double, Double> {
+        private fun getPoseRobotFromLL(
+            xLL: Double,
+            yLL: Double,
+            thetaTurret: Double,
+            thetaRobot: Double
+        ): Pair<Double, Double> {
             // thetaRobot MUST be in radians
 
             val rTurret = 6.5
@@ -83,8 +88,8 @@ class TurretTrack(
 
             val d = sqrt(
                 (rTurret).pow(2.0) +
-                (tOffset).pow(2.0) -
-                2 * (rTurret) * (tOffset) * cos(PI - thetaTurret)
+                        (tOffset).pow(2.0) -
+                        2 * (rTurret) * (tOffset) * cos(PI - thetaTurret)
             )
 
             val x = asin(
@@ -100,7 +105,7 @@ class TurretTrack(
             val xRobot = xLL + xOff
             val yRobot = yLL + yOff
 
-            return Pair(xRobot,yRobot)
+            return Pair(xRobot, yRobot)
         }
 
         private fun getLimelightPose2D(result: LLResult): REmover.RobotPose {
@@ -116,7 +121,12 @@ class TurretTrack(
             return sqrt(56.0 / ta) - 5.82//use for legacy task
         }
 
-        private fun getPinpointGoalYawDiff(currentTurretEncoder: Int, ppPose: REmover.RobotPose, ppErrX: Double, ppErrY: Double): Double {
+        private fun getPinpointGoalYawDiff(
+            currentTurretEncoder: Int,
+            ppPose: REmover.RobotPose,
+            ppErrX: Double,
+            ppErrY: Double
+        ): Double {
             // TODO: Possibly change this to getPinpointGoalYaw. Return a raw angle
             val x = targetPose.x - (ppPose.x + ppErrX)
             val y = targetPose.y - (ppPose.y + ppErrY)
@@ -137,7 +147,8 @@ class TurretTrack(
         }
 
         override fun onTick(): Boolean {
-            Log.w(TrackTask::class.simpleName, "is running")
+            // i don't know why stop() isn't stopping it
+            if (getState() != ITask.State.Ticking) return false
             // Determine whether to use pinpoint or limelight
             val result = ll.latestResult
             var useLL = false
@@ -153,7 +164,7 @@ class TurretTrack(
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
                     Log.w(
-                        TrackTask::class.simpleName,
+                        this::class.simpleName,
                         "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
                     )
                     ll.pipelineSwitch(pipe)
@@ -172,7 +183,7 @@ class TurretTrack(
                 val dy = ll2RobotY - pinpointY
                 val distanceLL2pp = hypot(dx.pow(2.0), dy.pow(2.0))
                 val llErr = 2.44 // avg error from data collect on 2/28
-                if  (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
+                if (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
                     lastPinpointUpdate = lastT
                     val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
                     val guessPointX = (alpha * pinpointX) + ((1 - alpha) * ll2RobotX)
@@ -180,25 +191,16 @@ class TurretTrack(
                     pinpointErrorX += (guessPointX - pinpointX)
                     pinpointErrorY += (guessPointY - pinpointY)
                 }
-                Log.w(
-                    "Limelight Camera",
-                    "(%.2f, %.2f)".format(llPose.x, llPose.y)
-                )
-                Log.w(
-                    "Thetas",
-                    "[turret = %.2f, robot = %.2f]".format((-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180), pinpointPose.a)
-                )
-                Log.w(
-                    "Limelight Robot",
-                    "(%.2f, %.2f)".format(ll2RobotX, ll2RobotY)
-                )
-                Log.w(
-                    "Pinpoint Pose",
-                    "(%.2f, %.2f)".format(pinpointX,  pinpointY)
-                )
-                Log.w(
-                    "Pinpoint Errors",
-                    "(%.2f, %.2f)".format(pinpointErrorX,  pinpointErrorY)
+
+                Log.i(
+                    this::class.simpleName,
+                    "TrackTask: cameraXY(%.2f %.2f) theta(t=%.2f r=%.2f)\nll(%.2f %.2f) pp(%.2f %.2f) err(%.2f %.2f)".format(
+                        llPose.x, llPose.y,
+                        (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180), pinpointPose.a,
+                        ll2RobotX, ll2RobotY,
+                        pinpointX, pinpointY,
+                        pinpointErrorX, pinpointErrorY
+                    )
                 )
                 val tags = result.fiducialResults
                 val target = tags.firstOrNull { it.fiducialId == targetTag }
@@ -206,55 +208,55 @@ class TurretTrack(
                     return false
                 }
 
-                Log.w(
-                    "Tracking Mode",
-                    ">>> LIMELIGHT MODE"
-                )
-
                 // TODO: Use pinpoint distance
                 val deltaX = targetPose.x - pinpointX
                 val deltaY = targetPose.y - pinpointY
                 val shootOffset = 0 // corrected center of robot
-                distance = hypot(deltaX,deltaY) - shootOffset
+                distance = hypot(deltaX, deltaY) - shootOffset
 
-                Log.w(
-                    "Limelight Distance",
-                    "%.4f".format(distance)
-                )
-                Log.w(
-                    "Limelight Baring",
-                    "%.4f".format(target.targetXDegrees)
-                )
                 turret.setDeltaTarget(-target.targetXDegrees)
+
+                Log.i(
+                    TrackTask::class.simpleName,
+                    "Limelight mode info: dist %.4f bearing %.4f".format(
+                        distance,
+                        target.targetXDegrees
+                    )
+                )
+
                 return false
             }
 
             val currentEncoder = turret.currentPosition()
-            Log.w(
-                "Tracking Mode",
-                ">>> PINPOINT MODE"
+
+            val yawDiff = getPinpointGoalYawDiff(
+                currentEncoder,
+                pinpointPose,
+                pinpointErrorX,
+                pinpointErrorY
             )
-            Log.w(
-                "Pinpoint Yaw Diff",
-                "%.4f".format(getPinpointGoalYawDiff(currentEncoder, pinpointPose, pinpointErrorX, pinpointErrorY))
+            turret.setDeltaTarget(
+                yawDiff
             )
-            turret.setDeltaTarget(getPinpointGoalYawDiff(currentEncoder, pinpointPose, pinpointErrorX, pinpointErrorY))
             val pinpointX = pinpointPose.x + pinpointErrorX
             val pinpointY = pinpointPose.y + pinpointErrorY
             val dx = targetPose.x - pinpointX
             val dy = targetPose.y - pinpointY
             val shootOffset = 0 // corrected center of robot
-            distance = hypot(dx,dy) - shootOffset
-
-            Log.w(
-                "Pinpoint distance",
-                "%.4f".format(distance)
+            distance = hypot(dx, dy) - shootOffset
+            Log.i(
+                this::class.simpleName,
+                "Pinpoint mode info: yaw diff %.4f dist %.4f".format(
+                    yawDiff,
+                    distance
+                )
             )
             return false
         }
 
         override fun onFinish(completedNormally: Boolean) {
-            ll.stop()
+            ll.pause()
+            turret.setTarget(0.0)
         }
     }
 
@@ -274,17 +276,18 @@ class TurretTrack(
         }
 
         override fun onTick(): Boolean {
-            Log.w(TrackTask::class.simpleName, "(Legacy) is running")
+            if (getState() != ITask.State.Ticking) return false
             val result = ll.latestResult
 
-            if (result != null && result.isValid) {
+            if (result == null || !result.isValid) {
+                Log.w(this::class.simpleName, "Legacy: invalid/null result")
                 return false
             }
 
             val actualPipeline = result.pipelineIndex
             if (actualPipeline != pipe) {
                 Log.w(
-                    TrackTask::class.simpleName,
+                    this::class.simpleName,
                     "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
                 )
                 ll.pipelineSwitch(pipe)
@@ -294,35 +297,30 @@ class TurretTrack(
             val target = tags.firstOrNull { it.fiducialId == targetTag }
 
             if (target == null) {
+                Log.w(this::class.simpleName, "Legacy: no matching results ($tags)")
                 return false
             }
 
-            Log.w(
-                "Tracking Mode",
-                ">>> LIMELIGHT MODE"
-            )
-
             distance = taToDistance(target.targetArea)
 
-            Log.w(
-                "Limelight Distance",
-                "%.4f".format(distance)
-            )
-            Log.w(
-                "Limelight Baring",
-                "%.4f".format(target.targetXDegrees)
-            )
             turret.setDeltaTarget(-target.targetXDegrees)
+            Log.i(
+                this::class.simpleName,
+                "Legacy: Limelight info: dist %.4f bearing %.4f".format(
+                    distance,
+                    target.targetXDegrees
+                )
+            )
             return false
         }
 
         override fun onFinish(completedNormally: Boolean) {
-            ll.stop()
+            ll.pause()
+            turret.setTarget(0.0)
         }
     }
 
     override fun onTick(): Boolean {
-        Log.w(TurretTrack::class.simpleName, "is running")
         val timestamp = ll.latestResult.timestamp
         val nowTs = markNow()
         if (timestamp != lastTimestamp) {
@@ -331,7 +329,10 @@ class TurretTrack(
         }
         if (nowTs - lastPoll > 1.seconds) {
             // IoC
-            Log.w("TurretTrack", "LL may be compromised: last stamp $timestamp, ${nowTs - lastPoll} ago")
+            Log.w(
+                "TurretTrack",
+                "LL may be compromised: last stamp $timestamp, ${nowTs - lastPoll} ago"
+            )
             fault = true
         } else {
             fault = false

@@ -32,10 +32,6 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
 
     fun setDeltaTarget(angle: Double) {
         val currentAngleDeg = -hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEGREE
-        Log.w(
-            "Current Angle Deg",
-            "%.4f".format(currentAngleDeg)
-        )
         setTarget(currentAngleDeg + angle)
     }
 
@@ -66,9 +62,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         val targetTicks = -targetAngleDeg * TICKS_PER_DEGREE
         val currentPosition = hw.turretEncoder.getCurrentPosition()
         val error = targetTicks - currentPosition
-        Log.w("Error", "%.2f".format(error))
-        Log.w("Target Ticks", "%.2f".format(targetTicks))
-        Log.w("Current Position", "%d".format(currentPosition))
+        Log.i("Turret", "err %.2f to %.2f (at %d)".format(error, targetTicks, currentPosition))
         val now = System.nanoTime()
         var dt = 0.0
         if (lastPidTime != 0L) {
@@ -113,10 +107,10 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
                 maxIntegralErrorSum = -integralErrorSum
             }
 
-            Log.w(
-                "maxIntegralErrorSum",
-                "%.2f".format(maxIntegralErrorSum)
-            )
+//            Log.w(
+//                "maxIntegralErrorSum",
+//                "%.2f".format(maxIntegralErrorSum)
+//            )
         } else {
             integralErrorSum = 0.0
         }
@@ -124,15 +118,15 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         prevError = error
         val output: Double = (P * error) + (I * integralErrorSum) + (D * derivative)
 
-        Log.i(
-            "TurretImpl",
-            "P %.2f I %.2f D %.2f => %.2f".format(
-                P * error,
-                I * integralErrorSum,
-                D * derivative,
-                output
-            )
-        )
+//        Log.i(
+//            "TurretImpl",
+//            "P %.2f I %.2f D %.2f => %.2f".format(
+//                P * error,
+//                I * integralErrorSum,
+//                D * derivative,
+//                output
+//            )
+//        )
         val output2 = when {
             output > 1.0 -> 1.0
             output < -1.0 -> -1.0
