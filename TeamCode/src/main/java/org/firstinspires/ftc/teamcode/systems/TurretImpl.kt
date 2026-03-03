@@ -19,15 +19,21 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val I_SPEED_LIMIT = 5_000.0
         const val SLEW_RATE_LIMITER =
             0.3 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
-
-        // TODO: Tune the PID coefficients and SLEW_RATE_LIMITER further
-        const val P = 0.000_1
-        const val I = 0.000_2 // 0.000_2
-        const val D = 0.000_000 // 0.000_062
+        private var P = 0.000_1
+        private var I = 0.000_2 // 0.000_2
+        private var D = 0.000_000 // 0.000_062
+        private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 * 2 // DEPENDS ON kI
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)
         }
+    }
+
+    fun setPIDCoeffs(kP: Double, kI: Double, kD: Double, iLimit: Double) {
+        P = kP
+        I = kI
+        D = kD
+        INTEGRAL_ERROR_SUM_LIMIT = iLimit
     }
 
     fun setDeltaTarget(angle: Double) {
@@ -54,7 +60,6 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     private var integralErrorSum = 0.0
     private var prevOutput = 0.0
     private var maxIntegralErrorSum = 0.0
-    private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 // DEPENDS ON kI
 
     val lock = LOCK_ROOT.derive()
 
@@ -98,6 +103,11 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
                 integralErrorSum < -INTEGRAL_ERROR_SUM_LIMIT -> -INTEGRAL_ERROR_SUM_LIMIT
                 else -> integralErrorSum
             }
+
+            Log.w(
+                "integralErrorSum (Current)",
+                ".2f".format(integralErrorSum)
+            )
 
             if (integralErrorSum > maxIntegralErrorSum) {
                 maxIntegralErrorSum = integralErrorSum
