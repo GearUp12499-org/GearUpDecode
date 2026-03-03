@@ -176,6 +176,7 @@ class TurretTrack(
 
             // Set const threshold for power
             if (useLL && turret.getPower() < TURRET_POWER_THRESHOLD) {
+                lastT = System.nanoTime()
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {
                     Log.w(
