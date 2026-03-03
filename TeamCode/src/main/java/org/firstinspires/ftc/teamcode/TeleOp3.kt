@@ -222,6 +222,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 )
                 hw.pinpoint.position = new
             }
+            if (gamepad1.startWasPressed()) {
+                activeTrack?.resetPinpointXY()
+            }
         }
 
         fun mecanum(y: Double, x: Double, rx: Double) {
