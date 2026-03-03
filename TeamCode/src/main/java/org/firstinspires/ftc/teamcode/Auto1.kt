@@ -20,8 +20,6 @@ import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
-import org.firstinspires.ftc.teamcode.systems.StopConditions
-import org.firstinspires.ftc.teamcode.systems.StopConditions.Precision
 import org.firstinspires.ftc.teamcode.systems.StopConditions.Waypoint
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
