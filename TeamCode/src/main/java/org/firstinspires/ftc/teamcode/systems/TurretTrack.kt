@@ -126,8 +126,8 @@ class TurretTrack(
         }
 
         private fun llErrDynamic(xDiff: Double, yDiff: Double): Double {
-            if (-0.04*xDiff + 0.047*yDiff + 0.06 < 0.0) {
-                return 0.0
+            if (-0.04*xDiff + 0.047*yDiff + 0.06 < 1.0) {
+                return 1.0
             }
             return -0.04*xDiff + 0.047*yDiff + 0.06
         }
