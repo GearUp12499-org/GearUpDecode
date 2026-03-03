@@ -59,6 +59,11 @@ class TurretTrack(
         private var lastPinpointUpdate = lastT
         private var pinpointErrorX = 0.0
         private var pinpointErrorY = 0.0
+        private var pinpointValX = 0.0
+        private var pinpointValY = 0.0
+        private var limelightX = 0.0
+        private var limelightY = 0.0
+        private var llErr = 0.0
         private var isDestinationReachable = true
         private var TURRET_POWER_THRESHOLD = 0.8
 
@@ -70,9 +75,21 @@ class TurretTrack(
             lastT = System.nanoTime()
         }
 
-        fun resetPinpointXY() {
+        fun resetPinpointErrorXY() {
             pinpointErrorX = 0.0
             pinpointErrorY = 0.0
+        }
+
+        fun getPinpointXY(): Pair<Double, Double> {
+            return Pair(pinpointValX, pinpointValY)
+        }
+
+        fun getLimelightXY(): Pair<Double, Double> {
+            return Pair(limelightX, limelightY)
+        }
+
+        fun getPinpointErrors(): Triple<Double, Double, Double> {
+            return Triple(pinpointErrorX, pinpointErrorY, llErr)
         }
 
         private fun getPoseRobotFromLL(
@@ -108,6 +125,13 @@ class TurretTrack(
             return Pair(xRobot, yRobot)
         }
 
+        private fun llErrDynamic(xDiff: Double, yDiff: Double): Double {
+            if (-0.04*xDiff + 0.047*yDiff + 0.06 < 0.0) {
+                return 0.0
+            }
+            return -0.04*xDiff + 0.047*yDiff + 0.06
+        }
+
         private fun getLimelightPose2D(result: LLResult): REmover.RobotPose {
             // Do NOT call if result is not sanitized for being null; Risk of NullObjectReference
             val robotPose: Pose3D = result.botpose
@@ -118,32 +142,21 @@ class TurretTrack(
         }
 
         private fun taToDistance(ta: Double): Double {
-            return sqrt(56.0 / ta) - 5.82//use for legacy task
+            return sqrt(56.0 / ta) - 5.82 //use for legacy task
         }
 
-        private fun getPinpointGoalYawDiff(
-            currentTurretEncoder: Int,
-            ppPose: REmover.RobotPose,
-            ppErrX: Double,
-            ppErrY: Double
-        ): Double {
-            // TODO: Possibly change this to getPinpointGoalYaw. Return a raw angle
-            val x = targetPose.x - (ppPose.x + ppErrX)
-            val y = targetPose.y - (ppPose.y + ppErrY)
-            val goalAngle = atan2(y, x)
-            val goalAngleDeg = goalAngle.wrapAngle().toDeg()
-            val botHeading = ppPose.a.toDeg()
-            val turretRotation = currentTurretEncoder / TICKS_PER_DEG
-            val turretWorldHeading = (botHeading + 180.0 - turretRotation).wrapAngleDeg()
+        private fun getTargetFromPinpoint(ppErrX: Double, ppErrY: Double, currentPose: REmover.RobotPose): Double {
+            val x = targetPose.x - (currentPose.x + ppErrX)
+            val y = targetPose.y - (currentPose.y + ppErrY)
+            val robotAngle = currentPose.a.toDeg()
+            val goalAngle = atan2(y, x).toDeg()
 
-            // TODO: log
+            var targetAngle = (180 + goalAngle - robotAngle)
 
-            val error = (goalAngleDeg - turretWorldHeading).wrapAngleDeg()
-            val llConventionError = -error
-            val targetTicks = currentTurretEncoder + (llConventionError * TICKS_PER_DEG).toInt()
-            isDestinationReachable = targetTicks in TURRET_CCW_STOP..TURRET_CW_STOP
+            while (targetAngle >= 180.0) targetAngle -= 360.0
+            while (targetAngle < -180.0) targetAngle += 360.0
 
-            return -llConventionError // TODO: Why is this backwards
+            return(targetAngle)
         }
 
         override fun onTick(): Boolean {
@@ -158,6 +171,8 @@ class TurretTrack(
                 useLL = true
             }
             val pinpointPose = pinpoint.position.remover
+            pinpointValX = pinpointPose.x
+            pinpointValY = pinpointPose.y
 
             // Set const threshold for power
             if (useLL && turret.getPower() < TURRET_POWER_THRESHOLD) {
@@ -177,12 +192,14 @@ class TurretTrack(
                     (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180),
                     pinpointPose.a
                 )
+                limelightX = ll2RobotX
+                limelightY = ll2RobotY
                 val pinpointX = pinpointPose.x + pinpointErrorX
                 val pinpointY = pinpointPose.y + pinpointErrorY
                 val dx = ll2RobotX - pinpointX
                 val dy = ll2RobotY - pinpointY
                 val distanceLL2pp = hypot(dx.pow(2.0), dy.pow(2.0))
-                val llErr = 2.44 // avg error from data collect on 2/28
+                llErr = llErrDynamic(pinpointPose.x - targetPose.x, pinpointPose.y - targetPose.y) //2.44 // avg error from data collect on 2/28
                 if (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
                     lastPinpointUpdate = lastT
                     val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
@@ -229,15 +246,13 @@ class TurretTrack(
 
             val currentEncoder = turret.currentPosition()
 
-            val yawDiff = getPinpointGoalYawDiff(
-                currentEncoder,
-                pinpointPose,
+            val yaw = getTargetFromPinpoint(
                 pinpointErrorX,
-                pinpointErrorY
+                pinpointErrorY,
+                pinpointPose
             )
-            turret.setDeltaTarget(
-                yawDiff
-            )
+
+            turret.setTarget(yaw)
             val pinpointX = pinpointPose.x + pinpointErrorX
             val pinpointY = pinpointPose.y + pinpointErrorY
             val dx = targetPose.x - pinpointX
@@ -246,8 +261,8 @@ class TurretTrack(
             distance = hypot(dx, dy) - shootOffset
             Log.i(
                 this::class.simpleName,
-                "Pinpoint mode info: yaw diff %.4f dist %.4f".format(
-                    yawDiff,
+                "Pinpoint mode info: yaw %.4f dist %.4f".format(
+                    yaw,
                     distance
                 )
             )
