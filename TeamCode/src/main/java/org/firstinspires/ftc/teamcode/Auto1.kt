@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import org.firstinspires.ftc.teamcode.utilities.reportIt
 import org.firstinspires.ftc.vision.VisionPortal
 
 abstract class Auto1(private val red: Boolean) : LinearOpMode() {
@@ -174,7 +175,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 add(OneShot {
                     turret.setTarget(poseSet.midShoot.turret!!)
                 })
@@ -220,7 +221,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
@@ -280,7 +281,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
@@ -315,7 +316,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
             })
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
-                intake.then(Wait.s(0.25)) // wait for shooter stop to release
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 add(OneShot {
                     turret.setTarget(poseSet.midShoot2.turret!!)
                 })
@@ -358,6 +359,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
         startFlag.requestStart()
 
         while (opModeIsActive()) sch.tick()
+
+        Log.i("FINAL REPORT", reportIt(sch))
 
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
         StaticStore.mark() // indicate to carry pinpoint into teleop in the next 30 seconds

@@ -74,11 +74,11 @@ class ShooterImpl(private val hw: CompBot2Hardware) : Task<ShooterImpl>() {
                 val now = System.nanoTime()
                 if (maximumDuration > 0 && now - start > maximumDuration * 1e9) return true
                 val currentVelocity = hw.shoot1Vel
+                Log.i("Shooter", "$currentVelocity -> $target = ${abs(currentVelocity - target)}")
                 if (!(abs(currentVelocity - target) < ACCEPTABLE_VELOCITY_DIFF)) {
                     lastMetAt = now
                     return false
                 }
-                Log.i("Shooter", "$currentVelocity -> $target = ${abs(currentVelocity - target)}")
                 return (now - lastMetAt) >= targetDuration
             }
         }

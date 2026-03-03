@@ -283,6 +283,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.add(Combo.intake(hw))
+                    .then(Combo.intakeAfter(hw))
             }
             if (a2 && !gp2A) {
                 if (!(activeTrack?.isAliveOrQueued() ?: false)) {

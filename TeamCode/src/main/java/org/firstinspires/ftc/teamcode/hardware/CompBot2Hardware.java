@@ -59,7 +59,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double SHOOT_CLOSE_RANGE = 1260.0;
     public static final double SHOOT_MID_RANGE = 1340.0;
     public static final double SHOOT_MID_RANGE2 = 1360.0;
-    public static final double SHOOT_FAR_RANGE = 1880.0; // 1820
+    public static final double SHOOT_FAR_RANGE = 1840.0; // 1820
 
     public static final double SHOOT_HOOD_UP_DIST = 32.0;
     public static final double SHOOT_MIN_DIST = 20.0;

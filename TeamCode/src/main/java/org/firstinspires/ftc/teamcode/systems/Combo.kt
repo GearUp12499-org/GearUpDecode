@@ -41,9 +41,20 @@ object Combo {
         override fun onFinish(completedNormally: Boolean) {
             super.onFinish(completedNormally)
             hw.setIntakePower(0.0)
-//            hw.bottomBallStop.position = BOTTOM_STOP_STOWED
-            hw.shooterBallStop.position = SHOOTER_STOP_UP
             hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
+        }
+    }
+    fun intakeAfter(hw: CompBot2Hardware) = object : Group({}) {
+        init {
+            getScheduler()
+                .add(OneShot {
+                    hw.setIntakePower(0.0)
+                })
+                .then(Wait.s(0.1))
+                .then(OneShot {
+                    hw.shooterBallStop.position = SHOOTER_STOP_UP
+                })
+                .then(Wait.s(0.15))
         }
     }
 

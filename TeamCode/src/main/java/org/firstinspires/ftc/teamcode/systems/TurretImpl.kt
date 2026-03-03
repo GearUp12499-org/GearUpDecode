@@ -118,15 +118,15 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         prevError = error
         val output: Double = (P * error) + (I * integralErrorSum) + (D * derivative)
 
-//        Log.i(
-//            "TurretImpl",
-//            "P %.2f I %.2f D %.2f => %.2f".format(
-//                P * error,
-//                I * integralErrorSum,
-//                D * derivative,
-//                output
-//            )
-//        )
+        Log.i(
+            "TurretImpl",
+            "P %.2f I %.2f D %.2f => %.2f".format(
+                P * error,
+                I * integralErrorSum,
+                D * derivative,
+                output
+            )
+        )
         val output2 = when {
             output > 1.0 -> 1.0
             output < -1.0 -> -1.0
