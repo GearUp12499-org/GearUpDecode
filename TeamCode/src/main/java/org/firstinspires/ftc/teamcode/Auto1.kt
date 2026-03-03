@@ -227,30 +227,22 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.gobble0,
+                            poseSet.set2pos,
                             stopCond = Waypoint
                         )
                     )
                         .then(
                             REmover.drive2Pose2(
                                 hw,
-                                poseSet.gobble1,
-                                timeoutAt = 0.1
+                                poseSet.gobble4
                             )
                         )
+                        .then(Wait.s(1.5))
                         .then(
                             REmover.drive2Pose2(
                                 hw,
-                                poseSet.gobble1b,
-                                timeoutAt = 0.5,
-                                stopCond = Waypoint
-                            )
-                        )
-                        .then(
-                            REmover.drive2Pose2(
-                                hw,
-                                poseSet.gobble1c,
-                                maxPower = 1.0
+                                poseSet.gobble6,
+                                maxPower = 0.5,
                             )
                         )
                         .then(Wait.s(0.5))
