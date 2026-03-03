@@ -9,6 +9,7 @@ import io.github.gearup12499.taskshark.api.BuiltInTags
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitTicks
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
@@ -300,8 +302,16 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 // If we're in live tracking mode
-                if (activeTrack?.isAliveOrQueued() ?: false)
-                    sch.add(VirtualGroup {
+                if (activeTrack?.isAliveOrQueued() ?: false) {
+                    val distance = activeTrack?.distance ?: 0.0
+                    if (distance < SHOOT_MIN_DIST) sch.add(OneShot {
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
+                    })
+                        .then(Wait.s(0.5))
+                        .then(OneShot {
+                            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                        })
+                    else sch.add(VirtualGroup {
                         add(shooter.awaitTarget(0.2))
                             .then(OneShot {
                                 shooter.pushThreshold = 0
@@ -312,32 +322,34 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             })
                             .then(Combo.shootAfter(hw))
                     })
-                // If we're... not
-                else sch.add(VirtualGroup {
-                    val track = add(turretTrack.trackLegacy())
-                    val bind = add(compose {
-                        onTick {
-                            val hoodSpeed =
-                                track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                            shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                            hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                            false
-                        }
+                    // If we're... not
+                } else {
+                    sch.add(VirtualGroup {
+                        val track = add(turretTrack.trackLegacy())
+                        val bind = add(compose {
+                            onTick {
+                                val hoodSpeed =
+                                    track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                                false
+                            }
+                        })
+                        add(shooter.awaitTarget(0.2))
+                            .then(OneShot {
+                                shooter.pushThreshold = 0
+                            })
+                            .then(Combo.shoot(hw))
+                            .then(OneShot {
+                                shooter.pushThreshold = shooter.defaultPushThreshold
+                            })
+                            .then(OneShot {
+                                track.finish()
+                                bind.finish()
+                            })
+                            .then(Combo.shootAfter(hw))
                     })
-                    add(shooter.awaitTarget(0.2))
-                        .then(OneShot {
-                            shooter.pushThreshold = 0
-                        })
-                        .then(Combo.shoot(hw))
-                        .then(OneShot {
-                            shooter.pushThreshold = shooter.defaultPushThreshold
-                        })
-                        .then(OneShot {
-                            track.finish()
-                            bind.finish()
-                        })
-                        .then(Combo.shootAfter(hw))
-                })
+                }
             }
             if (back2 && !gp2back) {
                 if (activeTrack?.isAliveOrQueued() ?: false) stopTracking()
