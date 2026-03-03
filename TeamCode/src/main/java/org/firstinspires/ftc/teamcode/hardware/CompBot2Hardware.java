@@ -277,7 +277,7 @@ public class CompBot2Hardware extends HardwareMapper {
         double hood = isUp ? HOOD_50 : HOOD_DOWN;
         double speed;
         if (isUp) speed = 8.0 * distance + 990;
-        else speed = 7.59 * distance + 1014;
+        else speed = 8.92 * distance + 1014;
         return new Pair<>(hood, speed);
     }
 }
