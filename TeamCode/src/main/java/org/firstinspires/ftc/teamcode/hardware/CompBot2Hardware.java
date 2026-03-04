@@ -59,9 +59,9 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double SHOOT_CLOSE_RANGE = 1260.0;
     public static final double SHOOT_MID_RANGE = 1340.0;
     public static final double SHOOT_MID_RANGE2 = 1360.0;
-    public static final double SHOOT_FAR_RANGE = 1900.0; // 1820
+    public static final double SHOOT_FAR_RANGE = 1940.0; // x < 24
 
-
+    public static final double SHOOT_MAX_DIST = 108.0;
     public static final double SHOOT_HOOD_UP_DIST = 32.0;
     public static final double SHOOT_MIN_DIST = 20.0;
 
@@ -275,10 +275,12 @@ public class CompBot2Hardware extends HardwareMapper {
      */
     public static Pair<Double, Double> hoodAndSpeed(double distance) {
         boolean isUp = distance >= SHOOT_HOOD_UP_DIST;
-        double hood = isUp ? HOOD_50 : HOOD_DOWN;
+        boolean isReallyFar = distance >= SHOOT_MAX_DIST;
+        double hood = isReallyFar ? HOOD_UP : isUp ? HOOD_50 : HOOD_DOWN;
         double speed;
-        if (isUp) speed = 8.0 * distance + 990;
-        else speed = 8.92 * distance + 1014;
+        if (isReallyFar) speed = SHOOT_FAR_RANGE;
+        else if (isUp) speed = 8.0 * distance + 990;
+        else speed = 8.8412 * distance + 927.2010;
         return new Pair<>(hood, speed);
     }
 }

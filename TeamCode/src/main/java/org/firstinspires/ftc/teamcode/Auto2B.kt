@@ -147,7 +147,7 @@
 //
 //        startFlag.then(VirtualGroup {
 //            add(REmover.drive2Pose2(hw, poseSet.farShoot))
-//            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.3))
+//            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE1, 0.3))
 //        })
 //            .then(Combo.shoot(hw, shooter, 0.5))
 //            .then(VirtualGroup {
@@ -156,7 +156,7 @@
 //                    .then(REmover.drive2Pose2(hw, poseSet.set3out))
 //                    .then(VirtualGroup {
 //                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
-//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+//                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE1, 0.2))
 //                    })
 //                    .then(OneShot {
 //                        intake.finish()
@@ -203,7 +203,7 @@
 //                })
 //                grp.then(VirtualGroup {
 //                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-//                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+//                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE1, 0.2))
 //                })
 //                .then(OneShot {
 //                    intake.finish()
@@ -254,7 +254,7 @@
 //                })
 //                grp.then(VirtualGroup {
 //                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-//                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE, 0.2))
+//                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE1, 0.2))
 //                })
 //                    .then(OneShot {
 //                        intake.finish()
