@@ -236,7 +236,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                                 poseSet.gobble4
                             )
                         )
-                        .then(Wait.s(1.5))
+                        .then(Wait.s(0.0)) //1.5
                         .then(
                             REmover.drive2Pose2(
                                 hw,
@@ -318,14 +318,15 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
                 intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 add(OneShot {
-                    turret.setTarget(poseSet.midShoot2.turret!!)
+                    turret.setTarget(0.0)
                 })
                 val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
                             hw,
                             poseSet.set3pos,
-                            stopCond = Waypoint
+                            stopCond = Waypoint,
+                            farStrafe = true
                         )
                     )
                         .then(REmover.drive2Pose2(hw, poseSet.set3out))
@@ -336,7 +337,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                             hw,
                             poseSet.closeShoot3,
                             farStrafe = true,
-                            rotateBack = false
+                            rotateBack = true //false
                         )
                     )
                     add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
