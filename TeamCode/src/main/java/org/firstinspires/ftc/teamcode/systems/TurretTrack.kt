@@ -10,8 +10,6 @@ import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.PoseSet
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.TURRET_CCW_STOP
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.TURRET_CW_STOP
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D
 import kotlin.math.atan2
 import kotlin.math.asin
@@ -284,26 +282,35 @@ class TurretTrack(
     }
 
     inner class LegacyTrackTask : Anonymous() {
-        private var lastT = 0L
+        private var lastFix = 0L
 
         var distance: Double? = null
             private set
 
         override fun onStart() {
             ll.start()
-            lastT = System.nanoTime()
         }
 
         private fun taToDistance(ta: Double): Double {
             return sqrt(56.0 / ta) - 5.82 // use for legacy task
         }
 
+        private fun handleFallback(now: Long) {
+            // 5s
+            if (now - lastFix > 5e9) {
+                distance = null
+                turret.setTarget(0.0)
+            }
+        }
+
         override fun onTick(): Boolean {
             if (getState() != ITask.State.Ticking) return false
             val result = ll.latestResult
+            val now = System.nanoTime()
 
             if (result == null || !result.isValid) {
                 Log.w(this::class.simpleName, "Legacy: invalid/null result")
+                handleFallback(now)
                 return false
             }
 
@@ -314,6 +321,7 @@ class TurretTrack(
                     "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
                 )
                 ll.pipelineSwitch(pipe)
+                handleFallback(now)
                 return false
             }
             val tags = result.fiducialResults
@@ -321,8 +329,11 @@ class TurretTrack(
 
             if (target == null) {
                 Log.w(this::class.simpleName, "Legacy: no matching results ($tags)")
+                handleFallback(now)
                 return false
             }
+
+            lastFix = now
 
             distance = taToDistance(target.targetArea)
 

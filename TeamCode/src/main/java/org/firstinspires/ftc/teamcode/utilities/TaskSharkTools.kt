@@ -49,9 +49,11 @@ fun reportIt(sch: Scheduler): String {
     return buildString {
         append("-- Scheduler report --\n")
         append("Overview: NS ${notStarted.size}  S ${starting.size}  T ${ticking.size}  F ${finishing.size}  Fn $finished  Fc $cancelled\n")
-        append("${notStarted.size} waiting:\n")
-        for (task in notStarted) {
-            describeTask(this, task, sch, 2)
+        if (notStarted.size < 10) {
+            append("${notStarted.size} waiting:\n")
+            for (task in notStarted) {
+                describeTask(this, task, sch, 2)
+            }
         }
         append("${starting.size} starting:\n")
         for (task in starting) {

@@ -28,6 +28,7 @@ import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
+import org.firstinspires.ftc.teamcode.systems.TurretImpl.Companion.DEADBAND_TICKS
 import org.firstinspires.ftc.teamcode.systems.TurretTrack
 import org.firstinspires.ftc.teamcode.systems.remover
 import org.firstinspires.ftc.teamcode.systems.toDeg
@@ -36,7 +37,6 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
-import org.firstinspires.ftc.teamcode.tasks.isAliveOrQueued
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.teamcode.utilities.reportIt
@@ -50,6 +50,12 @@ import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 
 abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
+    private enum class TrackState(val htmlLabel: String) {
+        Full("<font color=\"#40ff40\">ACTIVE</font>"),
+        Reduced("<font color=\"#ffb040\">REDUCED</font>"),
+        Off("<font color=\"#ff4040\">DISABLED</font>")
+    }
+
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
     private val skew = (if (red) 1 else -1) * PI / 2
 
@@ -57,11 +63,73 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private lateinit var shooter: ShooterImpl
     private lateinit var turret: TurretImpl
     private lateinit var turretTrack: TurretTrack
+
     private var activeTrack: TurretTrack.TrackTask? = null
+    private var activeLegacyTrack: TurretTrack.LegacyTrackTask? = null
+
     private var activeBind: ITask<*>? = null
     private lateinit var scheduler: FastScheduler
     private var isContinuation: Boolean = true
     private var pinpointSetupTask: PinpointSetupTask? = null
+
+    private fun startTrackingFull() {
+        activeTrack?.stop()
+        activeLegacyTrack?.stop()
+        activeBind?.stop()
+        activeTrack = scheduler.add(turretTrack.track())
+        activeBind = scheduler.add(compose {
+            onTick {
+                activeTrack ?: return@onTick true
+                val hoodSpeed =
+                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                false
+            }
+        })
+    }
+
+    private fun startTrackingReduced() {
+        activeTrack?.stop()
+        activeLegacyTrack?.stop()
+        activeBind?.stop()
+        activeLegacyTrack = scheduler.add(turretTrack.trackLegacy())
+        activeBind = scheduler.add(compose {
+            onTick {
+                activeLegacyTrack ?: return@onTick true
+                val hoodSpeed =
+                    activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                false
+            }
+        })
+    }
+
+    private fun stopTracking() {
+        activeTrack?.stop()
+        activeLegacyTrack?.stop()
+        activeBind?.stop()
+        turret.setTarget(0.0)
+        activeTrack = null
+        activeLegacyTrack = null
+        activeBind = null
+    }
+
+    // this isn't really a field
+    // setting does the relevant actions to get into the correct state
+    @Suppress("IntroduceWhenSubject")
+    private var trackState: TrackState
+        get() = when {
+            activeTrack?.getState() == ITask.State.Ticking -> TrackState.Full
+            activeLegacyTrack?.getState() == ITask.State.Ticking -> TrackState.Reduced
+            else -> TrackState.Off
+        }
+        set(value) = if (trackState != value) when (value) {
+            TrackState.Full -> startTrackingFull()
+            TrackState.Reduced -> startTrackingReduced()
+            TrackState.Off -> stopTracking()
+        } else Unit
 
     override fun runOpMode() {
         TaskSharkAndroid.setup()
@@ -119,7 +187,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             pinpointSetupTask?.stop()
             initVisual.stop()
 //            turret.setTarget(45.0)
-            startTracking()
+            trackState = TrackState.Full
         })
         robotStartTask.then(compose {
             onTick {
@@ -138,38 +206,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         }
     }
 
-    fun startTracking() {
-        activeTrack?.stop()
-        activeBind?.stop()
-        activeTrack = scheduler.add(turretTrack.track())
-        activeBind = scheduler.add(compose {
-            onTick {
-                activeTrack ?: return@onTick true
-                val hoodSpeed =
-                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                false
-            }
-        })
-    }
-
-    fun stopTracking() {
-        activeTrack?.stop()
-        activeBind?.stop()
-        turret.setTarget(0.0)
-        activeTrack = null
-        activeBind = null
-    }
-
     fun runningVisuals() {
         telemetry.addLine(
-            "<big>Live tracking is <strong>" +
-                    (if (activeTrack?.getState() == ITask.State.Ticking) "<font color=\"#40ff40\">ACTIVE</font>"
-                    else "<font color=\"#ff4040\">DISABLED</font>")
-                    + "</strong></big>"
+            "<big>Live tracking is <strong>" + trackState.htmlLabel + "</strong></big>"
         )
-        telemetry.addLine("<small>GP2 Back to enable/disable</small>")
+        telemetry.addLine("<small>GP2 Back to cycle on/reduced/off</small>")
         telemetry.addLine(hw.pinpoint.position.remover.let {
             "%.2f %.2f xy %.1f deg".format(it.x, it.y, it.a.toDeg())
         })
@@ -280,7 +321,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp1LB = false
         private var gp1X = false
         private var gp1Y = false
-        private var gp2Y = false
         private var gp2A = false
         private var gp2B = false
         private var gp2upD = false
@@ -302,7 +342,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     .then(Combo.intakeAfter(hw))
             }
             if (a2 && !gp2A) {
-                if (!(activeTrack?.isAliveOrQueued() ?: false)) {
+                if (trackState == TrackState.Off) {
                     sch.stopUsing(Locks.INTAKE_STORAGE)
                     sch.add(VirtualGroup {
                         add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
@@ -310,7 +350,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             hw.hood.position = CompBot2Hardware.HOOD_50
                         })
                         add(WaitUntil {
-                            abs(turret.currentPosition()) < 10
+                            abs(turret.currentPosition()) < DEADBAND_TICKS
                         })
                     })
                         .then(OneShot {
@@ -326,7 +366,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (b2 && !gp2B) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 // If we're in live tracking mode
-                if (activeTrack?.isAliveOrQueued() ?: false) {
+                if (trackState != TrackState.Off) {
                     val distance = activeTrack?.distance ?: 0.0
                     if (distance < SHOOT_MIN_DIST) sch.add(OneShot {
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
@@ -346,41 +386,17 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             })
                             .then(Combo.shootAfter(hw))
                     })
-                    // If we're... not
-                } else {
-                    sch.add(VirtualGroup {
-                        val track = add(turretTrack.trackLegacy())
-                        val bind = add(compose {
-                            onTick {
-                                val hoodSpeed =
-                                    track.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-                                false
-                            }
-                        })
-                        add(shooter.awaitTarget(0.2))
-                            .then(OneShot {
-                                shooter.pushThreshold = 0
-                            })
-                            .then(Combo.shoot(hw))
-                            .then(OneShot {
-                                shooter.pushThreshold = shooter.defaultPushThreshold
-                            })
-                            .then(OneShot {
-                                track.finish()
-                                bind.finish()
-                            })
-                            .then(Combo.shootAfter(hw))
-                    })
                 }
             }
             if (back2 && !gp2back) {
-                if (activeTrack?.isAliveOrQueued() ?: false) stopTracking()
-                else startTracking()
+                trackState = when (trackState) {
+                    TrackState.Full -> TrackState.Reduced
+                    TrackState.Reduced -> TrackState.Off
+                    TrackState.Off -> TrackState.Full
+                }
             }
             if (x && !gp1X) {
-                if (!(activeTrack?.isAliveOrQueued() ?: false)) {
+                if (trackState == TrackState.Off) {
                     sch.stopUsing(Locks.INTAKE_STORAGE)
                     sch.stopUsing(Locks.DRIVE_MOTORS)
                     sch.add(VirtualGroup {
@@ -404,7 +420,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 sch.add(object : Group({}) {
-                    var resumeAfterward = (activeTrack?.isAliveOrQueued() ?: false)
+                    var resumeAfterward = trackState
 
                     init {
                         getScheduler()
@@ -416,7 +432,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                     hw.hood.position = CompBot2Hardware.HOOD_UP
                                 })
                                 add(WaitUntil {
-                                    abs(turret.currentPosition()) < 10
+                                    abs(turret.currentPosition()) < DEADBAND_TICKS
                                 })
                             })
                             .then(OneShot {
@@ -432,12 +448,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     }
 
                     override fun onStart() {
-                        stopTracking()
+                        trackState = TrackState.Off
                     }
 
                     override fun onFinish(completedNormally: Boolean) {
                         super.onFinish(completedNormally)
-                        if (resumeAfterward) startTracking()
+                        trackState = resumeAfterward
                     }
                 })
             }
