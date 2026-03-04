@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 import org.firstinspires.ftc.teamcode.systems.Combo;
+import org.firstinspires.ftc.teamcode.systems.TurretImpl;
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous;
 import org.firstinspires.ftc.teamcode.utilities.StaticStore;
 
@@ -53,16 +54,25 @@ public class ShooterTest3 extends LinearOpMode {
         hardware.slider.setPosition(SLIDER_IN);
         hardware.bottomBallStop.setPosition(0.42);
 
+        hardware.turretEncoder.reset();
+        TurretImpl turret = sch.add(new TurretImpl(hardware));
+
         boolean wasb = false;
         boolean wasx = false;
         boolean wasdpad = false;
         boolean wasRightTrigger = false;
+        boolean wasLeftTrigger = false;
 
         //  double ticks_per_degree = TURRET_CW_90 / 90.0;
         double targetvel = 1200;
         double targetpos = 0.182;
 
         double intakePower = 0;
+
+        double turretTarget = 0;
+        double finalTurretTarget1 = turretTarget;
+        sch.add(new OneShot(()->turret.setTarget(finalTurretTarget1)));
+
 
         waitForStart();
 
@@ -178,10 +188,24 @@ public class ShooterTest3 extends LinearOpMode {
                 }
             }
 
-                wasb = gamepad1.b;
+            if (gamepad1.left_trigger>0.5 && !wasLeftTrigger) {
+                turretTarget+=5;
+                if (turretTarget>135){
+                    turretTarget = -135;
+                }
+                double finalTurretTarget = turretTarget;
+                sch.add(new OneShot(() -> {
+                    turret.setTarget(finalTurretTarget);
+                }));
+            }
+
+
+
+            wasb = gamepad1.b;
             wasx = gamepad1.x;
             wasdpad = gamepad1.dpad_right;
             wasRightTrigger = gamepad1.right_trigger>0.5;
+            wasLeftTrigger = gamepad1.left_trigger>0.5;
 
             double currentVel = hardware.getShoot1Vel();
             double hoodpos = hardware.gethoodpos();
@@ -202,6 +226,7 @@ public class ShooterTest3 extends LinearOpMode {
             telemetry.addData("Degrees", thetaD);
             telemetry.addData("Radians", thetaR);
             telemetry.addData("intake power", intakePower);
+            telemetry.addData("turret target", turretTarget);
             telemetry.update();
 
             hardware.pinpoint.update();
