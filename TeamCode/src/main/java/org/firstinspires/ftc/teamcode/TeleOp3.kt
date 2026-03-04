@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import io.github.gearup12499.taskshark.FastScheduler
 import io.github.gearup12499.taskshark.ITask
@@ -38,6 +39,7 @@ import org.firstinspires.ftc.teamcode.tasks.compose
 import org.firstinspires.ftc.teamcode.tasks.isAliveOrQueued
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import org.firstinspires.ftc.teamcode.utilities.reportIt
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -81,6 +83,19 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         // Background tasks
         scheduler.add(PinpointTask(hw.pinpoint))
         pinpointSetupTask = scheduler.add(PinpointSetupTask(hw.pinpoint, telemetry))
+        scheduler.add(compose {
+            var last = System.nanoTime()
+            onTick {
+                val now = System.nanoTime()
+                val duration = now - last
+                last = now
+                if (duration > 0.1e9) {
+                    Log.w("timings", "took too long: last tick is %.2f ms".format(duration / 1e6))
+                    Log.w("timings", reportIt(scheduler))
+                }
+                false
+            }
+        })
         val initVisual = scheduler.add(compose {
             onTick {
                 initVisuals()
@@ -92,6 +107,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         shooter = robotStartTask.then(ShooterImpl(hw))
         turret = robotStartTask.then(TurretImpl(hw))
         turret.setTarget(0.0)
+        turret.setPIDCoeffs(0.000_1, 0.000_2, 0.0, 220.0 * 2)
         turretTrack =
             robotStartTask.then(TurretTrack(hw.limelight, turret, hw.pinpoint, poseSet, red))
         robotStartTask.then(DriveTask())

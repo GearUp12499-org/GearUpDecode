@@ -128,6 +128,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
 
         turret = sch.add(TurretImpl(hw))
         turret.setTarget(0.0)
+        turret.setPIDCoeffs(0.000_1, 0.000_4, 0.0, 220.0 * 2)
 
         sch.add(compose {
             var state: GoBildaPinpoint2Driver.DeviceStatus? = null

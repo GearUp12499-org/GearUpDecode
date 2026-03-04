@@ -21,6 +21,7 @@ import kotlin.math.sqrt
 import kotlin.math.pow
 import kotlin.math.hypot
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
 
@@ -206,8 +207,14 @@ class TurretTrack(
                     val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
                     val guessPointX = (alpha * pinpointX) + ((1 - alpha) * ll2RobotX)
                     val guessPointY = (alpha * pinpointY) + ((1 - alpha) * ll2RobotY)
-                    pinpointErrorX += (guessPointX - pinpointX)
-                    pinpointErrorY += (guessPointY - pinpointY)
+                    val dX = guessPointX - pinpointX
+                    val dY = guessPointY - pinpointY
+                    if (abs(pinpointErrorX + dX) > 10.0 || abs(pinpointErrorY + dY) > 10.0) {
+                        Log.w(this::class.simpleName, "not taking +$dX,$dY pinpoint error update (would make error ${pinpointErrorX+dX}, ${pinpointErrorY+dY})")
+                    } else {
+                        pinpointErrorX += dX
+                        pinpointErrorY += dY
+                    }
                 }
 
                 Log.i(
