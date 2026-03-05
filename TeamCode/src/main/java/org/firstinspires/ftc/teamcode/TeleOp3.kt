@@ -64,6 +64,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private lateinit var turret: TurretImpl
     private lateinit var turretTrack: TurretTrack
 
+    private var intakeTask: ITask<*>? = null
     private var activeTrack: TurretTrack.TrackTask? = null
     private var activeLegacyTrack: TurretTrack.LegacyTrackTask? = null
 
@@ -338,8 +339,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
-                sch.add(Combo.intake(hw))
-                    .then(Combo.intakeAfter(hw))
+                val task = sch.add(Combo.intake(hw))
+                intakeTask = task
+                task.then(Combo.intakeAfter(hw))
             }
             if (a2 && !gp2A) {
                 if (trackState == TrackState.Off) {
@@ -376,10 +378,18 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                         })
                     else sch.add(VirtualGroup {
-                        add(shooter.awaitTarget(0.2))
+                        add(OneShot {
+                            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                        })
                             .then(OneShot {
                                 shooter.pushThreshold = 0
                             })
+                            .then(
+                                shooter.awaitTarget(
+                                    minimumDuration = 0.2,
+                                    maximumDuration = 0.75
+                                )
+                            )
                             .then(Combo.shoot(hw))
                             .then(OneShot {
                                 shooter.pushThreshold = shooter.defaultPushThreshold

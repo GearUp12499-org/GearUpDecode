@@ -65,7 +65,7 @@ public class CompBot2Hardware extends HardwareMapper {
 
     public static final double SHOOT_MAX_DIST = 108.0;
     public static final double SHOOT_HOOD_UP_DIST = 32.0;
-    public static final double SHOOT_MIN_DIST = 20.0;
+    public static final double SHOOT_MIN_DIST = 21.26; // based on 42, -42
 
     // UP 0.13 DOWN 0.42
     public static final double SHOOTER_STOP_UP = 0.63;
@@ -281,7 +281,7 @@ public class CompBot2Hardware extends HardwareMapper {
         double hood = isReallyFar ? HOOD_UP : isUp ? HOOD_50 : HOOD_DOWN;
         double speed;
         if (isReallyFar) speed = SHOOT_FAR_RANGE;
-        else if (isUp) speed = 8.0 * distance + 990;
+        else if (isUp) speed = 4.7215 * distance + 1119.6191; // https://www.desmos.com/calculator/ddauz4m00v
         else speed = 8.8412 * distance + 927.2010;
         return new Pair<>(hood, speed);
     }
