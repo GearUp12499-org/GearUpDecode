@@ -50,7 +50,7 @@ object Combo {
                 .add(OneShot {
                     hw.setIntakePower(0.0)
                 })
-                .then(Wait.s(0.1))
+                .then(Wait.s(0.05))
                 .then(OneShot {
                     hw.shooterBallStop.position = SHOOTER_STOP_UP
                 })

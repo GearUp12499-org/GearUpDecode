@@ -33,6 +33,7 @@ import org.firstinspires.ftc.teamcode.systems.TurretTrack
 import org.firstinspires.ftc.teamcode.systems.remover
 import org.firstinspires.ftc.teamcode.systems.toDeg
 import org.firstinspires.ftc.teamcode.systems.wrapAngle
+import org.firstinspires.ftc.teamcode.tasks.Deferred
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -366,36 +367,46 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 }
             }
             if (b2 && !gp2B) {
+                val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 // If we're in live tracking mode
                 if (trackState != TrackState.Off) {
                     val distance = activeTrack?.distance ?: 0.0
-                    if (distance < SHOOT_MIN_DIST) sch.add(OneShot {
-                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
-                    })
-                        .then(Wait.s(0.5))
-                        .then(OneShot {
-                            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                    if (distance < SHOOT_MIN_DIST) {
+                        sch.add(OneShot {
+                            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
                         })
-                    else sch.add(VirtualGroup {
-                        add(OneShot {
-                            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                            .then(Wait.s(0.5))
+                            .then(OneShot {
+                                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                            })
+                    } else {
+                        sch.add(VirtualGroup {
+                            add(OneShot {
+                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                            })
+                                .then(VirtualGroup {
+                                    add(Deferred {
+                                        if (needToStopIntake) Combo.intakeAfter(hw)
+                                        else null
+                                    })
+                                    add(OneShot {
+                                        shooter.pushThreshold = 0
+                                    })
+                                        .then(
+                                            shooter.awaitTarget(
+                                                minimumDuration = 0.2,
+                                                maximumDuration = 0.75
+                                            )
+                                        )
+                                })
+                                .then(Combo.shoot(hw))
+                                .then(OneShot {
+                                    shooter.pushThreshold = shooter.defaultPushThreshold
+                                })
+                                .then(Combo.shootAfter(hw))
                         })
-                            .then(OneShot {
-                                shooter.pushThreshold = 0
-                            })
-                            .then(
-                                shooter.awaitTarget(
-                                    minimumDuration = 0.2,
-                                    maximumDuration = 0.75
-                                )
-                            )
-                            .then(Combo.shoot(hw))
-                            .then(OneShot {
-                                shooter.pushThreshold = shooter.defaultPushThreshold
-                            })
-                            .then(Combo.shootAfter(hw))
-                    })
+                    }
                 }
             }
             if (back2 && !gp2back) {
@@ -427,6 +438,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             if (y1 && !gp1Y) {
                 // Temporarily suspend tracking
+                val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 sch.add(object : Group({}) {
@@ -434,7 +446,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
                     init {
                         getScheduler()
-                            .add(VirtualGroup {
+                            .add(Deferred {
+                                if (needToStopIntake) Combo.intakeAfter(hw)
+                                else null
+                            })
+                            .then(VirtualGroup {
                                 add(REmover.drive2Pose2(hw, poseSet.farShoot))
                                 add(WaitTicks(1))
                                     .then(shooter.setTargetAndWait(SHOOT_FAR_RANGE, 0.5))
