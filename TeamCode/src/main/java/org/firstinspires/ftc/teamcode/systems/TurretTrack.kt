@@ -45,6 +45,7 @@ class TurretTrack(
     val targetTag = if (red) TAG_RED else TAG_BLUE
     val targetPose = poseSet.goalAT
     val pipe = if (red) 2 else 7
+    val flipIfBlue = if (red) 1.0 else -1.0
 
     private var lastTimestamp: Double = 0.0
     private var lastPoll = markNow()
@@ -125,10 +126,11 @@ class TurretTrack(
         }
 
         private fun llErrDynamic(xDiff: Double, yDiff: Double): Double {
-            if (-0.04*xDiff + 0.047*yDiff + 0.06 < 1.0) {
+            val v = -0.04 * xDiff + 0.047 * yDiff * flipIfBlue + 0.06 * flipIfBlue
+            if (v < 1.0) {
                 return 1.0
             }
-            return -0.04*xDiff + 0.047*yDiff + 0.06
+            return v
         }
 
         private fun getLimelightPose2D(result: LLResult): REmover.RobotPose {
