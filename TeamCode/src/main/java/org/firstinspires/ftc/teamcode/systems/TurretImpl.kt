@@ -10,19 +10,19 @@ import kotlin.math.abs
 class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     companion object {
         private val LOCK_ROOT = Lock.StrLock("turret_impl")
-        const val TICKS_PER_DEGREE = 67.9
+        const val TICKS_PER_DEGREE = 159.5
         const val POSITIVE_LIMIT_DEG = 135.0
         const val POSITIVE_LIMIT_TICK = POSITIVE_LIMIT_DEG * TICKS_PER_DEGREE
         const val NEGATIVE_LIMIT_DEG = -135.0
         const val NEGATIVE_LIMIT_TICK = NEGATIVE_LIMIT_DEG * TICKS_PER_DEGREE
-        const val DEADBAND_TICKS = 136.0 / 2 // TODO: Try to revise these values
-        const val I_SPEED_LIMIT = 5_000.0
+        const val DEADBAND_TICKS = 159.5  // 1 deg
+        const val I_SPEED_LIMIT = 5_000.0 * 2.33
         const val SLEW_RATE_LIMITER =
             0.3 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
-        private var P = 0.000_1
-        private var I = 0.000_2 // 0.000_2
+        private var P = 0.000_08
+        private var I = 0.000_2 / 2.33 // 0.000_2
         private var D = 0.000_000 // 0.000_062
-        private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 * 2 // DEPENDS ON kI
+        private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 * 2 * 2.33 // DEPENDS ON kI
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)
@@ -30,10 +30,10 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     }
 
     fun setPIDCoeffs(kP: Double, kI: Double, kD: Double, iLimit: Double) {
-        P = kP
-        I = kI
-        D = kD
-        INTEGRAL_ERROR_SUM_LIMIT = iLimit
+        // P = kP
+        // I = kI
+        // D = kD
+        // INTEGRAL_ERROR_SUM_LIMIT = iLimit
     }
 
     fun setDeltaTarget(angle: Double) {
