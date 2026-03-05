@@ -257,7 +257,7 @@ object Combo {
                     .then(OneShot {
                         hw.flipper.position = FLIPPER_UP
                     })
-                    .then(Wait.ms(700))
+                    .then(Wait.ms(400))
                 this.require(Locks.INTAKE_STORAGE)
             }
         }

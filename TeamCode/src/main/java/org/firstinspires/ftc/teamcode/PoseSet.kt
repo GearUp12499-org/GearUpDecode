@@ -30,7 +30,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val closeShoot3 = RobotPose(48.66, -25.0, 2.06)
         private val midShoot = RobotPose(24.0, -24.0, 2.39, -79.0)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3, -93.0)
-        private val farShoot = RobotPose(-55.0, -12.39, 2.76)
+        private val farShoot = RobotPose(-55.0, -12.39, 2.65 )
         private val farShoot2 = RobotPose(-64.0, -29.0, -Math.PI/2,-105.0)
 
 
@@ -67,7 +67,7 @@ class PoseSet private constructor(val invert: Boolean) {
 
         private val gobble3 = RobotPose(-14.11, -66.08, -0.023)
 
-        private val gobble4 = RobotPose(-10.14, -59.79,-0.8987)
+        private val gobble4 = RobotPose(-9.14, -65.79,-0.8987)
         private val gobble5 = RobotPose(-10.42, -60.36,-PI/2)
 
         private val gobble6 = RobotPose(-18.03, -60.52, -0.57)

@@ -9,6 +9,7 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.prefabs.Group
 import io.github.gearup12499.taskshark.prefabs.OneShot
 import io.github.gearup12499.taskshark.prefabs.VirtualGroup
+import io.github.gearup12499.taskshark.prefabs.Wait
 import io.github.gearup12499.taskshark.prefabs.WaitUntil
 import io.github.gearup12499.taskshark_android.TaskSharkAndroid
 import org.firstinspires.ftc.robotcore.external.Telemetry
@@ -19,7 +20,7 @@ import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
-import org.firstinspires.ftc.teamcode.systems.StopConditions
+import org.firstinspires.ftc.teamcode.systems.StopConditions.Waypoint
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
@@ -28,15 +29,17 @@ import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.teamcode.utilities.reportIt
 import org.firstinspires.ftc.vision.VisionPortal
 
-abstract class Auto2(private val red: Boolean) : LinearOpMode() {
+abstract class Auto1B(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
     private lateinit var turret: TurretImpl
-    private var pinpointSetupTask: PinpointSetupTask? = null
     private var aprilTag: AprilTag? = null
+
+    private var altnStart = false
     private var confTask: ITask<*>? = null
+    private var pinpointSetupTask: PinpointSetupTask? = null
 
     fun initLog() {
         if (StaticStore.prismBroken) {
@@ -49,7 +52,8 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                     "<font color=\"${if (red) "#ff4040" else "#00ffff"}\"><strong>${if (red) "RED" else "BLUE"}</strong></font>" +
                     " auto</big></big>"
         )
-        telemetry.addLine("Press 1/RB to recalibrate Pinpoint")
+        telemetry.addLine("Position: <strong>${if (altnStart) "GOAL (ALTERNATE)" else "FAR (MAIN)"}</strong>")
+        telemetry.addLine("Press 1/RB to change")
         telemetry.addLine("Press 1/X to toggle Prism")
 
         pinpointSetupTask?.let {
@@ -76,18 +80,22 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         telemetry.update()
     }
 
-    fun reconfigure(prismBroken: Boolean, sch: Scheduler) {
+    fun reconfigure(altn: Boolean, prismBroken: Boolean, sch: Scheduler) {
+        altnStart = altn
         StaticStore.prismBroken = prismBroken
         hw.refreshPrismState()
 
         confTask?.stop()
         confTask = sch.add(Group {
             it.add(OneShot {
+                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_6)
                 hw.pinpoint.recalibrateIMU()
+                hw.turretEncoder.reset()
             }).then(WaitUntil {
                 hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
             }).then(OneShot {
-                hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
+                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                hw.pinpoint.setPosition(if (altn) poseSet.goalStart.asPose2D else poseSet.farStart.asPose2D)
             })
         })
     }
@@ -99,8 +107,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         hw.slider.position = CompBot2Hardware.SLIDER_IN
         hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
         hw.shooterBallStop.position = CompBot2Hardware.SHOOTER_STOP_UP
-        hw.hood.position = CompBot2Hardware.HOOD_UP
-        hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
+        hw.hood.position = CompBot2Hardware.HOOD_50
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
@@ -111,7 +118,8 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         val sch = FastScheduler()
         val startFlag = sch.add(SentinelTask())
 
-        reconfigure(StaticStore.prismBroken, sch)
+        reconfigure(false, StaticStore.prismBroken, sch)
+
         sch.add(Configurator())
         pinpointSetupTask = sch.add(PinpointSetupTask(hw.pinpoint, telemetry))
         val ticker = sch.add(compose {
@@ -124,7 +132,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
         sch.add(aprilTag!!.setupAprilTag(0, 0)).then(startFlag)
 
         shooter = sch.add(ShooterImpl(hw))
-
+        hw.setTurretPower(0.0)
         turret = sch.add(TurretImpl(hw))
         turret.setTarget(0.0)
         turret.setPIDCoeffs(0.000_1, 0.000_4, 0.0, 220.0 * 2)
@@ -142,65 +150,65 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             }
         })
 
+//        sch.add(compose {
+//            onTick {
+//                Log.i("power", "power %.2f mode ${shooter.mode} vel %f".format(hw.shoot1Power, hw.shoot1Vel))
+//                false
+//            }
+//        })
+
         startFlag.then(OneShot {
             pinpointSetupTask?.stop()
             ticker.stop()
         })
 
         startFlag.then(VirtualGroup {
-            add(REmover.drive2Pose2(hw, poseSet.farShoot))
-            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.3))
+            add(REmover.drive2Pose2(hw, poseSet.midShoot, farStrafe = true))
+                .then(aprilTag!!.readObelisk(0.3))
+            add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
         })
             .then(OneShot {
                 shooter.pushThreshold = 0
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+            .then(Combo.shoot(hw))
             .then(OneShot {
                 shooter.pushThreshold = shooter.defaultPushThreshold
             })
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
                 intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
-                add(REmover.drive2Pose2(hw, poseSet.set4out))
-//                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
-                    .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                        add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
-                    })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-            })
-
-            //shoot #2
-            .then(OneShot {
-                shooter.pushThreshold = 0
-            })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
-            .then(OneShot {
-                shooter.pushThreshold = shooter.defaultPushThreshold
-            })
-            .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
-                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
+                add(OneShot {
+                    turret.setTarget(poseSet.midShoot.turret!!)
+                })
                 val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.overflowPos3,
-                            maxPower = 1.0,
-                            stopCond = StopConditions.Waypoint
+                            poseSet.set2pos,
+                            stopCond = Waypoint
                         )
                     )
-                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
+                        .then(REmover.drive2Pose2(hw, poseSet.set2out, maxPower = 1.0))
                 })
                 grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.set2exit,
+                            stopCond = Waypoint
+                        )
+                    )
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.midShoot,
+                                farStrafe = true,
+                                rotateBack = false
+                            )
+                        )
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.0))
                 })
-                .then(OneShot {
-                    intake.finish()
-                })
+                    .then(OneShot(intake::finish))
                 intake.then(OneShot {
                     grp.inside.forEach(ITask<*>::finish)
                 })
@@ -208,67 +216,59 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             .then(OneShot {
                 shooter.pushThreshold = 0
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+            .then(Combo.shoot(hw))
             .then(OneShot {
                 shooter.pushThreshold = shooter.defaultPushThreshold
             })
-
-            //shoot #3
             .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
                 intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.overflowPos3,
-                            maxPower = 1.0,
-                            stopCond = StopConditions.Waypoint
+                            poseSet.set2pos,
+                            stopCond = Waypoint
                         )
                     )
-                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
-//
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.gobble4,
+                                timeoutAt = 0.15
+                            )
+                        )
+                        .then(Wait.s(0.0)) //1.5
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.gobble6,
+                                maxPower = 0.5,
+                            )
+                        )
+                        .then(Wait.s(0.5))
                 })
                 grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
-                })
-                    .then(OneShot {
-                        intake.finish()
-                    })
-                intake.then(OneShot {
-                    grp.inside.forEach(ITask<*>::finish)
-                })
-            })
-            .then(OneShot {
-                shooter.pushThreshold = 0
-            })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
-            .then(OneShot {
-                shooter.pushThreshold = shooter.defaultPushThreshold
-            })
-
-            .then(VirtualGroup {
-                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
-                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
-                val grp = add(VirtualGroup {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.overflowPos3,
-                            maxPower = 1.0,
-                            stopCond = StopConditions.Waypoint
+                            poseSet.set2exit,
+                            stopCond = Waypoint
                         )
                     )
-                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
-//
-                })
-                grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
-                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.midShoot,
+                                farStrafe = true,
+                                rotateBack = false
+                            )
+                        )
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.0))
                 })
                     .then(OneShot {
                         intake.finish()
+                        hw.hood.position = CompBot2Hardware.HOOD_25
                     })
                 intake.then(OneShot {
                     grp.inside.forEach(ITask<*>::finish)
@@ -277,19 +277,112 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             .then(OneShot {
                 shooter.pushThreshold = 0
             })
-            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+            .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
+            .then(VirtualGroup {
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
+                val grp = add(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.set2pos,
+                            stopCond = Waypoint
+                        )
+                    )
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.gobble4,
+                                timeoutAt = 0.15
+                            )
+                        )
+                        .then(Wait.s(0.0)) //1.5
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.gobble6,
+                                maxPower = 0.5,
+                            )
+                        )
+                        .then(Wait.s(0.5))
+                })
+                grp.then(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.set2exit,
+                            stopCond = Waypoint
+                        )
+                    )
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.midShoot,
+                                farStrafe = true,
+                                rotateBack = false
+                            )
+                        )
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.0))
+                })
+                    .then(OneShot {
+                        intake.finish()
+                        hw.hood.position = CompBot2Hardware.HOOD_25
+                    })
+                intake.then(OneShot {
+                    grp.inside.forEach(ITask<*>::finish)
+                })
+            })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
+            .then(Combo.shoot(hw))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
+            .then(VirtualGroup {
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, timeout = 0.25))
+                intake.then(Combo.intakeAfter(hw))
+//                add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_CLOSE_RANGE, 0.2))
+                add(OneShot {
+                    turret.setTarget(poseSet.midShoot2.turret!! - 10.0)
+                })// wait for shooter stop to release
+                val grp = add(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.set1pos,
+                            stopCond = Waypoint
+                        )
+                    )
+                        .then(REmover.drive2Pose2(hw, poseSet.set1out))
+                })
+                grp.then(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.closeShoot3,
+                            farStrafe = true,
+                            rotateBack = false
+                        )
+                    )
+                }).then(OneShot(intake::finish))
+                intake.then(OneShot {
+                    grp.inside.forEach(ITask<*>::finish)
+                })
+            })
+            .then(Combo.shoot(hw))
             .then(OneShot {
                 shooter.pushThreshold = shooter.defaultPushThreshold
             })
 
-            .then(VirtualGroup {
-                add(Combo.shootAfter(hw))
-                add(REmover.drive2Pose2(hw, poseSet.auto2park))
-            })
+
 
         while (opModeInInit()) sch.tick()
 
-        startFlag.finish()
+        startFlag.requestStart()
 
         while (opModeIsActive()) sch.tick()
 
@@ -309,10 +402,10 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
             val rb = gamepad1.right_bumper
             val x = gamepad1.x
             if (rb && !rbt) {
-                reconfigure(StaticStore.prismBroken, scheduler!!)
+                reconfigure(!altnStart, StaticStore.prismBroken, scheduler!!)
             }
             if (x && !xt) {
-                reconfigure(!StaticStore.prismBroken, scheduler!!)
+                reconfigure(altnStart, !StaticStore.prismBroken, scheduler!!)
             }
 
             rbt = rb
