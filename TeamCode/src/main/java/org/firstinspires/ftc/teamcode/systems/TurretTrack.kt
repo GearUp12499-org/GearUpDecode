@@ -296,8 +296,8 @@ class TurretTrack(
         }
 
         private fun handleFallback(now: Long) {
-            // 5s
-            if (now - lastFix > 5e9) {
+            // 2s
+            if (now - lastFix > 2e9) {
                 distance = null
                 turret.setTarget(0.0)
             }
