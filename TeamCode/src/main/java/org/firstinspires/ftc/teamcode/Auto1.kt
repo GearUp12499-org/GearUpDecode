@@ -234,7 +234,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         .then(
                             REmover.drive2Pose2(
                                 hw,
-                                poseSet.gobble4
+                                poseSet.gobble4,
+                                timeoutAt = 0.15
                             )
                         )
                         .then(Wait.s(0.0)) //1.5
