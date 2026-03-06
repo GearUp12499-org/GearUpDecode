@@ -15,7 +15,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         const val POSITIVE_LIMIT_TICK = POSITIVE_LIMIT_DEG * TICKS_PER_DEGREE
         const val NEGATIVE_LIMIT_DEG = -135.0
         const val NEGATIVE_LIMIT_TICK = NEGATIVE_LIMIT_DEG * TICKS_PER_DEGREE
-        const val DEADBAND_TICKS = 159.5  // 1 deg
+        const val DEADBAND_TICKS = 159.5 / 2.0  // 1 deg
         const val I_SPEED_LIMIT = 5_000.0 * 2.33
         const val SLEW_RATE_LIMITER =
             0.3 // https://docs.wpilib.org/en/stable/docs/software/advanced-controls/filters/slew-rate-limiter.html
@@ -34,6 +34,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         }
     }
 
+    @Deprecated("no implementation")
     fun setPIDCoeffs(kP: Double, kI: Double, kD: Double, iLimit: Double) {
         // P = kP
         // I = kI

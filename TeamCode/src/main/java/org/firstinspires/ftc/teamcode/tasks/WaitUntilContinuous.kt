@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.tasks
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
 
-class WaitUntilContinuous(private val duration: Double, private val cond: Condition) : Task<WaitUntilContinuous>() {
+
+class WaitUntilContinuous @JvmOverloads constructor(private val duration: Double, private val max: Double = -1.0, private val cond: Condition) : Task<WaitUntilContinuous>() {
     companion object {
         init {
             systemPackages.add(WaitUntilContinuous::class.qualifiedName!!)
@@ -16,16 +17,23 @@ class WaitUntilContinuous(private val duration: Double, private val cond: Condit
 
     private var isMatching = false
     private var startedMatching = 0L
+    private var started = 0L
+
+    override fun onStart() {
+        started = System.nanoTime()
+    }
 
     override fun onTick(): Boolean {
         if (cond.check()) {
+            val now = System.nanoTime()
             if (!isMatching) {
                 isMatching = true
-                startedMatching = System.nanoTime()
+                startedMatching = now
             }
-            if ((System.nanoTime() - startedMatching) / 1.0e9 > duration) {
+            if ((now - startedMatching) / 1.0e9 > duration) {
                 return true
             }
+            if (max > 0 && (now - started) / 1e9 > max) return true
         } else {
             if (isMatching) isMatching = false
         }

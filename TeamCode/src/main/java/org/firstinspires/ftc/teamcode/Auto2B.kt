@@ -84,6 +84,7 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
         confTask = sch.add(Group {
             it.add(OneShot {
                 hw.pinpoint.recalibrateIMU()
+                hw.turretEncoder.reset()
             }).then(WaitUntil {
                 hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
             }).then(OneShot {
@@ -148,7 +149,10 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
         })
 
         startFlag.then(VirtualGroup {
-            add(REmover.drive2Pose2(hw, poseSet.farShoot))
+            add(OneShot {
+                turret.setTarget(poseSet.farShoot2.turret!!)
+            })
+            add(REmover.drive2Pose2(hw, poseSet.farShoot2))
             add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.3))
         })
             .then(OneShot {
@@ -165,7 +169,7 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
                 add(REmover.drive2Pose2(hw, poseSet.set4out))
 //                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                     .then(VirtualGroup {
-                        add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                        add(REmover.drive2Pose2(hw, poseSet.farShoot2))
                         add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
                     })
                     .then(OneShot {
@@ -196,7 +200,7 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
 //
                 })
                 grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot2))
                     add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
                 })
                     .then(OneShot {
@@ -230,7 +234,7 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
                         .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
                 })
                 grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot2))
                     add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
                 })
                 .then(OneShot {
@@ -248,8 +252,39 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
                 shooter.pushThreshold = shooter.defaultPushThreshold
             })
 
-            //shoot #3
-
+            .then(VirtualGroup {
+                val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
+                intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
+                val grp = add(VirtualGroup {
+                    add(
+                        REmover.drive2Pose2(
+                            hw,
+                            poseSet.overflowPos3,
+                            maxPower = 1.0,
+                            stopCond = StopConditions.Waypoint
+                        )
+                    )
+                        .then(REmover.drive2Pose2(hw, poseSet.overflowPos1, timeoutAt = 0.3))
+//
+                })
+                grp.then(VirtualGroup {
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot2))
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
+                })
+                    .then(OneShot {
+                        intake.finish()
+                    })
+                intake.then(OneShot {
+                    grp.inside.forEach(ITask<*>::finish)
+                })
+            })
+            .then(OneShot {
+                shooter.pushThreshold = 0
+            })
+            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+            .then(OneShot {
+                shooter.pushThreshold = shooter.defaultPushThreshold
+            })
 
             .then(VirtualGroup {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0, timeout = 0.5))
@@ -267,7 +302,7 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
 //
                 })
                 grp.then(VirtualGroup {
-                    add(REmover.drive2Pose2(hw, poseSet.farShoot))
+                    add(REmover.drive2Pose2(hw, poseSet.farShoot2))
                     add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO, 0.2))
                 })
                     .then(OneShot {
@@ -288,6 +323,9 @@ abstract class Auto2B(private val red: Boolean) : LinearOpMode() {
             .then(VirtualGroup {
                 add(Combo.shootAfter(hw))
                 add(REmover.drive2Pose2(hw, poseSet.auto2park))
+            })
+            .then(OneShot {
+                turret.setTarget(0.0)
             })
 
         while (opModeInInit()) sch.tick()

@@ -250,7 +250,7 @@ object Combo {
                         hw.shooterBallStop.position = SHOOTER_STOP_UP
                         hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
                     })
-                    .then(WaitUntilContinuous(flipperWait) {
+                    .then(WaitUntilContinuous(flipperWait, max = 1.0) {
                         !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
                                 || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
                     })
