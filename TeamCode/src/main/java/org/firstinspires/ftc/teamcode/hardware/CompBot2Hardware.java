@@ -276,15 +276,8 @@ public class CompBot2Hardware extends HardwareMapper {
      * @return hood, speed
      */
     public static Pair<Double, Double> hoodAndSpeed(double distance) {
-//        boolean isUp = distance >= SHOOT_HOOD_UP_DIST;
-        isReallyFar = distance >= SHOOT_MAX_DIST;
-//        double hood = isReallyFar ? HOOD_UP : isUp ? HOOD_50 : HOOD_DOWN;
-        double hood;
-        double speed;
-//        if (isReallyFar) speed = SHOOT_FAR_RANGE;
-//        else if (isUp) speed = 4.8215 * distance + 1140; // https://www.desmos.com/calculator/ddauz4m00v
-        speed = 6.81246 * distance + 1075.16505;
-        hood = 0.00492724 * distance + 0.0769453;
+        double speed = 6.81246 * distance + 1075.16505;
+        double hood = 0.00492724 * distance + 0.0769453;
         if (hood > 0.5578) hood = 0.5578;
         else if (hood < 0.1817) hood = 0.1817;
         return new Pair<>(hood, speed);
