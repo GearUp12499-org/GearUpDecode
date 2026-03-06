@@ -65,7 +65,7 @@ class TurretTrack(
         private var limelightY = 0.0
         private var llErr = 0.0
         private var isDestinationReachable = true
-        private var TURRET_POWER_THRESHOLD = 0.8
+        private var turretPowerThreshold = 0.8
 
         var distance: Double? = null
             private set
@@ -176,7 +176,7 @@ class TurretTrack(
             pinpointValY = pinpointPose.y
 
             // Set const threshold for power
-            if (useLL && turret.getPower() < TURRET_POWER_THRESHOLD) {
+            if (useLL && turret.getPower() < turretPowerThreshold) {
                 lastT = System.nanoTime()
                 val actualPipeline = result.pipelineIndex
                 if (actualPipeline != pipe) {

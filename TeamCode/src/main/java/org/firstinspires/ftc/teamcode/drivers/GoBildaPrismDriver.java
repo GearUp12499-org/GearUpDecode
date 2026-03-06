@@ -122,7 +122,7 @@ public class GoBildaPrismDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSimpl
     {
         READ_ONLY,
         WRITE_ONLY,
-        READ_AND_WRITE;
+        READ_AND_WRITE
     }
 
     /**

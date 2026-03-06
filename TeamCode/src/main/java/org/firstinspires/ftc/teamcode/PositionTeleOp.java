@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 
 @TeleOp
 public class PositionTeleOp extends LinearOpMode {

@@ -7,7 +7,6 @@ import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.OUTTAKE_P
 import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_DOWN;
 import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_UP;
 import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SLIDER_IN;
-import static org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SLIDER_OUT;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -19,7 +18,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
-import org.firstinspires.ftc.teamcode.systems.Combo;
 import org.firstinspires.ftc.teamcode.systems.TurretImpl;
 import org.firstinspires.ftc.teamcode.tasks.WaitUntilContinuous;
 import org.firstinspires.ftc.teamcode.utilities.StaticStore;

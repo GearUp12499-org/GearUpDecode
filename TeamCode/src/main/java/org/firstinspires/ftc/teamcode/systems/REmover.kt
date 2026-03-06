@@ -51,9 +51,7 @@ object REmover {
 
     const val THRESHOLD = 0.2
 
-    const val tipFearRatio: Double = 2.0
     const val FKP: Double = 0.1 //0.35
-    const val tipFKP: Double = 0.1
     const val FKD: Double = 0.02 //0.02
     const val FKI: Double = 0.0005 // 0.0005
 
@@ -420,31 +418,6 @@ enum class StopConditions(internal val evaluate: StopCondition, val stopAtEnd: B
         },
         stopAtEnd = true
     ),
-}
-
-fun checkStop(
-    waypoint: Boolean,
-    deltaX: Double,
-    deltaY: Double,
-    deltaA: Double,
-    speed: Double,
-    angVelocity: Double,
-    timeoutTime: Double,
-    timeoutMax: Double
-): Boolean {
-    if (!waypoint) {
-        return (abs(deltaX) < 0.5
-                && abs(deltaY) < 0.5
-                && abs(deltaA) < Math.PI / 48
-                && speed < 10
-                && abs(angVelocity) < Math.PI / 4
-                || timeoutTime > timeoutMax)
-    } else {
-        return (abs(deltaX) < 6
-                && abs(deltaY) < 6
-                && abs(deltaA) < Math.PI / 4
-                || timeoutTime > timeoutMax)
-    }
 }
 
 fun Double.wrapAngleDeg(): Double {

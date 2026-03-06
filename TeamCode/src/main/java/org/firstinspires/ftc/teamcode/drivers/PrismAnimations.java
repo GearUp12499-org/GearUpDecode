@@ -1054,7 +1054,8 @@ public class PrismAnimations {
          * Sets the probability/density of sparkles. Lower is denser. Default is 16.
          * @param sparkleProbability from 0 to 255.
          */
-        public void setSparkleProbability(int sparkleProbability) { this.sparkleProbability = sparkleProbability; };
+        public void setSparkleProbability(int sparkleProbability) { this.sparkleProbability = sparkleProbability; }
+
         //endregion
         @Override
         protected void updateAnimationSpecificValuesOverI2C(I2cDeviceSynchSimple deviceClient)
