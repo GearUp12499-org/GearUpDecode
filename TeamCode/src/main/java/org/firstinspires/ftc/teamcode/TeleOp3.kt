@@ -484,9 +484,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 })
             }
             if (lb && !gp1LB) {
+                val needToStop = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 shooter.setTarget(0.0)
+                if (needToStop) sch.add(Combo.intakeAfter(hw))
             }
 
             if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
