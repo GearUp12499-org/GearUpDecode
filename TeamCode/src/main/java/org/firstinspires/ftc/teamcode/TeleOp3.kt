@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MAX_DIST
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
@@ -380,6 +381,32 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                             .then(OneShot {
                                 hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                             })
+                    } else if (distance > SHOOT_MAX_DIST) {
+                        sch.add(VirtualGroup {
+                            add(OneShot {
+                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                            })
+                                .then(VirtualGroup {
+                                    add(Deferred {
+                                        if (needToStopIntake) Combo.intakeAfter(hw)
+                                        else null
+                                    })
+                                    add(OneShot {
+                                        shooter.pushThreshold = 0
+                                    })
+                                        .then(
+                                            shooter.awaitTarget(
+                                                minimumDuration = 0.2,
+                                                maximumDuration = 0.75
+                                            )
+                                        )
+                                })
+                                .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+                                .then(OneShot {
+                                    shooter.pushThreshold = shooter.defaultPushThreshold
+                                })
+                                .then(Combo.shootAfter(hw))
+                        })
                     } else {
                         sch.add(VirtualGroup {
                             add(OneShot {

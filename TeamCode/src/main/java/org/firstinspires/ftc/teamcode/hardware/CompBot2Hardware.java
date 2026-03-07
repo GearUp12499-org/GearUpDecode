@@ -276,6 +276,9 @@ public class CompBot2Hardware extends HardwareMapper {
      * @return hood, speed
      */
     public static Pair<Double, Double> hoodAndSpeed(double distance) {
+        if (distance > SHOOT_MAX_DIST) {
+            return new Pair<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO);
+        }
         double speed = 6.81246 * distance + 1075.16505;
         double hood = 0.00492724 * distance + 0.0769453;
         if (hood > 0.5578) hood = 0.5578;
