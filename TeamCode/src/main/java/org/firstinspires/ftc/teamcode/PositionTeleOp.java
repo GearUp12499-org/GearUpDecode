@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 
@@ -103,7 +104,9 @@ public class PositionTeleOp extends LinearOpMode {
 
             if (result != null && result.isValid()) {
 
-                Pose3D botpose = result.getBotpose();
+//                limelight3A.updateRobotOrientation(currentPose.getHeading(AngleUnit.DEGREES) + 90 + hardware.turretEncoder.getCurrentPosition()/159.5);
+                limelight3A.updateRobotOrientation(currentPose.getHeading(AngleUnit.DEGREES));
+                Pose3D botpose = result.getBotpose_MT2();
 
                 if (botpose != null) {
 
@@ -136,6 +139,7 @@ public class PositionTeleOp extends LinearOpMode {
                     double x_robot = limelightX + x_offset;
                     double y_robot = limelightY + y_offset;
 
+                    YawPitchRollAngles ypr = hardware.imu.getRobotYawPitchRollAngles();
 
                     telemetry.addData("Limelight X", limelightX);
                     telemetry.addData("Limelight Y", limelightY);
@@ -144,6 +148,11 @@ public class PositionTeleOp extends LinearOpMode {
                     telemetry.addData("pinpoint X", ppX);
                     telemetry.addData("pinpoint Y", ppY);
                     telemetry.addData("pinpoint Heading", ppTheta);
+                    telemetry.addData("yaw", ypr.getYaw());
+                    telemetry.addData("pitch", ypr.getPitch());
+                    telemetry.addData("roll", ypr.getRoll());
+                    telemetry.addData("pinpoint yaw", currentPose.getHeading(AngleUnit.DEGREES));
+
 
 
                     if (gamepad1.y) {
