@@ -239,7 +239,8 @@ class TurretTrack(
                 val shootOffset = 0 // corrected center of robot
                 distance = hypot(deltaX, deltaY) - shootOffset
 
-                turret.setDeltaTarget(-target.targetXDegrees)
+                //if using limelight, set pid target to however many degrees limelight says you are off
+                //turret.setDeltaTarget(-target.targetXDegrees)
 
                 Log.i(
                     TrackTask::class.simpleName,
@@ -260,7 +261,8 @@ class TurretTrack(
                 pinpointPose
             )
 
-            turret.setTarget(yaw)
+            //if you aren't using limelight or can't see limelight, use pinpoint to set target
+            //turret.setTarget(yaw)
             val pinpointX = pinpointPose.x + pinpointErrorX
             val pinpointY = pinpointPose.y + pinpointErrorY
             val dx = targetPose.x - pinpointX
@@ -339,7 +341,8 @@ class TurretTrack(
 
             distance = taToDistance(target.targetArea)
 
-            turret.setDeltaTarget(-target.targetXDegrees)
+            //use limelight only?
+            //turret.setDeltaTarget(-target.targetXDegrees)
             Log.i(
                 this::class.simpleName,
                 "Legacy: Limelight info: dist %.4f bearing %.4f".format(

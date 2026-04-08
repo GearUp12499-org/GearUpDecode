@@ -1,28 +1,37 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.util.Log;
 import android.util.Pair;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.hardware.rev.Rev9AxisImuOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.PoseSet;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.drivers.IGoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.drivers.NoOpPrism;
+import org.firstinspires.ftc.teamcode.systems.REmover;
 import org.firstinspires.ftc.teamcode.utilities.StaticStore;
 
 import io.github.gearup12499.taskshark.Lock;
+import kotlin.Triple;
 
 public class CompBot2Hardware extends HardwareMapper {
     public static final double DROP_DOWN_SWEET_SPOT = 0.49;
@@ -73,6 +82,13 @@ public class CompBot2Hardware extends HardwareMapper {
 
     @HardwareName("limelight")
     public Limelight3A limelight;
+
+    @HardwareName("imu")
+    public IMU imu;
+    IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+    ));
 
     @HardwareName("frontRight")
     @ZeroPower(DcMotor.ZeroPowerBehavior.BRAKE)
@@ -285,4 +301,90 @@ public class CompBot2Hardware extends HardwareMapper {
         else if (hood < 0.1817) hood = 0.1817;
         return new Pair<>(hood, speed);
     }
+
+    //ROBOT VELX and VELY MUST BE IN METERS/SECOND
+    public static Triple<Double, Double, Double> hoodAndSpeedAndTurret(double robotVelX, double robotVelY, REmover.RobotPose goalPose, Pose2D robotPose){
+//        if (distance > SHOOT_MAX_DIST) {
+//            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO,????);
+
+        double distance = Math.hypot((goalPose.x-robotPose.getX(DistanceUnit.INCH)),(goalPose.y-robotPose.getY(DistanceUnit.INCH)));
+
+        //distance into speed and hood
+        double speed = 6.81246 * distance + 1075.16505;
+        double hood = 0.00492724 * distance + 0.0769453;
+
+        //hood into percent of total range
+        double hoodPercent = (hood-HOOD_DOWN)/(HOOD_UP-HOOD_DOWN)*100;
+
+        //use model to convert speed and hoodPercent into a V and Theta
+        double vB = 0.00331412 * speed + 0.426853;
+        double thetaB = -0.181376 * hoodPercent + 71.29116;
+
+        //thetaB into radians for sin and cos
+        thetaB = thetaB * Math.PI/180;
+
+        //azimuthal angle
+        double alphaB = Math.atan2(goalPose.y - robotPose.getY(DistanceUnit.INCH), goalPose.x - robotPose.getX(DistanceUnit.INCH));
+
+        //break up velocity of the ball with respect to the ground into components
+        double vBz = vB*Math.sin(thetaB);
+        double vBh = vB*Math.cos(thetaB);
+        double vBx = vBh*Math.cos(alphaB);
+        double vBy = vBh*Math.sin(alphaB);
+
+        //velocity of ball with respect to robot (v)
+        double vx = vBx - robotVelX;
+        double vy = vBy - robotVelY;
+        double vz = vBz;
+
+        double alpha = Math.atan2(vy,vx);
+        double vh = Math.hypot(vx,vy);
+        double theta = Math.atan2(vz, vh);
+        theta = theta * 180/Math.PI;
+        double v = Math.sqrt((vx*vx)+(vy*vy)+(vz*vz));
+
+        //use model to convert to hood and speed, alpha is turret angle
+        double finalHood = (theta-71.29116)/(-0.181376);
+        finalHood = (finalHood/100)*(HOOD_UP-HOOD_DOWN) + HOOD_DOWN;
+        double finalSpeed = (v-0.426853)/(0.00331412);
+
+        alpha = alpha * 180/Math.PI;
+        alpha = alpha % 360;
+        if (alpha > 180) {
+            alpha -= 360;
+        }
+        if (alpha < -180) {
+            alpha += 360;
+        }
+        double finalTurret = -180 + alpha - robotPose.getHeading(AngleUnit.DEGREES);
+        finalTurret = finalTurret % 360;
+        if (finalTurret > 180){
+            finalTurret -= 360;
+        }
+        if (finalTurret < -180){
+            finalTurret += 360;
+        }
+
+        //add something for the case that it is not possible
+        if (finalHood > 0.5578) finalHood = 0.5578;
+        else if (finalHood < 0.1817) finalHood = 0.1817;
+
+        if (finalSpeed < 0){
+            finalSpeed = 0;
+        }
+        //hood over 0.5578, negative speed
+
+        alphaB = alphaB * 180/Math.PI;
+
+
+        //return new Triple<>(alpha, alphaB, finalTurret);
+
+
+
+        return new Triple<>(finalHood, finalSpeed, finalTurret);
+
+
+    }
 }
+
+

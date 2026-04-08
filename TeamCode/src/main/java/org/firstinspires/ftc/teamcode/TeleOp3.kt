@@ -83,14 +83,42 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         activeBind = scheduler.add(compose {
             onTick {
                 activeTrack ?: return@onTick true
-                val hoodSpeed =
-                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+                val hoodSpeedTurret = activeTrack!!.distance.let { CompBot2Hardware.hoodAndSpeedAndTurret( hw.pinpoint.getVelX(DistanceUnit.METER),
+                    hw.pinpoint.getVelY(DistanceUnit.METER), poseSet.goalAT, hw.pinpoint.position)}
+                shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
+                hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
+                turret.setTarget(hoodSpeedTurret?.third ?: 0.0)
+               // val hoodSpeed =
+                  //  activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+                //shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                //hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+
+                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second<hoodSpeedTurret.first))
+                telemetry.addData("alphaB", hoodSpeedTurret.second)
+                telemetry.addData("alpha", hoodSpeedTurret.first)
+                telemetry.addData("turret", hoodSpeedTurret.third)
+
                 false
             }
         })
     }
+//
+//    private fun startTrackingFull() {
+//        activeTrack?.stop()
+//        activeLegacyTrack?.stop()
+//        activeBind?.stop()
+//        activeTrack = scheduler.add(turretTrack.track())
+//        activeBind = scheduler.add(compose {
+//            onTick {
+//                activeTrack ?: return@onTick true
+//                val hoodSpeed =
+//                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
+//                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+//                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+//                false
+//            }
+//        })
+//    }
 
     private fun startTrackingReduced() {
         activeTrack?.stop()
