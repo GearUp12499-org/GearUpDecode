@@ -171,6 +171,8 @@ class TurretTrack(
             if (result != null && result.isValid) {
                 useLL = true
             }
+            Log.d("AAA","AAAAAAAAAA")
+            Log.d("UseLL","$useLL")
             val pinpointPose = pinpoint.position.remover
             pinpointValX = pinpointPose.x
             pinpointValY = pinpointPose.y
@@ -342,7 +344,7 @@ class TurretTrack(
             distance = taToDistance(target.targetArea)
 
             //use limelight only?
-            //turret.setDeltaTarget(-target.targetXDegrees)
+            turret.setDeltaTarget(target.targetXDegrees)
             Log.i(
                 this::class.simpleName,
                 "Legacy: Limelight info: dist %.4f bearing %.4f".format(
