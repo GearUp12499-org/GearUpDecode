@@ -57,7 +57,7 @@ class TuneRemover : LinearOpMode() {
             }).then(WaitUntil {
                 hw.pinpoint.deviceStatus == GoBildaPinpoint2Driver.DeviceStatus.READY
             }).then(OneShot {
-                hw.pinpoint.setPosition(poseSet.farStart.asPose2D)
+                hw.pinpoint.setPosition(poseSet.set3out.asPose2D)
             })
 
         })
@@ -117,15 +117,15 @@ class TuneRemover : LinearOpMode() {
 
             if (gamepad1.a && !wasA) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(48.0, 0.0, 0.0)))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.closeShoot3, curveAround = REmover.RobotPose(-12.0,0.0, 0.0),  ))
             }
             else if (gamepad1.b && !wasB) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0, -48.0 , 0.0)))
+                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(8.98, -22.0 , -1.918)))
             }
             else if (gamepad1.x && !wasX) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, REmover.RobotPose(0.0,0.0,0.0)))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.closeShoot3))
 
             }
             else if (gamepad1.y && !wasY) {

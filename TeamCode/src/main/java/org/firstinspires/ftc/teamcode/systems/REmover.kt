@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.systems
 
 import android.util.Log
+import com.qualcomm.robotcore.robot.Robot
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
@@ -17,6 +18,7 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -109,6 +111,7 @@ object REmover {
     fun drive2Pose2(
         hardware: CompBot2Hardware,
         pose: RobotPose,
+        curveAround: RobotPose = pose,
         maxPower: Double = 1.0,
         stopCond: StopConditions = StopConditions.Default,
         timeoutAt: Double = 1.0,
@@ -129,11 +132,23 @@ object REmover {
             var prevTime = 0.0
             var prevDeltaAll = 0.0
 
+            var prevX = 0.0
+            var prevY = 0.0
+
+            var distanceTraveled = 0.0
+            var deltaDistance = 0.0
+            var fakeTgt = pose
+
+
             var tempTargetAngle = tgta
             var sumF = 0.0
             var sumS = 0.0
             var sumW = 0.0
 
+            val startPos = RobotPose(hardware.pinpoint.getPosX(DistanceUnit.INCH),hardware.pinpoint.getPosY(DistanceUnit.INCH),hardware.pinpoint.getHeading(AngleUnit.RADIANS))
+
+
+            var estimateCurveLength = 0.0
 
             override fun onStart() {
                 timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)
@@ -175,6 +190,20 @@ object REmover {
                 }
 
 
+
+
+                if (curveAround != pose){
+                    val startY: Double = startPos.y
+                    val curveY: Double = curveAround.y
+                    val startX: Double = startPos.x
+                    val curveX: Double = curveAround.x
+
+                    //linear estimation probably should change?
+                    estimateCurveLength = hypot(startY-curveY, startX-curveX) + hypot(curveY - tgty,curveX - tgtx)
+                }
+
+
+
             }
 
             override fun onTick(): Boolean {
@@ -195,6 +224,77 @@ object REmover {
                 val currentY = currentPose.getY(DistanceUnit.INCH)
                 val currentTheta = currentPose.getHeading(AngleUnit.RADIANS)
 
+                distanceTraveled += deltaDistance
+                var bezierA = 0.0
+
+                if(curveAround != pose){
+                       var t = (distanceTraveled/estimateCurveLength)
+
+                        if (t>=1){
+                            t = 1.0
+                        }
+                        else if(t<=0){
+                            t = 0.001 // fudge factor cuz t = will make the robot stay at its original position
+                        }
+
+
+                        //get bezier x
+                        val x1 = lerp(startPos.x,curveAround.x, t)
+                        val x2 = lerp(curveAround.x, pose.x, t)
+                        val bezierX = lerp(x1,x2,t)
+
+                        //get bezier y
+                        val y1 = lerp(startPos.y,curveAround.y, t)
+                        val y2 = lerp(curveAround.y, pose.y, t)
+                        val bezierY = lerp(y1,y2,t)
+
+                        //get angle (should prolly make this into a function but I'm too lazy)
+                        val tempTargetAngle1 = normalize(atan2((bezierY-currentY), (bezierX-currentX)))
+                        val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
+
+                        tgta = normalize(tgta)
+
+                        val error1 = angleDifference(tempTargetAngle1, currentTheta) + angleDifference(
+                            tgta,
+                            tempTargetAngle1
+                        )
+                        val error2 = angleDifference(tempTargetAngle2, currentTheta) + angleDifference(
+                            tgta,
+                            tempTargetAngle2
+                        )
+
+
+                        if (error1 <= error2) {
+                            bezierA= tempTargetAngle1
+                        } else if (error2 < error1) {
+                            bezierA = tempTargetAngle2
+                        }
+
+                    Log.i("BtempA2", tempTargetAngle2.toString())
+                    Log.i("BtempA1", tempTargetAngle1.toString())
+                    Log.i("BezierA", bezierA.toString())
+                        //make robot pose
+                        if(t >= 0.9){
+                            fakeTgt = pose
+                        }
+//                        else if (t >= 0.75){
+//                            RobotPose(bezierX, bezierY, pose.a)
+//                        }
+                        else{
+                            fakeTgt = RobotPose(bezierX, bezierY, bezierA)
+                        }
+
+                        if(t >=1 ){
+                            Log.i("CurrentPosAtT1", currentPose.toString())
+                        }
+
+
+                }
+
+                val tempDeltaX = fakeTgt.x - currentX
+                val tempDeltaY = fakeTgt.y - currentY
+                var tempDeltaA = fakeTgt.a - currentTheta
+
                 val deltaX = tgtx - currentX
                 val deltaY = tgty - currentY
                 var deltaA = tempTargetAngle - currentTheta
@@ -204,6 +304,12 @@ object REmover {
                     deltaA -= 2 * PI
                 } else if (deltaA < -PI) {
                     deltaA += 2 * PI
+                }
+                tempDeltaA %= 2 * PI
+                if (tempDeltaA > PI) {
+                    tempDeltaA -= 2 * PI
+                } else if (tempDeltaA < -PI) {
+                    tempDeltaA += 2 * PI
                 }
 
                 if (stopCond.evaluate.check(
@@ -239,9 +345,9 @@ object REmover {
                 }
 
 
-                val f = cos(currentTheta) * deltaX + sin(currentTheta) * deltaY
-                val s = sin(currentTheta) * deltaX - cos(currentTheta) * deltaY
-                val w = R * deltaA
+                val f = cos(currentTheta) * tempDeltaX + sin(currentTheta) * tempDeltaY
+                val s = sin(currentTheta) * tempDeltaX - cos(currentTheta) * tempDeltaY
+                val w = R * tempDeltaA
 
                 deltaTime = max(currentTime - prevTime, 0.001)
 
@@ -267,7 +373,7 @@ object REmover {
 //                    sumW += W * deltaTime
 //                }
 
-                var tipFactor: Double = 1.0
+                val tipFactor: Double = 1.0
 
 //                if (abs(f) > tipFearRatio * abs(s)) {
 //                    val ratio: Double = abs(s) / abs(f)
@@ -275,8 +381,13 @@ object REmover {
 //                    tipFactor = (tipFKP / FKP) + (ratio * tipFearRatio) * (FKP - tipFKP / FKP)
 //                }
 
-                val tempFKP: Double = tipFactor * FKP
-                val tempSKP: Double = tipFactor * SKP
+                var tempFKP: Double = tipFactor * FKP
+                var tempSKP: Double = tipFactor * SKP
+
+
+                //ratio the KP up so that P isn't messed up by having "endpoints" super close the actual position
+                tempFKP *= hypot(deltaX,deltaY)/hypot(tempDeltaX,tempDeltaY)
+                tempSKP *= hypot(deltaX,deltaY)/hypot(tempDeltaX,tempDeltaY)
 
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
@@ -331,6 +442,10 @@ object REmover {
                 hardware.frontRight.power = pfr
                 hardware.backRight.power = pbr
                 prevTime = currentTime
+
+                deltaDistance = hypot(currentX - prevX, currentY - prevY)
+                prevX = currentX
+                prevY = currentY
 
                 return false
             }
@@ -430,4 +545,10 @@ fun Double.wrapAngleDeg(): Double {
 }
 
 fun Number.toDeg() = this.toDouble() * 180 / Math.PI
+
+fun lerp(p1: Double,
+         p2: Double,
+         t: Double): Double{
+        return (1-t)*p1 + t*p2
+}
 
