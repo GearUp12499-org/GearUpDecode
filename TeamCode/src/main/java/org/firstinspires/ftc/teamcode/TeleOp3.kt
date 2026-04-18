@@ -81,7 +81,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
     // Offsets the Limelight camera position to the robot center,
     // accounting for the turret angle and camera mounting offset.
-    // Mirrors TurretTrack.getPoseRobotFromLL() exactly so they stay consistent.
+    // Mirrors TurretTrack.getPoseRobotFromLL() exactly so they stay consistent
     private fun offsetLLToRobotCenter(
         llX: Double, llY: Double,
         thetaTurret: Double, thetaRobot: Double
@@ -270,7 +270,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine("XY: pin (%.2f %.2f), ll (%.2f %.2f)".format(px, py, lx, ly))
             telemetry.addLine("pin error: (%.2f %.2f), ll error: %.2f".format(pex, pey, le))
         }
-        // EKF estimate display — compare this against Pinpoint above to verify filter
         val ekfPose = KalmanLocalization.getEstimate()
         telemetry.addLine("EKF: %.2f %.2f xy %.1f deg".format(
             ekfPose[0], ekfPose[1], Math.toDegrees(ekfPose[2])
@@ -308,7 +307,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         override fun onTick(): Boolean {
             val sch = sch
 
-            // --- Kalman filter update ---
+            // Kalman filter update...
             val llResult = hw.limelight.latestResult
             val loopTime = 20.0 // ms — improve later with actual loop timer
 
@@ -342,7 +341,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     loopTime
                 )
             }
-            // --- End Kalman filter update ---
 
             mecanumDispatcher(sch)
             inOut(sch)
