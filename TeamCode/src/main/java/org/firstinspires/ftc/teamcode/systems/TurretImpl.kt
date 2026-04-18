@@ -7,6 +7,10 @@ import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.abs
 
+
+/**
+ * runs the turret pid on tick, includes other pid related functions
+ */
 class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
     companion object {
         private val LOCK_ROOT = Lock.StrLock("turret_impl")

@@ -23,6 +23,15 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
 
+/**
+ * (1)TurretTrack (tracking with fused pinpoint and limelight): onTick
+ * -sensor fusion (if turret is moving slow enough, you get a good limelight read, and its been long enough since the last update)
+ * -limelight track (if you can see the apriltag)
+ * -otherwise pinpoint track
+ * -distances used for hood and speed calculation are based off the fused position
+ *{2}LegacyTurretTrack (limelight only): onTick
+ * -uses limelight reads to aim turret and determine distance for hood and speed
+*/
 class TurretTrack(
     private val ll: Limelight3A,
     private val turret: TurretImpl,
@@ -242,7 +251,7 @@ class TurretTrack(
                 distance = hypot(deltaX, deltaY) - shootOffset
 
                 //if using limelight, set pid target to however many degrees limelight says you are off
-                //turret.setDeltaTarget(-target.targetXDegrees)
+//                turret.setDeltaTarget(-target.targetXDegrees)
 
                 Log.i(
                     TrackTask::class.simpleName,
