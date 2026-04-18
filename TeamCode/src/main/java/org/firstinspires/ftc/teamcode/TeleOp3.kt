@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
@@ -44,11 +45,14 @@ import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.teamcode.utilities.reportIt
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 
 abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
@@ -75,6 +79,27 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private var isContinuation: Boolean = true
     private var pinpointSetupTask: PinpointSetupTask? = null
 
+    // Offsets the Limelight camera position to the robot center,
+    // accounting for the turret angle and camera mounting offset.
+    // Mirrors TurretTrack.getPoseRobotFromLL() exactly so they stay consistent.
+    private fun offsetLLToRobotCenter(
+        llX: Double, llY: Double,
+        thetaTurret: Double, thetaRobot: Double
+    ): Pair<Double, Double> {
+        val rTurret = 6.5
+        val tOffset = 0.5
+        val d = sqrt(
+            rTurret.pow(2.0) + tOffset.pow(2.0) -
+                    2 * rTurret * tOffset * cos(PI - thetaTurret)
+        )
+        val x = asin(sin(PI - thetaTurret) * rTurret / d)
+        val f = d * cos(x)
+        val s = d * sin(x)
+        val xOff = f * cos(thetaRobot) - s * sin(thetaRobot)
+        val yOff = f * sin(thetaRobot) + s * cos(thetaRobot)
+        return Pair(llX + xOff, llY + yOff)
+    }
+
     private fun startTrackingFull() {
         activeTrack?.stop()
         activeLegacyTrack?.stop()
@@ -83,17 +108,19 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         activeBind = scheduler.add(compose {
             onTick {
                 activeTrack ?: return@onTick true
-                val hoodSpeedTurret = activeTrack!!.distance.let { CompBot2Hardware.hoodAndSpeedAndTurret( hw.pinpoint.getVelX(DistanceUnit.METER),
-                    hw.pinpoint.getVelY(DistanceUnit.METER), poseSet.goalAT, hw.pinpoint.position)}
+                val hoodSpeedTurret = activeTrack!!.distance.let {
+                    CompBot2Hardware.hoodAndSpeedAndTurret(
+                        hw.pinpoint.getVelX(DistanceUnit.METER),
+                        hw.pinpoint.getVelY(DistanceUnit.METER),
+                        poseSet.goalAT,
+                        hw.pinpoint.position
+                    )
+                }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
                 turret.setTarget(hoodSpeedTurret?.third ?: 0.0)
-               // val hoodSpeed =
-                  //  activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                //shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-                //hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
 
-                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second<hoodSpeedTurret.first))
+                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
                 telemetry.addData("alphaB", hoodSpeedTurret.second)
                 telemetry.addData("alpha", hoodSpeedTurret.first)
                 telemetry.addData("turret", hoodSpeedTurret.third)
@@ -102,23 +129,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
         })
     }
-//
-//    private fun startTrackingFull() {
-//        activeTrack?.stop()
-//        activeLegacyTrack?.stop()
-//        activeBind?.stop()
-//        activeTrack = scheduler.add(turretTrack.track())
-//        activeBind = scheduler.add(compose {
-//            onTick {
-//                activeTrack ?: return@onTick true
-//                val hoodSpeed =
-//                    activeTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-//                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
-//                hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
-//                false
-//            }
-//        })
-//    }
 
     private fun startTrackingReduced() {
         activeTrack?.stop()
@@ -147,8 +157,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         activeBind = null
     }
 
-    // this isn't really a field
-    // setting does the relevant actions to get into the correct state
     @Suppress("IntroduceWhenSubject")
     private var trackState: TrackState
         get() = when {
@@ -165,6 +173,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     override fun runOpMode() {
         TaskSharkAndroid.setup()
         hw = CompBot2Hardware(hardwareMap)
+
+        // Reset Kalman filter to current Pinpoint position at OpMode start
+        KalmanLocalization.resetState(
+            hw.pinpoint.position.getX(DistanceUnit.INCH),
+            hw.pinpoint.position.getY(DistanceUnit.INCH),
+            hw.pinpoint.getHeading(AngleUnit.RADIANS)
+        )
+
         scheduler = FastScheduler()
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
@@ -217,7 +233,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
             pinpointSetupTask?.stop()
             initVisual.stop()
-//            turret.setTarget(45.0)
             trackState = TrackState.Full
         })
         robotStartTask.then(compose {
@@ -255,6 +270,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine("XY: pin (%.2f %.2f), ll (%.2f %.2f)".format(px, py, lx, ly))
             telemetry.addLine("pin error: (%.2f %.2f), ll error: %.2f".format(pex, pey, le))
         }
+        // EKF estimate display — compare this against Pinpoint above to verify filter
+        val ekfPose = KalmanLocalization.getEstimate()
+        telemetry.addLine("EKF: %.2f %.2f xy %.1f deg".format(
+            ekfPose[0], ekfPose[1], Math.toDegrees(ekfPose[2])
+        ))
         telemetry.update()
     }
 
@@ -288,6 +308,42 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         override fun onTick(): Boolean {
             val sch = sch
 
+            // --- Kalman filter update ---
+            val llResult = hw.limelight.latestResult
+            val loopTime = 20.0 // ms — improve later with actual loop timer
+
+            if (llResult != null && llResult.isValid) {
+                val rawPose = llResult.botpose
+                val llX = rawPose.position.x * 39.37 * -1
+                val llY = rawPose.position.y * 39.37 * -1
+                // Offset from camera position to robot center (mirrors TurretTrack logic)
+                val turretAngleRad = (-turret.currentPosition() / TurretImpl.TICKS_PER_DEGREE) * (PI / 180)
+                val (robotX, robotY) = offsetLLToRobotCenter(
+                    llX, llY,
+                    turretAngleRad,
+                    hw.pinpoint.getHeading(AngleUnit.RADIANS)
+                )
+                KalmanLocalization.extendedKalman(
+                    hw.pinpoint.position.getX(DistanceUnit.INCH),
+                    hw.pinpoint.position.getY(DistanceUnit.INCH),
+                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
+                    hw.pinpoint.getVelX(DistanceUnit.INCH),
+                    hw.pinpoint.getVelY(DistanceUnit.INCH),
+                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
+                    robotX, robotY,
+                    loopTime
+                )
+            } else {
+                KalmanLocalization.predictOnly(
+                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
+                    hw.pinpoint.getVelX(DistanceUnit.INCH),
+                    hw.pinpoint.getVelY(DistanceUnit.INCH),
+                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
+                    loopTime
+                )
+            }
+            // --- End Kalman filter update ---
+
             mecanumDispatcher(sch)
             inOut(sch)
             emerg(sch)
@@ -308,7 +364,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
             if (gamepad1.backWasPressed()) {
                 sch.stopUsing(Locks.DRIVE_MOTORS)
-
                 val pos = hw.pinpoint.position
                 val new = Pose2D(
                     DistanceUnit.INCH,
@@ -327,25 +382,21 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         fun mecanum(y: Double, x: Double, rx: Double) {
             val botHeading: Double = hw.pinpoint.getHeading(AngleUnit.RADIANS) + skew
 
-            // Rotate the movement direction counter to the bot's rotation
             var rotX = x * cos(-botHeading) - y * sin(-botHeading)
             val rotY = x * sin(-botHeading) + y * cos(-botHeading)
 
             rotX *= 1.1 // Counteract imperfect strafing
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
             val denominator = max(abs(rotY) + abs(rotX) + abs(rx), 1.0)
-            val frontLeftPower = (rotY + rotX + rx) / denominator
-            val backLeftPower = (rotY - rotX + rx) / denominator
+            val frontLeftPower  = (rotY + rotX + rx) / denominator
+            val backLeftPower   = (rotY - rotX + rx) / denominator
             val frontRightPower = (rotY - rotX - rx) / denominator
-            val backRightPower = (rotY + rotX - rx) / denominator
+            val backRightPower  = (rotY + rotX - rx) / denominator
 
-            hw.frontLeft.power = frontLeftPower
-            hw.backLeft.power = backLeftPower
+            hw.frontLeft.power  = frontLeftPower
+            hw.backLeft.power   = backLeftPower
             hw.frontRight.power = frontRightPower
-            hw.backRight.power = backRightPower
+            hw.backRight.power  = backRightPower
         }
 
         private var gp1RB = false
@@ -358,14 +409,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp2back = false
 
         fun inOut(sch: Scheduler) {
-            val rb = gamepad1.right_bumper
-            val lb = gamepad1.left_bumper
-            val x = gamepad1.x
-            val y1 = gamepad1.y
-            val a2 = gamepad2.a
-            val b2 = gamepad2.b
+            val rb    = gamepad1.right_bumper
+            val lb    = gamepad1.left_bumper
+            val x     = gamepad1.x
+            val y1    = gamepad1.y
+            val a2    = gamepad2.a
+            val b2    = gamepad2.b
             val back2 = gamepad2.back
-            val upD = gamepad2.dpad_up
+            val upD   = gamepad2.dpad_up
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
@@ -378,87 +429,46 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     sch.stopUsing(Locks.INTAKE_STORAGE)
                     sch.add(VirtualGroup {
                         add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                        add(OneShot {
-                            hw.hood.position = CompBot2Hardware.HOOD_50
-                        })
-                        add(WaitUntil {
-                            abs(turret.currentPosition()) < DEADBAND_TICKS
-                        })
+                        add(OneShot { hw.hood.position = CompBot2Hardware.HOOD_50 })
+                        add(WaitUntil { abs(turret.currentPosition()) < DEADBAND_TICKS })
                     })
-                        .then(OneShot {
-                            shooter.pushThreshold = 0
-                        })
+                        .then(OneShot { shooter.pushThreshold = 0 })
                         .then(Combo.shoot(hw))
-                        .then(OneShot {
-                            shooter.pushThreshold = shooter.defaultPushThreshold
-                        })
+                        .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
                         .then(Combo.shootAfter(hw))
                 }
             }
             if (b2 && !gp2B) {
                 val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
-                // If we're in live tracking mode
                 if (trackState != TrackState.Off) {
                     val distance = activeTrack?.distance ?: 0.0
                     if (distance < SHOOT_MIN_DIST) {
-                        sch.add(OneShot {
-                            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5)
-                        })
+                        sch.add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5) })
                             .then(Wait.s(0.5))
-                            .then(OneShot {
-                                hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
-                            })
+                            .then(OneShot { hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard) })
                     } else if (distance > SHOOT_MAX_DIST) {
                         sch.add(VirtualGroup {
-                            add(OneShot {
-                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                            })
+                            add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
                                 .then(VirtualGroup {
-                                    add(Deferred {
-                                        if (needToStopIntake) Combo.intakeAfter(hw)
-                                        else null
-                                    })
-                                    add(OneShot {
-                                        shooter.pushThreshold = 0
-                                    })
-                                        .then(
-                                            shooter.awaitTarget(
-                                                minimumDuration = 0.2,
-                                                maximumDuration = 0.75
-                                            )
-                                        )
+                                    add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
+                                    add(OneShot { shooter.pushThreshold = 0 })
+                                        .then(shooter.awaitTarget(minimumDuration = 0.2, maximumDuration = 0.75))
                                 })
                                 .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
-                                .then(OneShot {
-                                    shooter.pushThreshold = shooter.defaultPushThreshold
-                                })
+                                .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
                                 .then(Combo.shootAfter(hw))
                         })
                     } else {
                         sch.add(VirtualGroup {
-                            add(OneShot {
-                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                            })
+                            add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
                                 .then(VirtualGroup {
-                                    add(Deferred {
-                                        if (needToStopIntake) Combo.intakeAfter(hw)
-                                        else null
-                                    })
-                                    add(OneShot {
-                                        shooter.pushThreshold = 0
-                                    })
-                                        .then(
-                                            shooter.awaitTarget(
-                                                minimumDuration = 0.2,
-                                                maximumDuration = 0.75
-                                            )
-                                        )
+                                    add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
+                                    add(OneShot { shooter.pushThreshold = 0 })
+                                        .then(shooter.awaitTarget(minimumDuration = 0.2, maximumDuration = 0.75))
                                 })
                                 .then(Combo.shoot(hw))
-                                .then(OneShot {
-                                    shooter.pushThreshold = shooter.defaultPushThreshold
-                                })
+                                .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
                                 .then(Combo.shootAfter(hw))
                         })
                     }
@@ -466,9 +476,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             if (back2 && !gp2back) {
                 trackState = when (trackState) {
-                    TrackState.Full -> TrackState.Reduced
+                    TrackState.Full    -> TrackState.Reduced
                     TrackState.Reduced -> TrackState.Off
-                    TrackState.Off -> TrackState.Full
+                    TrackState.Off     -> TrackState.Full
                 }
             }
             if (x && !gp1X) {
@@ -478,21 +488,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     sch.add(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.midShoot))
                         add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                        add(OneShot {
-                            hw.hood.position = CompBot2Hardware.HOOD_50
-                        })
+                        add(OneShot { hw.hood.position = CompBot2Hardware.HOOD_50 })
                     })
-                        .then(OneShot {
-                            shooter.pushThreshold = 0
-                        })
+                        .then(OneShot { shooter.pushThreshold = 0 })
                         .then(Combo.shoot(hw))
-                        .then(OneShot {
-                            shooter.pushThreshold = shooter.defaultPushThreshold
-                        })
+                        .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
                 }
             }
             if (y1 && !gp1Y) {
-                // Temporarily suspend tracking
                 val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 sch.stopUsing(Locks.DRIVE_MOTORS)
@@ -501,28 +504,17 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
                     init {
                         getScheduler()
-                            .add(Deferred {
-                                if (needToStopIntake) Combo.intakeAfter(hw)
-                                else null
-                            })
+                            .add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
                             .then(VirtualGroup {
                                 add(REmover.drive2Pose2(hw, poseSet.farShoot))
                                 add(WaitTicks(1))
                                     .then(shooter.setTargetAndWait(SHOOT_FAR_RANGE, 0.5))
-                                add(OneShot {
-                                    hw.hood.position = CompBot2Hardware.HOOD_UP
-                                })
-                                add(WaitUntil {
-                                    abs(turret.currentPosition()) < DEADBAND_TICKS
-                                })
+                                add(OneShot { hw.hood.position = CompBot2Hardware.HOOD_UP })
+                                add(WaitUntil { abs(turret.currentPosition()) < DEADBAND_TICKS })
                             })
-                            .then(OneShot {
-                                shooter.pushThreshold = 0
-                            })
+                            .then(OneShot { shooter.pushThreshold = 0 })
                             .then(Combo.shoot(hw))
-                            .then(OneShot {
-                                shooter.pushThreshold = shooter.defaultPushThreshold
-                            })
+                            .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
                             .then(Combo.shootAfter(hw))
                         require(Locks.INTAKE_STORAGE)
                         require(Locks.DRIVE_MOTORS)
@@ -549,12 +541,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
                 shooter.setTarget(SHOOT_MID_RANGE)
 
-            gp1RB = rb
-            gp1LB = lb
-            gp1X = x
-            gp1Y = y1
-            gp2A = a2
-            gp2B = b2
+            gp1RB  = rb
+            gp1LB  = lb
+            gp1X   = x
+            gp1Y   = y1
+            gp2A   = a2
+            gp2B   = b2
             gp2upD = upD
             gp2back = back2
         }
@@ -562,20 +554,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp2l = false
         private var gp2r = false
         fun emerg(sch: Scheduler) {
-            /*
-            button prime shooter motor
-            dpad to manually adjust shooter angle
-            intake/outake buttons
-             */
             val lb = gamepad2.left_bumper
             val rb = gamepad2.right_bumper
 
             if (lb || rb) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 hw.setIntakePower(if (lb) 0.8 else -0.8)
-                if (rb && !gp2r) {
-                    shooter.setTarget(-500.0)
-                }
+                if (rb && !gp2r) shooter.setTarget(-500.0)
                 if (!rb && gp2r) shooter.setTarget(0.0)
             } else if (gp2l || gp2r) {
                 hw.setIntakePower(0.0)
@@ -589,23 +574,18 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
     fun getDistanceToGoal(): Double {
         val currentPos = hw.pinpoint.position.remover
-        val distance =
-            max(
-                hypot(
-                    poseSet.shootMeasure.x - currentPos.x,
-                    poseSet.shootMeasure.y - currentPos.y
-                ) - 5, 0.0
-            )
-        return distance
+        return max(
+            hypot(
+                poseSet.shootMeasure.x - currentPos.x,
+                poseSet.shootMeasure.y - currentPos.y
+            ) - 5, 0.0
+        )
     }
 
     fun lookAtGoal(): ITask<*> {
         val currentPos = hw.pinpoint.position.remover
         val phi = atan2(poseSet.shootTarget.x - currentPos.x, poseSet.shootTarget.y - currentPos.y)
         val theta1 = ((PI / 2 - phi) + PI).wrapAngle()
-        return REmover.drive2Pose2(
-            hw,
-            REmover.RobotPose(currentPos.x, currentPos.y, theta1)
-        )
+        return REmover.drive2Pose2(hw, REmover.RobotPose(currentPos.x, currentPos.y, theta1))
     }
 }
