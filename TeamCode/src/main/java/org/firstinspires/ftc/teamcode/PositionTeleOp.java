@@ -62,6 +62,9 @@ public class PositionTeleOp extends LinearOpMode {
         hardware.pinpoint.setPosition(
                 new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, 0)
         );
+
+        boolean wasY = false;
+
         waitForStart();
 
         while (opModeIsActive()) {
@@ -105,8 +108,10 @@ public class PositionTeleOp extends LinearOpMode {
             if (result != null && result.isValid()) {
 
 //                limelight3A.updateRobotOrientation(currentPose.getHeading(AngleUnit.DEGREES) + 90 + hardware.turretEncoder.getCurrentPosition()/159.5);
-                limelight3A.updateRobotOrientation(currentPose.getHeading(AngleUnit.DEGREES));
+
+                limelight3A.updateRobotOrientation((currentPose.getHeading(AngleUnit.DEGREES)+(-hardware.turretEncoder.getCurrentPosition() / 159.5)));
                 Pose3D botpose = result.getBotpose_MT2();
+//                Pose3D botpose = result.getBotpose();
 
                 if (botpose != null) {
 
@@ -155,8 +160,8 @@ public class PositionTeleOp extends LinearOpMode {
 
 
 
-                    if (gamepad1.y) {
-                        distance.add(d);
+                    if (gamepad1.y && !wasY) {
+                        distance.add((Math.hypot(currentPose.getX(DistanceUnit.INCH)-58,currentPose.getY(DistanceUnit.INCH)+56)));
                         llX.add(limelightX);
                         llY.add(limelightY);
                         ll2ppX.add(x_robot);
@@ -167,6 +172,8 @@ public class PositionTeleOp extends LinearOpMode {
                         diffY.add(y_robot-ppY);
                     }
 
+
+                    wasY = gamepad1.y;
                 }
             }
 
