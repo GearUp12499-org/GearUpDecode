@@ -252,7 +252,7 @@ class TurretTrack(
 
                 //if using limelight, set pid target to however many degrees limelight says you are off
 //                turret.setDeltaTarget(-target.targetXDegrees)
-
+//
                 Log.i(
                     TrackTask::class.simpleName,
                     "Limelight mode info: dist %.4f bearing %.4f".format(
@@ -353,7 +353,7 @@ class TurretTrack(
             distance = taToDistance(target.targetArea)
 
             //use limelight only?
-            turret.setDeltaTarget(target.targetXDegrees)
+            turret.setDeltaTarget(-target.targetXDegrees)
             Log.i(
                 this::class.simpleName,
                 "XYZLegacy: Limelight info: dist %.4f bearing %.4f".format(
