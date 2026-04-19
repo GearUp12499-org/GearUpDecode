@@ -6,6 +6,7 @@ import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import kotlin.math.abs
+import kotlin.math.log
 
 
 /**
@@ -57,6 +58,7 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
             angle < NEGATIVE_LIMIT_DEG -> NEGATIVE_LIMIT_DEG
             else -> angle
         }
+        Log.w("Target Angle", "targetAngleDeg: angle %.4f".format(angle))
     }
 
     fun getPower(): Double {

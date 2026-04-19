@@ -356,7 +356,7 @@ class TurretTrack(
             turret.setDeltaTarget(target.targetXDegrees)
             Log.i(
                 this::class.simpleName,
-                "Legacy: Limelight info: dist %.4f bearing %.4f".format(
+                "XYZLegacy: Limelight info: dist %.4f bearing %.4f".format(
                     distance,
                     target.targetXDegrees
                 )
