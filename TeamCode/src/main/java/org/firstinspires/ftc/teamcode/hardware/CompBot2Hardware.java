@@ -42,7 +42,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double SLIDER_MIDDLE = 0.25;
     public static final double SLIDER_IN = 0.95;
 
-    public static final double TICKS_PER_DEG = 67.9;
+    public static final double TICKS_PER_DEG = 159.5;
     public static final int TURRET_CW_STOP = 9400;
     public static final int TURRET_CCW_STOP = -9400;
 
