@@ -10,6 +10,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.systems.REmover.angleDifference
+import org.firstinspires.ftc.teamcode.systems.REmover.normalize
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -22,6 +24,7 @@ import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.toString
 
 @Suppress("SpellCheckingInspection")
 object REmover {
@@ -76,6 +79,8 @@ object REmover {
 
     const val ROTATE_FUDGE = 1.3
 
+
+
     @JvmStatic
     fun speed2Power(speed: Double) = when {
         abs(speed) < 0.001 -> 0.0
@@ -112,6 +117,7 @@ object REmover {
         hardware: CompBot2Hardware,
         pose: RobotPose,
         curveAround: RobotPose = pose,
+        subSections: Int = 10,
         maxPower: Double = 1.0,
         stopCond: StopConditions = StopConditions.Default,
         timeoutAt: Double = 1.0,
@@ -145,12 +151,19 @@ object REmover {
             var sumS = 0.0
             var sumW = 0.0
 
-            val startPos = RobotPose(hardware.pinpoint.getPosX(DistanceUnit.INCH),hardware.pinpoint.getPosY(DistanceUnit.INCH),hardware.pinpoint.getHeading(AngleUnit.RADIANS))
 
 
             var estimateCurveLength = 0.0
 
+            var SSPoses = mutableListOf<RobotPose>()
+
+            var n = 0
+
             override fun onStart() {
+                n = 0
+
+                val startPos = RobotPose(hardware.pinpoint.getPosX(DistanceUnit.INCH),hardware.pinpoint.getPosY(DistanceUnit.INCH),hardware.pinpoint.getHeading(AngleUnit.RADIANS))
+
                 timeout = ElapsedTime(ElapsedTime.Resolution.SECONDS)
                 runtime = ElapsedTime(ElapsedTime.Resolution.MILLISECONDS)
                 currentTime = runtime.time()
@@ -193,13 +206,39 @@ object REmover {
 
 
                 if (curveAround != pose){
-                    val startY: Double = startPos.y
-                    val curveY: Double = curveAround.y
-                    val startX: Double = startPos.x
-                    val curveX: Double = curveAround.x
+                    Log.i("StartPos", startPos.toString())
+                    Log.i("EndPos", pose.toString())
+//                    val startY: Double = startPos.y
+//                    val curveY: Double = curveAround.y
+//                    val startX: Double = startPos.x
+//                    val curveX: Double = curveAround.x
 
-                    //linear estimation probably should change?
-                    estimateCurveLength = hypot(startY-curveY, startX-curveX) + hypot(curveY - tgty,curveX - tgtx)
+                    //CHANGE
+//                    estimateCurveLength = hypot(startY-curveY, startX-curveX) + hypot(curveY - tgty,curveX - tgtx)
+                    var prevSS = startPos
+                    for(i in 1..subSections+1 step 1){
+                        Log.i("Remover", "for loop")
+                        //do this to return a double not int
+                        val tI = i.toDouble()
+                        val tSubSections = (subSections+1).toDouble()
+                        val t = (tI/tSubSections)
+                        Log.i("t", t.toString())
+
+                        val subSection = bezier(startPos,curveAround,pose,t)
+
+                        val SSLength = hypot(subSection.x - prevSS.x, subSection.y - prevSS.y)
+
+                        Log.i("SubSection", "length of pose # " + (i-1).toString() + " " +SSLength.toString())
+
+                        estimateCurveLength += SSLength
+
+                        SSPoses.add(subSection)
+
+                        prevSS = subSection
+                        Log.i("ArcLength", estimateCurveLength.toString())
+                        Log.i("SubSection", "pose # " + (i-1).toString() + " " +SSPoses[i-1].toString())
+                    }
+
                 }
 
 
@@ -227,69 +266,97 @@ object REmover {
                 distanceTraveled += deltaDistance
                 var bezierA = 0.0
 
-                if(curveAround != pose){
-                       var t = (distanceTraveled/estimateCurveLength)
-
-                        if (t>=1){
-                            t = 1.0
-                        }
-                        else if(t<=0){
-                            t = 0.001 // fudge factor cuz t = will make the robot stay at its original position
-                        }
-
-
-                        //get bezier x
-                        val x1 = lerp(startPos.x,curveAround.x, t)
-                        val x2 = lerp(curveAround.x, pose.x, t)
-                        val bezierX = lerp(x1,x2,t)
-
-                        //get bezier y
-                        val y1 = lerp(startPos.y,curveAround.y, t)
-                        val y2 = lerp(curveAround.y, pose.y, t)
-                        val bezierY = lerp(y1,y2,t)
-
-                        //get angle (should prolly make this into a function but I'm too lazy)
-                        val tempTargetAngle1 = normalize(atan2((bezierY-currentY), (bezierX-currentX)))
-                        val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
-
-                        tgta = normalize(tgta)
-
-                        val error1 = angleDifference(tempTargetAngle1, currentTheta) + angleDifference(
-                            tgta,
-                            tempTargetAngle1
-                        )
-                        val error2 = angleDifference(tempTargetAngle2, currentTheta) + angleDifference(
-                            tgta,
-                            tempTargetAngle2
-                        )
-
-
-                        if (error1 <= error2) {
-                            bezierA= tempTargetAngle1
-                        } else if (error2 < error1) {
-                            bezierA = tempTargetAngle2
-                        }
-
-                    Log.i("BtempA2", tempTargetAngle2.toString())
-                    Log.i("BtempA1", tempTargetAngle1.toString())
-                    Log.i("BezierA", bezierA.toString())
-                        //make robot pose
-                        if(t >= 0.9){
-                            fakeTgt = pose
-                        }
-//                        else if (t >= 0.75){
-//                            RobotPose(bezierX, bezierY, pose.a)
+//                if(curveAround != pose){
+//                       var t = (distanceTraveled/estimateCurveLength)
+//
+//                        if (t>=1){
+//                            t = 1.0
 //                        }
-                        else{
-                            fakeTgt = RobotPose(bezierX, bezierY, bezierA)
-                        }
+//                        else if(t<=0){
+//                            t = 0.001 // fudge factor cuz t = will make the robot stay at its original position
+//                        }
+//
+//                        val bezierPose = bezier(startPos,curveAround,pose, t,)
+//
+//                        //get angle
+//                        val tempTargetAngle1 = normalize(atan2((bezierPose.y-currentY), (bezierPose.x-currentX)))
+//                        val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
+//
+//                        val tgta = normalize(pose.a)
+//
+//                        val error1 = angleDifference(tempTargetAngle1, currentTheta) + angleDifference(
+//                            tgta,
+//                            tempTargetAngle1
+//                        )
+//                        val error2 = angleDifference(tempTargetAngle2, currentTheta) + angleDifference(
+//                            tgta,
+//                            tempTargetAngle2
+//                        )
+//
+//
+//                        if (error1 <= error2) {
+//                            bezierA= tempTargetAngle1
+//                        } else if (error2 < error1) {
+//                            bezierA = tempTargetAngle2
+//                        }
+//
+//                        Log.i("BtempA2", tempTargetAngle2.toString())
+//                        Log.i("BtempA1", tempTargetAngle1.toString())
+//                        Log.i("BezierA", bezierA.toString())
+//                            //make robot pose
+//                            if(t >= 0.9){
+//                                fakeTgt = pose
+//                            }
+////                        else if (t >= 0.75){
+////                            RobotPose(bezierX, bezierY, pose.a)
+////                        }
+//                        else{
+//                            fakeTgt = RobotPose(bezierPose.x,bezierPose.y, bezierA)
+//                        }
+//
+//                        if(t >=1 ){
+//                            Log.i("CurrentPosAtT1", currentPose.toString())
+//                        }
+//
+//
+//                }
 
-                        if(t >=1 ){
-                            Log.i("CurrentPosAtT1", currentPose.toString())
-                        }
+                if(curveAround != pose){
+                    if(n >= subSections){
+                        n = subSections
+                    }
+                    val tempTargetAngle1 = normalize(atan2((SSPoses[n].y-currentY), (SSPoses[n].x-currentX)))
+                    val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
+
+                    val tgta = normalize(pose.a)
+
+                    val error1 = angleDifference(tempTargetAngle1, currentTheta) + angleDifference(
+                        tgta,
+                        tempTargetAngle1
+                    )
+                    val error2 = angleDifference(tempTargetAngle2, currentTheta) + angleDifference(
+                        tgta,
+                        tempTargetAngle2
+                    )
 
 
+                    if (error1 <= error2) {
+                        bezierA= tempTargetAngle1
+                    } else if (error2 < error1) {
+                        bezierA = tempTargetAngle2
+                    }
+
+                    if(n >= subSections){
+                        fakeTgt = pose
+                    } else if (n >= subSections - 2){
+                        fakeTgt = RobotPose(SSPoses[n].x,SSPoses[n].y, pose.a)
+                    } else{
+                        fakeTgt = RobotPose(SSPoses[n].x, SSPoses[n].y,bezierA)
+                    }
                 }
+
+                Log.i("currentTarget", fakeTgt.toString())
+                Log.i("Removern", n.toString())
 
                 val tempDeltaX = fakeTgt.x - currentX
                 val tempDeltaY = fakeTgt.y - currentY
@@ -336,6 +403,7 @@ object REmover {
                         Log.w("Remover", "finished")
                     }
                     if (stopCond.stopAtEnd) {
+                        Log.i("Remover", "runtime " + currentTime.toString())
                         hardware.frontLeft.power = 0.0
                         hardware.frontRight.power = 0.0
                         hardware.backLeft.power = 0.0
@@ -386,8 +454,9 @@ object REmover {
 
 
                 //ratio the KP up so that P isn't messed up by having "endpoints" super close the actual position
-                tempFKP *= hypot(deltaX,deltaY)/hypot(tempDeltaX,tempDeltaY)
-                tempSKP *= hypot(deltaX,deltaY)/hypot(tempDeltaX,tempDeltaY)
+                val ratio = hypot(deltaX, deltaY) / hypot(tempDeltaX, tempDeltaY)
+                tempFKP *= ratio
+                tempSKP *= ratio
 
                 val pf: Double = tempFKP * f + FKI * sumF - FKD * vF
                 val ps: Double = tempSKP * s + SKI * sumS - SKD * vS
@@ -436,6 +505,9 @@ object REmover {
                     pbr /= scale
                 }
 
+                Log.i("power", greatestPower.toString())
+
+
 
                 hardware.frontLeft.power = pfl
                 hardware.backLeft.power = pbl
@@ -446,6 +518,10 @@ object REmover {
                 deltaDistance = hypot(currentX - prevX, currentY - prevY)
                 prevX = currentX
                 prevY = currentY
+
+                if(abs(tempDeltaX) < 4 && abs(tempDeltaY) < 4 && curveAround != pose){
+                    n++
+                }
 
                 return false
             }
@@ -551,4 +627,25 @@ fun lerp(p1: Double,
          t: Double): Double{
         return (1-t)*p1 + t*p2
 }
+
+fun bezier(startPos: REmover.RobotPose,
+           curveAround: REmover.RobotPose,
+           pose: REmover.RobotPose,
+           t: Double,
+           ): REmover.RobotPose{
+    //get bezier x
+    val x1 = lerp(startPos.x,curveAround.x, t)
+    val x2 = lerp(curveAround.x, pose.x, t)
+    val bezierX = lerp(x1,x2,t)
+
+    //get bezier y
+    val y1 = lerp(startPos.y,curveAround.y, t)
+    val y2 = lerp(curveAround.y, pose.y, t)
+    val bezierY = lerp(y1,y2,t)
+
+    return REmover.RobotPose(bezierX, bezierY, 0.0)
+
+}
+
+
 
