@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.TurretTrack.Companion.TAG_BLUE
 import org.firstinspires.ftc.teamcode.systems.TurretTrack.Companion.TAG_RED
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -49,8 +50,8 @@ class Kalman(
     var prevY = 0.0
     var prevTheta = 0.0
 
-    val structuralErrorX = 0.0
-    val structuralErrorY = 0.0
+    var structuralErrorX = 0.0
+    var structuralErrorY = 0.0
 
 
     var llx = 0.0
@@ -60,6 +61,18 @@ class Kalman(
     var hasRead = false //if true, don't read in this movement
 
     var updateCounter = 0
+
+    var prevTurret = 0.0
+
+    private var lastTime = 0L
+
+    var startTime:Long = 0
+
+    var prevLLX = 0.0
+
+    var prevLLY = 0.0
+
+    var counter = 0
 
 
     init{
@@ -94,15 +107,29 @@ class Kalman(
     override fun onTick(): Boolean {
         Log.i("Kalman","Running")
 
+        val currentTurret = hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG
+
+        val now = System.nanoTime()
+        var dt = 0.0
+        if (lastTime != 0L) {
+            dt = (now - lastTime) / 1e9
+        }
+        lastTime = now
+
+        val deltaTurret = (currentTurret - prevTurret) / dt
+
         hw.pinpoint.update()
 
         val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
 
-        if (velocity > 1){
-            inMotion = true
+        Log.i("velocity", deltaTurret.toString())
+        Log.i("dt", dt.toString())
+        Log.i("currentTurret", currentTurret.toString())
+        Log.i("prevTurret", prevTurret.toString())
+
+        if (velocity > 1 || abs(deltaTurret) > 0.0){
+            startTime = (now / 1e9).toLong()
             hasRead = false
-        } else {1
-            inMotion = false
         }
 
         val pinpointPose = hw.pinpoint.position
@@ -121,11 +148,17 @@ class Kalman(
         prevY = currentY
         prevTheta = currentTheta
 
-        if (hasRead || inMotion){
-            return false
-        }
+        prevTurret = currentTurret
+
+//        if (hasRead || inMotion){
+//            return false
+//        }
+
+
 
         val result = hw.limelight.latestResult
+
+
 
 
         //safety to make sure you are in the right pipeline
@@ -155,29 +188,79 @@ class Kalman(
 
 
         hw.limelight.updateRobotOrientation((pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)))
+        Log.i("kalman_orientation",(pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)).toString() )
         val botpose = result.botpose_MT2
 
 
         val limelightX: Double = botpose.getPosition().x * INCHES_PER_METER * -1
         val limelightY: Double = botpose.getPosition().y * INCHES_PER_METER * -1
+
+        Log.i("cameraX", limelightX.toString())
+        Log.i("cameraY", limelightY.toString())
+
+        Log.i("LLX", llx.toString())
+        Log.i("LLY", lly.toString())
+
         val thetaTurretRelTurret = (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180)
 
-        var (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(limelightX, limelightY, thetaTurretRelTurret, kalmanState.get(2,0))
-
-        llFieldX -= structuralErrorX
-        llFieldY -= structuralErrorY
+        var (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(limelightX, limelightY, thetaTurretRelTurret, stateTheta)
 
         llx = llFieldX
         lly = llFieldY
 
+        if(abs(prevLLX - llx) > 1.0 || abs(prevLLY - lly) > 1.0){
+           counter = 0
+        } else{
+            counter++
+        }
+
+        prevLLX = llx
+        prevLLX = lly
+
+        if(counter <= 4 || hasRead){
+            return false
+        }
+
         //make R
+
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
-                doubleArrayOf(0.0281, 0.0320, 0.0),
-                doubleArrayOf(0.0320, 0.1529, 0.0),
+                doubleArrayOf(0.04519, -0.0055, 0.0),
+                doubleArrayOf(-0.0055, 0.0813, 0.0),
                 doubleArrayOf(0.0, 0.0, 0.0)
             )
         )
+
+        structuralErrorX = -1.069
+        structuralErrorY = 1.439
+
+        if(stateX > 48){
+            R = SimpleMatrix(
+                arrayOf<DoubleArray?>(
+                    doubleArrayOf(0.0281, 0.0320, 0.0),
+                    doubleArrayOf(0.0320, 0.1529, 0.0),
+                    doubleArrayOf(0.0, 0.0, 0.0)
+                )
+            )
+
+            structuralErrorX = 0.1606325833
+            structuralErrorY = 1.280544028
+        } else if(stateY < -48){
+            R = SimpleMatrix(
+                arrayOf<DoubleArray?>(
+                    doubleArrayOf(0.08369, -0.0842, 0.0),
+                    doubleArrayOf(-0.08421, 0.121, 0.0),
+                    doubleArrayOf(0.0, 0.0, 0.0)
+                )
+            )
+
+            structuralErrorX = -0.682
+            structuralErrorY = 2.203
+        }
+
+//        llFieldX -= structuralErrorX
+//        llFieldY -= structuralErrorY
+
 
         update(llFieldX, llFieldY, llFieldTheta, R)
         updateCounter += 1

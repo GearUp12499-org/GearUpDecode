@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import android.support.v4.app.INotificationSideChannel
+import android.util.Log
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import io.github.gearup12499.taskshark.FastScheduler
@@ -48,6 +49,8 @@ class KalmanTeleop: LinearOpMode() {
         waitForStart()
 
         while (opModeIsActive()) {
+
+
             scheduler.tick()
 
             hw.pinpoint.update()
