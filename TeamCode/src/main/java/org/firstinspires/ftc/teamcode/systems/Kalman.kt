@@ -14,6 +14,7 @@ import kotlin.math.PI
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -47,6 +48,19 @@ class Kalman(
     var prevX = 0.0
     var prevY = 0.0
     var prevTheta = 0.0
+
+    val structuralErrorX = 0.0
+    val structuralErrorY = 0.0
+
+
+    var llx = 0.0
+    var lly = 0.0
+
+    var inMotion = false //if true, don't update with limelight
+    var hasRead = false //if true, don't read in this movement
+
+    var updateCounter = 0
+
 
     init{
         //give initial position
@@ -82,6 +96,15 @@ class Kalman(
 
         hw.pinpoint.update()
 
+        val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
+
+        if (velocity > 1){
+            inMotion = true
+            hasRead = false
+        } else {1
+            inMotion = false
+        }
+
         val pinpointPose = hw.pinpoint.position
 
         val currentX = pinpointPose.getX(DistanceUnit.INCH)
@@ -97,6 +120,10 @@ class Kalman(
         prevX = currentX
         prevY = currentY
         prevTheta = currentTheta
+
+        if (hasRead || inMotion){
+            return false
+        }
 
         val result = hw.limelight.latestResult
 
@@ -135,18 +162,26 @@ class Kalman(
         val limelightY: Double = botpose.getPosition().y * INCHES_PER_METER * -1
         val thetaTurretRelTurret = (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180)
 
-        val (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(limelightX, limelightY, thetaTurretRelTurret, kalmanState.get(2,0))
+        var (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(limelightX, limelightY, thetaTurretRelTurret, kalmanState.get(2,0))
 
+        llFieldX -= structuralErrorX
+        llFieldY -= structuralErrorY
+
+        llx = llFieldX
+        lly = llFieldY
 
         //make R
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
-                doubleArrayOf(2.0, -0.004, 0.0),
-                doubleArrayOf(-0.004, 2.0, 0.0),
-                doubleArrayOf(0.0, 0.0, 0.03)
+                doubleArrayOf(0.0281, 0.0320, 0.0),
+                doubleArrayOf(0.0320, 0.1529, 0.0),
+                doubleArrayOf(0.0, 0.0, 0.0)
             )
         )
+
         update(llFieldX, llFieldY, llFieldTheta, R)
+        updateCounter += 1
+        hasRead = true
 
         return false
     }
@@ -227,6 +262,12 @@ class Kalman(
 
     val stateTheta: Double
         get() = kalmanState.get(2, 0)
+
+    val limelightx: Double
+        get() = llx
+
+    val limelighty: Double
+        get() = lly
 
 
     fun predict(dx: Double, dy: Double, dTheta: Double, pinpointTheta: Double) {

@@ -13,6 +13,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.systems.Kalman
+import org.firstinspires.ftc.teamcode.systems.Kalman.Companion.INCHES_PER_METER
+import org.firstinspires.ftc.teamcode.systems.Kalman.Companion.TICKS_PER_DEG
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import kotlin.math.PI
 import kotlin.math.abs
@@ -52,12 +54,16 @@ class KalmanTeleop: LinearOpMode() {
 
             var pinpointPose = hw.pinpoint.position
 
+
             telemetry.addData("estimated X", kalman.stateX)
             telemetry.addData("estimated Y", kalman.stateY)
             telemetry.addData("estimated Theta", kalman.stateTheta)
             telemetry.addData("pinpoint X", pinpointPose.getX(DistanceUnit.INCH))
             telemetry.addData("pinpoint Y", pinpointPose.getY(DistanceUnit.INCH))
             telemetry.addData("pinpoint Theta", pinpointPose.getHeading(AngleUnit.RADIANS))
+            telemetry.addData("Limelight X", kalman.llx);
+            telemetry.addData("Limelight Y", kalman.lly);
+            telemetry.addData("number of updates", kalman.updateCounter)
             telemetry.update()
         }
 
@@ -111,4 +117,6 @@ class KalmanTeleop: LinearOpMode() {
         }
 
 
-    }}
+    }
+
+}
