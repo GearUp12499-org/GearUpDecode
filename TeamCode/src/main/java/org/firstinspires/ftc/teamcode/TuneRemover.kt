@@ -117,7 +117,7 @@ class TuneRemover : LinearOpMode() {
 
             if (gamepad1.a && !wasA) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
-                sch2.add(REmover.drive2Pose2(hw, poseSet.closeShoot3, curveAround = REmover.RobotPose(-12.0,0.0, 0.0),  ))
+                sch2.add(REmover.drive2Pose2(hw, poseSet.closeShoot3))
             }
             else if (gamepad1.b && !wasB) {
                 sch2.stopUsing(Locks.DRIVE_MOTORS)
