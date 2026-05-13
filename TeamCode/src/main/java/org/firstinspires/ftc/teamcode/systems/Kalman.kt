@@ -118,11 +118,14 @@ class Kalman(
 
         val deltaTurret = (currentTurret - prevTurret) / dt
 
+        prevTurret = currentTurret
+
         hw.pinpoint.update()
 
         val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
 
-        Log.i("velocity", deltaTurret.toString())
+        Log.i("turretVel", deltaTurret.toString())
+        Log.i("velocity", velocity.toString())
         Log.i("dt", dt.toString())
         Log.i("currentTurret", currentTurret.toString())
         Log.i("prevTurret", prevTurret.toString())
@@ -130,6 +133,8 @@ class Kalman(
         if (velocity > 1 || abs(deltaTurret) > 0.0){
             startTime = (now / 1e9).toLong()
             hasRead = false
+            counter = 0
+            return false
         }
 
         val pinpointPose = hw.pinpoint.position
@@ -148,7 +153,6 @@ class Kalman(
         prevY = currentY
         prevTheta = currentTheta
 
-        prevTurret = currentTurret
 
 //        if (hasRead || inMotion){
 //            return false
@@ -198,8 +202,8 @@ class Kalman(
         Log.i("cameraX", limelightX.toString())
         Log.i("cameraY", limelightY.toString())
 
-        Log.i("LLX", llx.toString())
-        Log.i("LLY", lly.toString())
+//        Log.i("LLX", llx.toString())
+//        Log.i("LLY", lly.toString())
 
         val thetaTurretRelTurret = (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180)
 
@@ -208,19 +212,27 @@ class Kalman(
         llx = llFieldX
         lly = llFieldY
 
-        if(abs(prevLLX - llx) > 1.0 || abs(prevLLY - lly) > 1.0){
+        //if the reading is very different from the last one
+        if((abs(prevLLX - llFieldX) > 1.0) || (abs(prevLLY - llFieldY) > 1.0)){
            counter = 0
+            Log.i("llx",llFieldX.toString())
+            Log.i("lly",llFieldY.toString())
+            Log.i("prevLLX",prevLLX.toString())
+            Log.i("prevLLY",prevLLY.toString())
+            Log.i("diffLLX", (prevLLX-llx).toString())
+            Log.i("diffLLY",(prevLLY-lly).toString())
         } else{
-            counter++
+            counter += 1
+            Log.i("madeIt","")
         }
+        Log.i("counter",counter.toString())
 
-        prevLLX = llx
-        prevLLX = lly
+        prevLLX = llFieldX
+        prevLLY = llFieldY
 
         if(counter <= 4 || hasRead){
             return false
         }
-
         //make R
 
         var R = SimpleMatrix(
@@ -261,10 +273,18 @@ class Kalman(
 //        llFieldX -= structuralErrorX
 //        llFieldY -= structuralErrorY
 
+//        Log.i("PBeforeUpdate", P.toString())
+//        Log.i("stateBeforeUpdate", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 
         update(llFieldX, llFieldY, llFieldTheta, R)
         updateCounter += 1
         hasRead = true
+        counter = 0
+
+//        Log.i("state", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
+//        Log.i("llField", "x: " + llFieldX.toString() + " y: " + llFieldY.toString() + " theta: " + llFieldTheta.toString())
+//        Log.i("P", P.toString())
+
 
         return false
     }
