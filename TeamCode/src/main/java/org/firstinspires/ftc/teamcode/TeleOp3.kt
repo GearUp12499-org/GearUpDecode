@@ -21,6 +21,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_DOWN
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_UP
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MAX_DIST
@@ -174,12 +176,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         TaskSharkAndroid.setup()
         hw = CompBot2Hardware(hardwareMap)
 
-        // Reset Kalman filter to current Pinpoint position at OpMode start
-        KalmanLocalization.resetState(
-            hw.pinpoint.position.getX(DistanceUnit.INCH),
-            hw.pinpoint.position.getY(DistanceUnit.INCH),
-            hw.pinpoint.getHeading(AngleUnit.RADIANS)
-        )
+//        // Reset Kalman filter to current Pinpoint position at OpMode start
+//        KalmanLocalization.resetState(
+//            hw.pinpoint.position.getX(DistanceUnit.INCH),
+//            hw.pinpoint.position.getY(DistanceUnit.INCH),
+//            hw.pinpoint.getHeading(AngleUnit.RADIANS)
+//        )
 
         scheduler = FastScheduler()
 
@@ -270,10 +272,10 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             telemetry.addLine("XY: pin (%.2f %.2f), ll (%.2f %.2f)".format(px, py, lx, ly))
             telemetry.addLine("pin error: (%.2f %.2f), ll error: %.2f".format(pex, pey, le))
         }
-        val ekfPose = KalmanLocalization.getEstimate()
-        telemetry.addLine("EKF: %.2f %.2f xy %.1f deg".format(
-            ekfPose[0], ekfPose[1], Math.toDegrees(ekfPose[2])
-        ))
+//        val ekfPose = KalmanLocalization.getEstimate()
+//        telemetry.addLine("EKF: %.2f %.2f xy %.1f deg".format(
+//            ekfPose[0], ekfPose[1], Math.toDegrees(ekfPose[2])
+//        ))
         telemetry.update()
     }
 
@@ -306,41 +308,41 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
         override fun onTick(): Boolean {
             val sch = sch
-
-            // Kalman filter update...
-            val llResult = hw.limelight.latestResult
-            val loopTime = 20.0 // ms — improve later with actual loop timer
-
-            if (llResult != null && llResult.isValid) {
-                val rawPose = llResult.botpose
-                val llX = rawPose.position.x * 39.37 * -1
-                val llY = rawPose.position.y * 39.37 * -1
-                // Offset from camera position to robot center (mirrors TurretTrack logic)
-                val turretAngleRad = (-turret.currentPosition() / TurretImpl.TICKS_PER_DEGREE) * (PI / 180)
-                val (robotX, robotY) = offsetLLToRobotCenter(
-                    llX, llY,
-                    turretAngleRad,
-                    hw.pinpoint.getHeading(AngleUnit.RADIANS)
-                )
-                KalmanLocalization.extendedKalman(
-                    hw.pinpoint.position.getX(DistanceUnit.INCH),
-                    hw.pinpoint.position.getY(DistanceUnit.INCH),
-                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
-                    hw.pinpoint.getVelX(DistanceUnit.INCH),
-                    hw.pinpoint.getVelY(DistanceUnit.INCH),
-                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
-                    robotX, robotY,
-                    loopTime
-                )
-            } else {
-                KalmanLocalization.predictOnly(
-                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
-                    hw.pinpoint.getVelX(DistanceUnit.INCH),
-                    hw.pinpoint.getVelY(DistanceUnit.INCH),
-                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
-                    loopTime
-                )
-            }
+//
+//            // Kalman filter update...
+//            val llResult = hw.limelight.latestResult
+//            val loopTime = 20.0 // ms — improve later with actual loop timer
+//
+//            if (llResult != null && llResult.isValid) {
+//                val rawPose = llResult.botpose
+//                val llX = rawPose.position.x * 39.37 * -1
+//                val llY = rawPose.position.y * 39.37 * -1
+//                // Offset from camera position to robot center (mirrors TurretTrack logic)
+//                val turretAngleRad = (-turret.currentPosition() / TurretImpl.TICKS_PER_DEGREE) * (PI / 180)
+//                val (robotX, robotY) = offsetLLToRobotCenter(
+//                    llX, llY,
+//                    turretAngleRad,
+//                    hw.pinpoint.getHeading(AngleUnit.RADIANS)
+//                )
+//                KalmanLocalization.extendedKalman(
+//                    hw.pinpoint.position.getX(DistanceUnit.INCH),
+//                    hw.pinpoint.position.getY(DistanceUnit.INCH),
+//                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
+//                    hw.pinpoint.getVelX(DistanceUnit.INCH),
+//                    hw.pinpoint.getVelY(DistanceUnit.INCH),
+//                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
+//                    robotX, robotY,
+//                    loopTime
+//                )
+//            } else {
+//                KalmanLocalization.predictOnly(
+//                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
+//                    hw.pinpoint.getVelX(DistanceUnit.INCH),
+//                    hw.pinpoint.getVelY(DistanceUnit.INCH),
+//                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
+//                    loopTime
+//                )
+//            }
 
             mecanumDispatcher(sch)
             inOut(sch)
@@ -415,6 +417,16 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val b2    = gamepad2.b
             val back2 = gamepad2.back
             val upD   = gamepad2.dpad_up
+
+            if (gamepad2.x) {
+                hw.flipper.position = FLIPPER_UP
+                telemetry.addData("flipper up","")
+            }
+            if (gamepad2.y) {
+                hw.flipper.position = FLIPPER_DOWN
+                telemetry.addData("flipper down","")
+            }
+
 
             if (rb && !gp1RB) {
                 sch.stopUsing(Locks.INTAKE_STORAGE)

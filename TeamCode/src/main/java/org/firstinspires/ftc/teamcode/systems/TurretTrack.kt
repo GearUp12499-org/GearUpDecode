@@ -24,7 +24,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource.Monotonic.markNow
 
 /**
- * (1)TurretTrack (tracking with fused pinpoint and limelight): onTick
+ * (1)TurretTrack DOES NOTHING NOW!!!
+ * if you uncomment:(tracking with fused pinpoint and limelight): onTick
  * -sensor fusion (if turret is moving slow enough, you get a good limelight read, and its been long enough since the last update)
  * -limelight track (if you can see the apriltag)
  * -otherwise pinpoint track
@@ -80,8 +81,8 @@ class TurretTrack(
             private set
 
         override fun onStart() {
-            ll.start()
-            lastT = System.nanoTime()
+//            ll.start()
+//            lastT = System.nanoTime()
         }
 
         fun resetPinpointErrorXY() {
@@ -170,124 +171,125 @@ class TurretTrack(
         }
 
         override fun onTick(): Boolean {
-            // i don't know why stop() isn't stopping it
-            if (getState() != ITask.State.Ticking) return false
-            // Determine whether to use pinpoint or limelight
-            val result = ll.latestResult
-            var useLL = false
-
-            // TODO: If turret moving too fast, keep useLL false
-            if (result != null && result.isValid) {
-                useLL = true
-            }
-            Log.d("AAA","AAAAAAAAAA")
-            Log.d("UseLL","$useLL")
-            val pinpointPose = pinpoint.position.remover
-            pinpointValX = pinpointPose.x
-            pinpointValY = pinpointPose.y
-
-            // Set const threshold for power
-            if (useLL && turret.getPower() < turretPowerThreshold) {
-                lastT = System.nanoTime()
-                val actualPipeline = result.pipelineIndex
-                if (actualPipeline != pipe) {
-                    Log.w(
-                        this::class.simpleName,
-                        "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
-                    )
-                    ll.pipelineSwitch(pipe)
-                    return false
-                }
-                val llPose = getLimelightPose2D(result)
-                val (ll2RobotX, ll2RobotY) = getPoseRobotFromLL(
-                    llPose.x,
-                    llPose.y,
-                    (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180),
-                    pinpointPose.a
-                )
-                limelightX = ll2RobotX
-                limelightY = ll2RobotY
-                val pinpointX = pinpointPose.x + pinpointErrorX
-                val pinpointY = pinpointPose.y + pinpointErrorY
-                val dx = ll2RobotX - pinpointX
-                val dy = ll2RobotY - pinpointY
-                val distanceLL2pp = hypot(dx.pow(2.0), dy.pow(2.0))
-                llErr = llErrDynamic(pinpointPose.x - targetPose.x, pinpointPose.y - targetPose.y) //2.44 // avg error from data collect on 2/28
-                if (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
-                    lastPinpointUpdate = lastT
-                    val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
-                    val guessPointX = (alpha * pinpointX) + ((1 - alpha) * ll2RobotX)
-                    val guessPointY = (alpha * pinpointY) + ((1 - alpha) * ll2RobotY)
-                    val dX = guessPointX - pinpointX
-                    val dY = guessPointY - pinpointY
-                    if (abs(pinpointErrorX + dX) > 10.0 || abs(pinpointErrorY + dY) > 10.0) {
-                        Log.w(this::class.simpleName, "not taking +$dX,$dY pinpoint error update (would make error ${pinpointErrorX+dX}, ${pinpointErrorY+dY})")
-                    } else {
-                        pinpointErrorX += dX
-                        pinpointErrorY += dY
-                    }
-                }
-
-                Log.i(
-                    this::class.simpleName,
-                    "TrackTask: cameraXY(%.2f %.2f) theta(t=%.2f r=%.2f)\nll(%.2f %.2f) pp(%.2f %.2f) err(%.2f %.2f)".format(
-                        llPose.x, llPose.y,
-                        (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180), pinpointPose.a,
-                        ll2RobotX, ll2RobotY,
-                        pinpointX, pinpointY,
-                        pinpointErrorX, pinpointErrorY
-                    )
-                )
-                val tags = result.fiducialResults
-                val target = tags.firstOrNull { it.fiducialId == targetTag }
-                if (target == null) {
-                    return false
-                }
-
-                // TODO: Use pinpoint distance
-                val deltaX = targetPose.x - pinpointX
-                val deltaY = targetPose.y - pinpointY
-                val shootOffset = 0 // corrected center of robot
-                distance = hypot(deltaX, deltaY) - shootOffset
-
-                //if using limelight, set pid target to however many degrees limelight says you are off
-//                turret.setDeltaTarget(-target.targetXDegrees)
-//
-                Log.i(
-                    TrackTask::class.simpleName,
-                    "Limelight mode info: dist %.4f bearing %.4f".format(
-                        distance,
-                        target.targetXDegrees
-                    )
-                )
-
-                return false
-            }
-
-            val currentEncoder = turret.currentPosition()
-
-            val yaw = getTargetFromPinpoint(
-                pinpointErrorX,
-                pinpointErrorY,
-                pinpointPose
-            )
-
-            //if you aren't using limelight or can't see limelight, use pinpoint to set target
-            //turret.setTarget(yaw)
-            val pinpointX = pinpointPose.x + pinpointErrorX
-            val pinpointY = pinpointPose.y + pinpointErrorY
-            val dx = targetPose.x - pinpointX
-            val dy = targetPose.y - pinpointY
-            val shootOffset = 0 // corrected center of robot
-            distance = hypot(dx, dy) - shootOffset
-            Log.i(
-                this::class.simpleName,
-                "Pinpoint mode info: yaw %.4f dist %.4f".format(
-                    yaw,
-                    distance
-                )
-            )
             return false
+//            // i don't know why stop() isn't stopping it
+//            if (getState() != ITask.State.Ticking) return false
+//            // Determine whether to use pinpoint or limelight
+//            val result = ll.latestResult
+//            var useLL = false
+//
+//            // TODO: If turret moving too fast, keep useLL false
+//            if (result != null && result.isValid) {
+//                useLL = true
+//            }
+//            Log.d("AAA","AAAAAAAAAA")
+//            Log.d("UseLL","$useLL")
+//            val pinpointPose = pinpoint.position.remover
+//            pinpointValX = pinpointPose.x
+//            pinpointValY = pinpointPose.y
+//
+//            // Set const threshold for power
+//            if (useLL && turret.getPower() < turretPowerThreshold) {
+//                lastT = System.nanoTime()
+//                val actualPipeline = result.pipelineIndex
+//                if (actualPipeline != pipe) {
+//                    Log.w(
+//                        this::class.simpleName,
+//                        "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
+//                    )
+//                    ll.pipelineSwitch(pipe)
+//                    return false
+//                }
+//                val llPose = getLimelightPose2D(result)
+//                val (ll2RobotX, ll2RobotY) = getPoseRobotFromLL(
+//                    llPose.x,
+//                    llPose.y,
+//                    (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180),
+//                    pinpointPose.a
+//                )
+//                limelightX = ll2RobotX
+//                limelightY = ll2RobotY
+//                val pinpointX = pinpointPose.x + pinpointErrorX
+//                val pinpointY = pinpointPose.y + pinpointErrorY
+//                val dx = ll2RobotX - pinpointX
+//                val dy = ll2RobotY - pinpointY
+//                val distanceLL2pp = hypot(dx.pow(2.0), dy.pow(2.0))
+//                llErr = llErrDynamic(pinpointPose.x - targetPose.x, pinpointPose.y - targetPose.y) //2.44 // avg error from data collect on 2/28
+//                if (distanceLL2pp > llErr && lastT - lastPinpointUpdate > 1e9) {
+//                    lastPinpointUpdate = lastT
+//                    val alpha = (0.5 * (llErr + distanceLL2pp)) / distanceLL2pp
+//                    val guessPointX = (alpha * pinpointX) + ((1 - alpha) * ll2RobotX)
+//                    val guessPointY = (alpha * pinpointY) + ((1 - alpha) * ll2RobotY)
+//                    val dX = guessPointX - pinpointX
+//                    val dY = guessPointY - pinpointY
+//                    if (abs(pinpointErrorX + dX) > 10.0 || abs(pinpointErrorY + dY) > 10.0) {
+//                        Log.w(this::class.simpleName, "not taking +$dX,$dY pinpoint error update (would make error ${pinpointErrorX+dX}, ${pinpointErrorY+dY})")
+//                    } else {
+//                        pinpointErrorX += dX
+//                        pinpointErrorY += dY
+//                    }
+//                }
+//
+//                Log.i(
+//                    this::class.simpleName,
+//                    "TrackTask: cameraXY(%.2f %.2f) theta(t=%.2f r=%.2f)\nll(%.2f %.2f) pp(%.2f %.2f) err(%.2f %.2f)".format(
+//                        llPose.x, llPose.y,
+//                        (-turret.currentPosition() / TICKS_PER_DEG) * (PI / 180), pinpointPose.a,
+//                        ll2RobotX, ll2RobotY,
+//                        pinpointX, pinpointY,
+//                        pinpointErrorX, pinpointErrorY
+//                    )
+//                )
+//                val tags = result.fiducialResults
+//                val target = tags.firstOrNull { it.fiducialId == targetTag }
+//                if (target == null) {
+//                    return false
+//                }
+//
+//                // TODO: Use pinpoint distance
+//                val deltaX = targetPose.x - pinpointX
+//                val deltaY = targetPose.y - pinpointY
+//                val shootOffset = 0 // corrected center of robot
+//                distance = hypot(deltaX, deltaY) - shootOffset
+//
+//                //if using limelight, set pid target to however many degrees limelight says you are off
+////                turret.setDeltaTarget(-target.targetXDegrees)
+////
+//                Log.i(
+//                    TrackTask::class.simpleName,
+//                    "Limelight mode info: dist %.4f bearing %.4f".format(
+//                        distance,
+//                        target.targetXDegrees
+//                    )
+//                )
+////
+//                return false
+//            }
+//
+//            val currentEncoder = turret.currentPosition()
+//
+//            val yaw = getTargetFromPinpoint(
+//                pinpointErrorX,
+//                pinpointErrorY,
+//                pinpointPose
+//            )
+//
+//            //if you aren't using limelight or can't see limelight, use pinpoint to set target
+//            //turret.setTarget(yaw)
+//            val pinpointX = pinpointPose.x + pinpointErrorX
+//            val pinpointY = pinpointPose.y + pinpointErrorY
+//            val dx = targetPose.x - pinpointX
+//            val dy = targetPose.y - pinpointY
+//            val shootOffset = 0 // corrected center of robot
+//            distance = hypot(dx, dy) - shootOffset
+//            Log.i(
+//                this::class.simpleName,
+//                "Pinpoint mode info: yaw %.4f dist %.4f".format(
+//                    yaw,
+//                    distance
+//                )
+//            )
+//            return false
         }
 
         override fun onFinish(completedNormally: Boolean) {
