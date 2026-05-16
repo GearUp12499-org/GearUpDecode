@@ -387,14 +387,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val back2 = gamepad2.back
             val upD   = gamepad2.dpad_up
 
-            if (gamepad2.x) {
-                hw.flipper.position = FLIPPER_UP
-                telemetry.addData("flipper up","")
-            }
-            if (gamepad2.y) {
-                hw.flipper.position = FLIPPER_DOWN
-                telemetry.addData("flipper down","")
-            }
 
 
             if (rb && !gp1RB) {
