@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MAX_DIST
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MIN_DIST
 import org.firstinspires.ftc.teamcode.systems.Combo
+import org.firstinspires.ftc.teamcode.systems.Kalman
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
@@ -71,6 +72,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private lateinit var shooter: ShooterImpl
     private lateinit var turret: TurretImpl
     private lateinit var turretTrack: TurretTrack
+
+    private lateinit var kalman: Kalman
 
     private var intakeTask: ITask<*>? = null
     private var activeTrack: TurretTrack.TrackTask? = null
@@ -115,17 +118,20 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         hw.pinpoint.getVelX(DistanceUnit.METER),
                         hw.pinpoint.getVelY(DistanceUnit.METER),
                         poseSet.goalAT,
-                        hw.pinpoint.position
+                         kalman.kalmanPose2D
                     )
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
                 turret.setTarget(hoodSpeedTurret?.third ?: 0.0)
 
-                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
-                telemetry.addData("alphaB", hoodSpeedTurret.second)
-                telemetry.addData("alpha", hoodSpeedTurret.first)
+//                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
+//                telemetry.addData("alphaB", hoodSpeedTurret.second)
+//                telemetry.addData("alpha", hoodSpeedTurret.first)
                 telemetry.addData("turret", hoodSpeedTurret.third)
+                telemetry.addData("statex", kalman.kalmanPose2D.x)
+                telemetry.addData("statey", kalman.kalmanPose2D.y)
+                telemetry.addData("statea", kalman.kalmanPose2D.a)
 
                 false
             }
@@ -176,30 +182,32 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         TaskSharkAndroid.setup()
         hw = CompBot2Hardware(hardwareMap)
 
-//        // Reset Kalman filter to current Pinpoint position at OpMode start
-//        KalmanLocalization.resetState(
-//            hw.pinpoint.position.getX(DistanceUnit.INCH),
-//            hw.pinpoint.position.getY(DistanceUnit.INCH),
-//            hw.pinpoint.getHeading(AngleUnit.RADIANS)
-//        )
-
         scheduler = FastScheduler()
 
         StaticStore.fallbackArtboard = if (red) Artboard.ARTBOARD_0 else Artboard.ARTBOARD_1
         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
 
+        val robotStartTask = scheduler.add(SentinelTask())
+
+
         if (StaticStore.duration() > 30.seconds) {
+
+            kalman = robotStartTask.then(Kalman(hw, true, 0.0, 0.0, 0.0))
             hw.pinpoint.resetPosAndIMU()
             hw.turretEncoder.reset()
             isContinuation = false
+        }
+        else {
+            kalman = robotStartTask.then(Kalman(hw, true, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
+                DistanceUnit.INCH), hw.pinpoint.getHeading(AngleUnit.RADIANS)))
         }
 
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
         telemetry.update()
 
         // Background tasks
-        scheduler.add(PinpointTask(hw.pinpoint))
-        pinpointSetupTask = scheduler.add(PinpointSetupTask(hw.pinpoint, telemetry))
+        scheduler.add(PinpointTask(hw.pinpoint)) //come back to this
+        pinpointSetupTask = scheduler.add(PinpointSetupTask(hw.pinpoint, telemetry)) //and this
         scheduler.add(compose {
             var last = System.nanoTime()
             onTick {
@@ -220,7 +228,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             tag(BuiltInTags.DAEMON)
         })
-        val robotStartTask = scheduler.add(SentinelTask())
         shooter = robotStartTask.then(ShooterImpl(hw))
         turret = robotStartTask.then(TurretImpl(hw))
         turret.setTarget(0.0)
@@ -308,41 +315,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
         override fun onTick(): Boolean {
             val sch = sch
-//
-//            // Kalman filter update...
-//            val llResult = hw.limelight.latestResult
-//            val loopTime = 20.0 // ms — improve later with actual loop timer
-//
-//            if (llResult != null && llResult.isValid) {
-//                val rawPose = llResult.botpose
-//                val llX = rawPose.position.x * 39.37 * -1
-//                val llY = rawPose.position.y * 39.37 * -1
-//                // Offset from camera position to robot center (mirrors TurretTrack logic)
-//                val turretAngleRad = (-turret.currentPosition() / TurretImpl.TICKS_PER_DEGREE) * (PI / 180)
-//                val (robotX, robotY) = offsetLLToRobotCenter(
-//                    llX, llY,
-//                    turretAngleRad,
-//                    hw.pinpoint.getHeading(AngleUnit.RADIANS)
-//                )
-//                KalmanLocalization.extendedKalman(
-//                    hw.pinpoint.position.getX(DistanceUnit.INCH),
-//                    hw.pinpoint.position.getY(DistanceUnit.INCH),
-//                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
-//                    hw.pinpoint.getVelX(DistanceUnit.INCH),
-//                    hw.pinpoint.getVelY(DistanceUnit.INCH),
-//                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
-//                    robotX, robotY,
-//                    loopTime
-//                )
-//            } else {
-//                KalmanLocalization.predictOnly(
-//                    hw.pinpoint.getHeading(AngleUnit.RADIANS),
-//                    hw.pinpoint.getVelX(DistanceUnit.INCH),
-//                    hw.pinpoint.getVelY(DistanceUnit.INCH),
-//                    hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS),
-//                    loopTime
-//                )
-//            }
 
             mecanumDispatcher(sch)
             inOut(sch)
@@ -361,7 +333,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 mecanum(y, x, rx)
             }
-
+            //reset pinpoint heading
             if (gamepad1.backWasPressed()) {
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 val pos = hw.pinpoint.position
@@ -373,9 +345,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     0.0
                 )
                 hw.pinpoint.position = new
-            }
-            if (gamepad1.startWasPressed()) {
-                activeTrack?.resetPinpointErrorXY()
             }
         }
 
@@ -452,7 +421,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
                 if (trackState != TrackState.Off) {
-                    val distance = activeTrack?.distance ?: 0.0
+                    val distance = kalman.distance
                     if (distance < SHOOT_MIN_DIST) {
                         sch.add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5) })
                             .then(Wait.s(0.5))

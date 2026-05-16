@@ -6,6 +6,7 @@ import io.github.gearup12499.taskshark.systemPackages
 import org.ejml.simple.SimpleMatrix
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.PoseSet
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.TurretTrack.Companion.TAG_BLUE
@@ -46,6 +47,7 @@ class Kalman(
     )
 
     // x, y, theta or the last pinpoint read
+
     var prevX = 0.0
     var prevY = 0.0
     var prevTheta = 0.0
@@ -122,6 +124,23 @@ class Kalman(
 
         hw.pinpoint.update()
 
+        val pinpointPose = hw.pinpoint.position
+
+        val currentX = pinpointPose.getX(DistanceUnit.INCH)
+        val currentY = pinpointPose.getY(DistanceUnit.INCH)
+        val currentTheta = pinpointPose.getHeading(AngleUnit.RADIANS)
+
+        val dx = currentX - prevX
+        val dy = currentY - prevY
+        val dTheta = currentTheta - prevTheta
+
+
+        predict(dx, dy, dTheta, currentTheta)
+
+        prevX = currentX
+        prevY = currentY
+        prevTheta = currentTheta
+
         val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
 
         Log.i("turretVel", deltaTurret.toString())
@@ -137,21 +156,7 @@ class Kalman(
             return false
         }
 
-        val pinpointPose = hw.pinpoint.position
 
-        val currentX = pinpointPose.getX(DistanceUnit.INCH)
-        val currentY = pinpointPose.getY(DistanceUnit.INCH)
-        val currentTheta = pinpointPose.getHeading(AngleUnit.RADIANS)
-
-        val dx = currentX - prevX
-        val dy = currentY - prevY
-        val dTheta = currentTheta - prevTheta
-
-        predict(dx, dy, dTheta, currentTheta)
-
-        prevX = currentX
-        prevY = currentY
-        prevTheta = currentTheta
 
 
 //        if (hasRead || inMotion){
@@ -368,6 +373,12 @@ class Kalman(
 
     val stateTheta: Double
         get() = kalmanState.get(2, 0)
+
+    val kalmanPose2D: REmover.RobotPose
+        get() = REmover.RobotPose(stateX, stateY, stateTheta)
+
+    val distance: Double
+        get() = hypot((stateX-poseSet.goalAT.x),(stateY- poseSet.goalAT.y))
 
     val limelightx: Double
         get() = llx

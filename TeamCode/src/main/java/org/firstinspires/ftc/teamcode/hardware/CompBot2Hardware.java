@@ -303,11 +303,11 @@ public class CompBot2Hardware extends HardwareMapper {
     }
 
     //ROBOT VELX and VELY MUST BE IN METERS/SECOND
-    public static Triple<Double, Double, Double> hoodAndSpeedAndTurret(double robotVelX, double robotVelY, REmover.RobotPose goalPose, Pose2D robotPose){
+    public static Triple<Double, Double, Double> hoodAndSpeedAndTurret(double robotVelX, double robotVelY, REmover.RobotPose goalPose, REmover.RobotPose robotPose){
 //        if (distance > SHOOT_MAX_DIST) {
 //            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO,????);
 
-        double distance = Math.hypot((goalPose.x-robotPose.getX(DistanceUnit.INCH)),(goalPose.y-robotPose.getY(DistanceUnit.INCH)));
+        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y));
 
         //distance into speed and hood
         double speed = 6.81246 * distance + 1075.16505;
@@ -324,7 +324,7 @@ public class CompBot2Hardware extends HardwareMapper {
         thetaB = thetaB * Math.PI/180;
 
         //azimuthal angle
-        double alphaB = Math.atan2(goalPose.y - robotPose.getY(DistanceUnit.INCH), goalPose.x - robotPose.getX(DistanceUnit.INCH));
+        double alphaB = Math.atan2(goalPose.y - robotPose.y, goalPose.x - robotPose.x);
 
         //break up velocity of the ball with respect to the ground into components
         double vBz = vB*Math.sin(thetaB);
@@ -356,7 +356,7 @@ public class CompBot2Hardware extends HardwareMapper {
         if (alpha < -180) {
             alpha += 360;
         }
-        double finalTurret = -180 + alpha - robotPose.getHeading(AngleUnit.DEGREES);
+        double finalTurret = -180 + alpha - (robotPose.a * 180/Math.PI);
         finalTurret = finalTurret % 360;
         if (finalTurret > 180){
             finalTurret -= 360;
