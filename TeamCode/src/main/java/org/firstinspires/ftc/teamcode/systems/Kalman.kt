@@ -237,8 +237,8 @@ class Kalman(
 
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
-                doubleArrayOf(0.04519, -0.0055, 0.0),
-                doubleArrayOf(-0.0055, 0.0813, 0.0),
+                doubleArrayOf(2.0, -0.5, 0.0),
+                doubleArrayOf(-0.5, 2.0, 0.0),
                 doubleArrayOf(0.0, 0.0, 0.0)
             )
         )
@@ -249,8 +249,8 @@ class Kalman(
         if(stateX > 48){
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
-                    doubleArrayOf(0.0281, 0.0320, 0.0),
-                    doubleArrayOf(0.0320, 0.1529, 0.0),
+                    doubleArrayOf(1.0, 0.0320, 0.0),
+                    doubleArrayOf(0.0320, 4.0, 0.0),
                     doubleArrayOf(0.0, 0.0, 0.0)
                 )
             )
@@ -260,8 +260,8 @@ class Kalman(
         } else if(stateY < -48){
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
-                    doubleArrayOf(0.08369, -0.0842, 0.0),
-                    doubleArrayOf(-0.08421, 0.121, 0.0),
+                    doubleArrayOf(4.0, -0.0842, 0.0),
+                    doubleArrayOf(-0.08421, 1.0, 0.0),
                     doubleArrayOf(0.0, 0.0, 0.0)
                 )
             )
@@ -270,8 +270,8 @@ class Kalman(
             structuralErrorY = 2.203
         }
 
-//        llFieldX -= structuralErrorX
-//        llFieldY -= structuralErrorY
+        llFieldX -= structuralErrorX
+        llFieldY -= structuralErrorY
 
 //        Log.i("PBeforeUpdate", P.toString())
 //        Log.i("stateBeforeUpdate", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
@@ -280,6 +280,9 @@ class Kalman(
         updateCounter += 1
         hasRead = true
         counter = 0
+
+        Log.i("usedLLFieldX", llFieldX.toString())
+        Log.i("usedLLFieldY", llFieldY.toString())
 
 //        Log.i("state", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 //        Log.i("llField", "x: " + llFieldX.toString() + " y: " + llFieldY.toString() + " theta: " + llFieldTheta.toString())
