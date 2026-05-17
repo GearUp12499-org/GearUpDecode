@@ -239,6 +239,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             hw.slider.position = CompBot2Hardware.SLIDER_IN
             hw.flipper.position = CompBot2Hardware.FLIPPER_DOWN
             hw.bottomBallStop.position = CompBot2Hardware.BOTTOM_STOP_STOWED
+            hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
+            hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_NEUTRAL
 
             pinpointSetupTask?.stop()
             initVisual.stop()
@@ -377,6 +379,10 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp2upD = false
         private var gp2back = false
 
+        private var gp2RB = false
+
+        private var gp2LB = false
+
         fun inOut(sch: Scheduler) {
             val rb    = gamepad1.right_bumper
             val lb    = gamepad1.left_bumper
@@ -386,6 +392,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val b2    = gamepad2.b
             val back2 = gamepad2.back
             val upD   = gamepad2.dpad_up
+            val rb2 = gamepad2.right_bumper
+            val lb2 = gamepad2.left_bumper
 
 
 
@@ -512,6 +520,28 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
                 shooter.setTarget(SHOOT_MID_RANGE)
 
+            if(rb2 && !gp2RB){
+
+                //TODO: Add lock so drive motors can't move while up
+                sch.add(VirtualGroup{
+                    add(OneShot{
+                        hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
+                        hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
+                    })
+                }
+                )
+            }
+
+            if(lb2 && !gp2LB){
+                sch.add(VirtualGroup{
+                    add(OneShot{
+                        hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
+                        hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_NEUTRAL
+                    })
+                }
+                )
+            }
+
             gp1RB  = rb
             gp1LB  = lb
             gp1X   = x
@@ -520,6 +550,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp2B   = b2
             gp2upD = upD
             gp2back = back2
+            gp2RB = rb2
+            gp2LB = lb2
         }
 
         private var gp2l = false

@@ -38,6 +38,13 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double DROP_DOWN_BOTTOM = 0.44;
     public static final double DROP_DOWN_TOP = 0.64;
 
+    public static final double LEFT_KICKSTAND_NEUTRAL = 0.74;
+    public static final double RIGHT_KICKSTAND_NEUTRAL = 0.4;
+    public static final double LEFT_KICKSTAND_UP = 0.3;
+    public static final double RIGHT_KICKSTAND_UP = 0.84;
+    public static final double LEFT_KICKSTAND_BRAKE = 0.56;
+    public static final double RIGHT_KICKSTAND_BRAKE = 0.58;
+
     public static final double SLIDER_OUT = 0.10;
     public static final double SLIDER_MIDDLE = 0.25;
     public static final double SLIDER_IN = 0.95;
@@ -132,6 +139,12 @@ public class CompBot2Hardware extends HardwareMapper {
 
     @HardwareName("bottomBallStop")
     public ServoImplEx bottomBallStop;
+
+    @HardwareName("leftKickstand")
+    public ServoImplEx leftKickstand;
+
+    @HardwareName("rightKickstand")
+    public ServoImplEx rightKickstand;
 
     @HardwareName("ballStopEncoder")
     public AnalogInput ballStopEncoder;

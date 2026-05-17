@@ -10,10 +10,12 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware;
 public class ServoSteper extends LinearOpMode {
 
     CompBot2Hardware hardware;
-    double position = CompBot2Hardware.SHOOTER_STOP_DOWN;
+    double position = 0.57;
 
     double maxServo = 1.0;
     double minServo = 0.0;
+
+    double deltaPosition = 0;
 
     int MotorPosition = 0;
 
@@ -28,20 +30,22 @@ public class ServoSteper extends LinearOpMode {
 
         while (opModeIsActive()) {
 
+
             if (gamepad1.right_bumper){
-                position += 0.01;
+                deltaPosition += 0.01;
                 if(position > maxServo){
                     position = maxServo;
                 }
             }
 
             if (gamepad1.left_bumper){
-                position -= 0.01;
+                deltaPosition -= 0.01;
                 if(position < minServo){
                     position = minServo;
                 }
             }
-            theServo.setPosition(position);
+            hardware.leftKickstand.setPosition(position + deltaPosition);
+            hardware.rightKickstand.setPosition(position - deltaPosition);
 
             if (gamepad1.a){
                 hardware.setIntakePower(1);
@@ -62,7 +66,8 @@ public class ServoSteper extends LinearOpMode {
 
 
 //            telemetry.addData("motorPosition", hardware.turret.getCurrentPosition());
-            telemetry.addData("position",position);
+            telemetry.addData("positionleft",position+deltaPosition);
+            telemetry.addData("positionright",position-deltaPosition);
             telemetry.update();
 
             sleep(50);
