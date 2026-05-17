@@ -155,7 +155,7 @@ class Kalman(
         Log.i("currentTurret", currentTurret.toString())
         Log.i("prevTurret", prevTurret.toString())
 
-        if (velocity > 1 || abs(deltaTurret) > 0.0){
+        if (velocity > 1 || abs(deltaTurret) > 100.0){
             startTime = (now / 1e9).toLong()
             hasRead = false
             counter = 0
@@ -287,8 +287,12 @@ class Kalman(
 //        Log.i("PBeforeUpdate", P.toString())
 //        Log.i("stateBeforeUpdate", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 
+        if(stateX <= -24.0){
+            return false
+        }
+
         update(llFieldX, llFieldY, llFieldTheta, R)
-        updateCounter += 1
+         updateCounter += 1
         hasRead = true
         counter = 0
 

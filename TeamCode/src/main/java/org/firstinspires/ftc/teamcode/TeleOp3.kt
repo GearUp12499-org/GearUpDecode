@@ -129,9 +129,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 //                telemetry.addData("alphaB", hoodSpeedTurret.second)
 //                telemetry.addData("alpha", hoodSpeedTurret.first)
                 telemetry.addData("turret", hoodSpeedTurret.third)
+                telemetry.addData("ppx", hw.pinpoint.getPosX(DistanceUnit.INCH))
+                telemetry.addData("ppy", hw.pinpoint.getPosY(DistanceUnit.INCH))
+                telemetry.addData("ppa", hw.pinpoint.getHeading(AngleUnit.RADIANS))
                 telemetry.addData("statex", kalman.kalmanPose2D.x)
                 telemetry.addData("statey", kalman.kalmanPose2D.y)
                 telemetry.addData("statea", kalman.kalmanPose2D.a)
+                telemetry.addData("counter", kalman.updateCounter)
 
                 false
             }
@@ -192,13 +196,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
         if (StaticStore.duration() > 30.seconds) {
 
-            kalman = robotStartTask.then(Kalman(hw, true, 0.0, 0.0, 0.0))
+            kalman = robotStartTask.then(Kalman(hw, red, 0.0, 0.0, 0.0))
             hw.pinpoint.resetPosAndIMU()
             hw.turretEncoder.reset()
             isContinuation = false
         }
         else {
-            kalman = robotStartTask.then(Kalman(hw, true, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
+            kalman = robotStartTask.then(Kalman(hw, red, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
                 DistanceUnit.INCH), hw.pinpoint.getHeading(AngleUnit.RADIANS)))
         }
 

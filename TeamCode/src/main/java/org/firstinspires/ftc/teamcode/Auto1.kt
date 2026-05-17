@@ -326,12 +326,11 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.set3pos,
-                            stopCond = Waypoint,
-                            farStrafe = true
+                            poseSet.set3out,
+                           curveAround = poseSet.set3curve
                         )
                     )
-                        .then(REmover.drive2Pose2(hw, poseSet.set3out))
+//                        .then(REmover.drive2Pose2(hw, poseSet.set3out))
                 })
                 grp.then(VirtualGroup {
                     add(

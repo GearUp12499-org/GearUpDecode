@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.REmover.RobotPose
 import kotlin.math.PI
 
@@ -37,11 +38,17 @@ class PoseSet private constructor(val invert: Boolean) {
         //private val set1pos = RobotPose(12.0, -24.0, -Math.PI / 2)
         private val set1pos = RobotPose(12.0, -18.0, -Math.PI / 2)
         private val set1out = RobotPose(12.0, -54.625, -Math.PI / 2)
+
+        private val set1curve =  RobotPose(12.0,-20.0,0.0)
         private val set2pos = RobotPose(-12.0, -24.0, -Math.PI / 2)
         private val set2out = RobotPose(-12.0, -62.625, -Math.PI / 2)
+
+        private val set2curve = RobotPose(-12.6,-5.0,0.0)
         private val set2exit = RobotPose(0.0, -32.0, -Math.PI)
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0, -62.625, -Math.PI / 2)
+
+        private val set3curve = RobotPose(-36.6,-15.0,0.0)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
         private val set4out = RobotPose(-64.5, -60.0, -Math.PI / 2)
         private val overflowPos1 = RobotPose(-64.75, -64.6, -Math.PI / 2)
@@ -72,6 +79,8 @@ class PoseSet private constructor(val invert: Boolean) {
 
         private val gobble6 = RobotPose(-18.03, -60.52, -0.57)
         private val gobble7 = RobotPose(-9.75, -57.4, -1.18)
+
+        private val gobbleCurve = RobotPose(-20.0,-20.0, 0.0)
         private val shootTarget = RobotPose(72.0 - 6.0, -(72.0 - 6.0), 0.0)
         private val shootMeasure = RobotPose(57.0, -57.0, 0.0)
 
@@ -120,10 +129,16 @@ class PoseSet private constructor(val invert: Boolean) {
     val set1out = Companion.set1out.bind
 
     @JvmField
+    val set1curve = Companion.set1curve.bind
+
+    @JvmField
     val set2pos = Companion.set2pos.bind
 
     @JvmField
     val set2out = Companion.set2out.bind
+
+    @JvmField
+    val set2curve = Companion.set2curve.bind
 
     @JvmField
     val set2exit = Companion.set2exit.bind
@@ -133,6 +148,9 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val set3out = Companion.set3out.bind
+
+    @JvmField
+    val set3curve = Companion.set3curve.bind
 
     @JvmField
     val set4pos = Companion.set4pos.bind
@@ -196,6 +214,9 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val gobble6 = Companion.gobble6.bind
+
+    @JvmField
+    val gobbleCurve = Companion.gobbleCurve.bind
 
     @JvmField
     val gobble7 = Companion.gobble7.bind
