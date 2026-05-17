@@ -194,11 +194,14 @@ object REmover {
                 if (farStrafe) {
                     Wfudge = 5.0
                     if (error1 <= error2) {
+                        fakeTgt = RobotPose(pose.x,pose.y, tempTargetAngle1)
                         tempTargetAngle = tempTargetAngle1
                     } else if (error2 < error1) {
+                        fakeTgt = RobotPose(pose.x,pose.y, tempTargetAngle2)
                         tempTargetAngle = tempTargetAngle2
                     }
                 } else {
+                    fakeTgt = RobotPose(pose.x,pose.y, tgta)
                     tempTargetAngle = tgta
                 }
 
@@ -212,7 +215,6 @@ object REmover {
 //                    val curveY: Double = curveAround.y
 //                    val startX: Double = startPos.x
 //                    val curveX: Double = curveAround.x
-
                     //CHANGE
 //                    estimateCurveLength = hypot(startY-curveY, startX-curveX) + hypot(curveY - tgty,curveX - tgtx)
                     var prevSS = startPos
@@ -403,7 +405,7 @@ object REmover {
                         Log.w("Remover", "finished")
                     }
                     if (stopCond.stopAtEnd) {
-                        Log.i("Remover", "runtime " + currentTime.toString())
+                        Log.i("Remover", "runtime " + (currentTime / 1000).toString())
                         hardware.frontLeft.power = 0.0
                         hardware.frontRight.power = 0.0
                         hardware.backLeft.power = 0.0
@@ -467,6 +469,7 @@ object REmover {
 
                 if (farStrafe && (hypot(deltaX, deltaY) < 30.0)) {
                     if (rotateBack) {
+                        fakeTgt = RobotPose(pose.x, pose.y, tgta)
                         tempTargetAngle = tgta
                     }
                     Wfudge = 1.0

@@ -76,6 +76,8 @@ class Kalman(
 
     var counter = 0
 
+    var reverse = 1.0
+
 
     init{
         //give initial position
@@ -103,6 +105,10 @@ class Kalman(
     override fun onStart() {
         hw.limelight.start()
         hw.limelight.pipelineSwitch(pipe)
+
+        if(!red){
+            reverse = -1.0
+        }
 
     }
 
@@ -242,37 +248,37 @@ class Kalman(
 
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
-                doubleArrayOf(2.0, -0.5, 0.0),
-                doubleArrayOf(-0.5, 2.0, 0.0),
+                doubleArrayOf(2.0, -0.5 * reverse, 0.0),
+                doubleArrayOf(-0.5 * reverse, 2.0 * reverse, 0.0),
                 doubleArrayOf(0.0, 0.0, 0.0)
             )
         )
 
         structuralErrorX = -1.069
-        structuralErrorY = 1.439
+        structuralErrorY = 1.439 * reverse
 
         if(stateX > 48){
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(1.0, 0.0320, 0.0),
-                    doubleArrayOf(0.0320, 4.0, 0.0),
+                    doubleArrayOf(0.0320, 4.0 * reverse, 0.0),
                     doubleArrayOf(0.0, 0.0, 0.0)
                 )
             )
 
             structuralErrorX = 0.1606325833
-            structuralErrorY = 1.280544028
+            structuralErrorY = 1.280544028 * reverse
         } else if(stateY < -48){
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(4.0, -0.0842, 0.0),
-                    doubleArrayOf(-0.08421, 1.0, 0.0),
+                    doubleArrayOf(-0.08421, 1.0 * reverse, 0.0),
                     doubleArrayOf(0.0, 0.0, 0.0)
                 )
             )
 
             structuralErrorX = -0.682
-            structuralErrorY = 2.203
+            structuralErrorY = 2.203 * reverse
         }
 
         llFieldX -= structuralErrorX
