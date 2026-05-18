@@ -168,6 +168,7 @@ abstract class Auto2(private val red: Boolean) : LinearOpMode() {
                 val intake = add(Combo.shootAfter(hw)).then(Combo.intake(hw, 1.0))
                 intake.then(Combo.intakeAfter(hw)) // wait for shooter stop to release
                 add(REmover.drive2Pose2(hw, poseSet.set4out))
+                    .then(Wait.s(1.0))
 //                    .then(REmover.drive2Pose2(hw, poseSet.set4out, 0.35))
                     .then(VirtualGroup {
                         add(REmover.drive2Pose2(hw, poseSet.farShoot2))

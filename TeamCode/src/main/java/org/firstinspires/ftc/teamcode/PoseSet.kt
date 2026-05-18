@@ -29,7 +29,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val closeShoot2 = RobotPose(36.0, -36.0, 2.39)
         private val closeShoot3 = RobotPose(48.66, -25.0, 2.06)
-        private val midShoot = RobotPose(24.0, -24.0, 2.39, -79.0)
+        private val midShoot = RobotPose(24.0, -24.0, 2.39, -77.0)
         private val midShoot2 = RobotPose(36.0, -12.0, 2 * Math.PI / 3, -93.0)
         private val farShoot = RobotPose(-55.0, -12.39, 2.705 )
         private val farShoot2 = RobotPose(-64.0, -29.0, -Math.PI/2,-106.0)
@@ -48,7 +48,7 @@ class PoseSet private constructor(val invert: Boolean) {
         private val set3pos = RobotPose(-36.0, -24.0, -Math.PI / 2)
         private val set3out = RobotPose(-36.0, -62.625, -Math.PI / 2)
 
-        private val set3curve = RobotPose(-36.6,-15.0,0.0)
+        private val set3curve = RobotPose(-36.6,2.0,0.0)
         private val set4pos = RobotPose(-57.5, -61.0, -Math.PI / 2)
         private val set4out = RobotPose(-64.5, -60.0, -Math.PI / 2)
         private val overflowPos1 = RobotPose(-64.75, -64.6, -Math.PI / 2)
@@ -72,13 +72,15 @@ class PoseSet private constructor(val invert: Boolean) {
 
         private val gobble2 = RobotPose(-17.11, -66.08, -0.023)
 
-        private val gobble3 = RobotPose(-14.11, -66.08, -0.023)
+        private val gobble3 = RobotPose(-4.5, -62.0, -1.5732)
 
-        private val gobble4 = RobotPose(-9.14, -65.79,-0.8987)
+        private val gobbleSet = RobotPose(-4.5, -24.0, -Math.PI / 2)
+
+        private val gobble4 = RobotPose(-9.14, -62.44,-1.0614)
         private val gobble5 = RobotPose(-10.42, -60.36,-PI/2)
 
-        private val gobble6 = RobotPose(-18.03, -60.52, -0.57)
-        private val gobble7 = RobotPose(-9.75, -57.4, -1.18)
+        private val gobble6 = RobotPose(-20.03, -65.52, -0.785)
+        private val gobble7 = RobotPose(-10.0, -65.52, 0.0)
 
         private val gobbleCurve = RobotPose(-20.0,-20.0, 0.0)
         private val shootTarget = RobotPose(72.0 - 6.0, -(72.0 - 6.0), 0.0)
@@ -154,6 +156,9 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val set4pos = Companion.set4pos.bind
+
+    @JvmField
+    val gobbleSet = Companion.gobbleSet.bind
 
     @JvmField
     val set4out = Companion.set4out.bind

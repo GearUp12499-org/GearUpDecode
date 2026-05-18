@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.systems.AprilTag
 import org.firstinspires.ftc.teamcode.systems.Combo
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.ShooterImpl
+import org.firstinspires.ftc.teamcode.systems.StopConditions
 import org.firstinspires.ftc.teamcode.systems.StopConditions.Waypoint
 import org.firstinspires.ftc.teamcode.systems.TurretImpl
 import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
@@ -227,15 +228,16 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.set2pos,
+                            poseSet.gobbleSet,
                             stopCond = Waypoint
                         )
                     )
                         .then(
                             REmover.drive2Pose2(
                                 hw,
-                                poseSet.gobble4,
-                                timeoutAt = 0.15
+                                poseSet.gobble3,
+                                timeoutAt = 0.1,
+                                maxPower = 0.8
                             )
                         )
                         .then(Wait.s(0.0)) //1.5
@@ -243,10 +245,19 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                             REmover.drive2Pose2(
                                 hw,
                                 poseSet.gobble6,
-                                maxPower = 0.5,
+                                maxPower = 1.0,
                             )
                         )
-                        .then(Wait.s(0.5))
+                        .then(
+                            REmover.drive2Pose2(
+                                hw,
+                                poseSet.gobble7,
+                                maxPower = 1.0,
+                                stopCond = StopConditions.Precision,
+                                timeoutAt= 0.15
+                            )
+                        )
+//                        .then(Wait.s(0.5))
                 })
                 grp.then(VirtualGroup {
                     add(
@@ -264,7 +275,7 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                                 rotateBack = false
                             )
                         )
-                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.2))
+                    add(shooter.setTargetAndWait(CompBot2Hardware.SHOOT_MID_RANGE, 0.0, 0.0))
                 })
                     .then(OneShot {
                         intake.finish()
@@ -288,11 +299,12 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                     add(
                         REmover.drive2Pose2(
                             hw,
-                            poseSet.set1pos,
-                            stopCond = Waypoint
+                            poseSet.set1out,
+                            curveAround = poseSet.set1curve,
+                            maxPower = 0.9
                         )
                     )
-                        .then(REmover.drive2Pose2(hw, poseSet.set1out))
+//                        .then(REmover.drive2Pose2(hw, poseSet.set1out))
                 })
                 grp.then(VirtualGroup {
                     add(
@@ -327,7 +339,8 @@ abstract class Auto1(private val red: Boolean) : LinearOpMode() {
                         REmover.drive2Pose2(
                             hw,
                             poseSet.set3out,
-                           curveAround = poseSet.set3curve
+                           curveAround = poseSet.set3curve,
+                            maxPower = 0.9
                         )
                     )
 //                        .then(REmover.drive2Pose2(hw, poseSet.set3out))
