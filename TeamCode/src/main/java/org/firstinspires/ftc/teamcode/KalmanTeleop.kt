@@ -39,7 +39,7 @@ class KalmanTeleop: LinearOpMode() {
 
         scheduler = FastScheduler()
 
-        kalman = scheduler.add(Kalman(hw, true, 0.0, 0.0, 0.0))
+        kalman = scheduler.add(Kalman(hw,hw.limelight,true, 0.0, 0.0, 0.0))
 
         hw.pinpoint.resetPosAndIMU()
         hw.pinpoint.setPosition(Pose2D (DistanceUnit.INCH, 0.0, 0.0, AngleUnit.RADIANS, 0.0))

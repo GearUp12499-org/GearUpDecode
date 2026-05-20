@@ -195,15 +195,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
 
         if (StaticStore.duration() > 30.seconds) {
-
-            kalman = robotStartTask.then(Kalman(hw, red, 0.0, 0.0, 0.0))
             hw.pinpoint.resetPosAndIMU()
             hw.turretEncoder.reset()
             isContinuation = false
-        }
-        else {
-            kalman = robotStartTask.then(Kalman(hw, red, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
-                DistanceUnit.INCH), hw.pinpoint.getHeading(AngleUnit.RADIANS)))
         }
 
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML)
@@ -257,6 +251,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             tag(BuiltInTags.DAEMON)
         })
+        kalman = robotStartTask.then(Kalman(hw,hw.limelight, red, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
+            DistanceUnit.INCH), hw.pinpoint.getHeading(AngleUnit.RADIANS)))
 
         while (opModeInInit()) {
             scheduler.tick()

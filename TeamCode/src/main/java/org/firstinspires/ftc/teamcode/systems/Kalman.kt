@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.systems
 
 import android.util.Log
+import com.qualcomm.hardware.limelightvision.Limelight3A
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
 import org.ejml.simple.SimpleMatrix
@@ -23,6 +24,7 @@ import kotlin.math.sqrt
 
 class Kalman(
     private val hw: CompBot2Hardware,
+    private val ll: Limelight3A,
     private val red: Boolean,
     var initX: Double,
     var initY: Double,
@@ -103,8 +105,8 @@ class Kalman(
     }
 
     override fun onStart() {
-        hw.limelight.start()
-        hw.limelight.pipelineSwitch(pipe)
+        ll.start()
+        ll.pipelineSwitch(pipe)
 
         if(!red){
             reverse = -1.0
@@ -113,7 +115,6 @@ class Kalman(
     }
 
     override fun onTick(): Boolean {
-        Log.i("Kalman","Running")
 
         val currentTurret = hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG
 
@@ -171,19 +172,20 @@ class Kalman(
 
 
 
-        val result = hw.limelight.latestResult
+        val result = ll.latestResult
 
 
 
 
         //safety to make sure you are in the right pipeline
         val actualPipeline = result.pipelineIndex
+        Log.i("pipeline", actualPipeline.toString())
         if (actualPipeline != pipe) {
             Log.w(
                 this::class.simpleName,
                 "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
             )
-            hw.limelight.pipelineSwitch(pipe)
+            ll.pipelineSwitch(pipe)
             Log.i("Kalman","wrong pipeline")
             return false
         }
@@ -202,15 +204,20 @@ class Kalman(
 
 
 
-        hw.limelight.updateRobotOrientation((pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)))
+        ll.updateRobotOrientation((pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)))
         Log.i("kalman_orientation",(pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)).toString() )
         val botpose = result.botpose_MT2
+        val testpose = result.botpose
+
+
+        val testX = testpose.getPosition().x * INCHES_PER_METER * -1
 
 
         val limelightX: Double = botpose.getPosition().x * INCHES_PER_METER * -1
         val limelightY: Double = botpose.getPosition().y * INCHES_PER_METER * -1
 
-        Log.i("cameraX", limelightX.toString())
+        Log.i("MT2cameraX", limelightX.toString())
+        Log.i("MTcameraX", testX.toString())
         Log.i("cameraY", limelightY.toString())
 
 //        Log.i("LLX", llx.toString())
@@ -346,7 +353,7 @@ class Kalman(
 
 
         //use fiducial tag to get relative to goal angle
-        val tags = hw.limelight.latestResult.fiducialResults
+        val tags = ll.latestResult.fiducialResults
         val target = tags.firstOrNull { it.fiducialId == targetTag }
         //just use pinpoint angle if no fiducial tag is found
         if (target == null) {
