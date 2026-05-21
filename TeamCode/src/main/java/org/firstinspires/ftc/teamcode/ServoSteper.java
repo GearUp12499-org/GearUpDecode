@@ -17,6 +17,8 @@ public class ServoSteper extends LinearOpMode {
 
     double deltaPosition = 0;
 
+    double deltaPosition2 = 0;
+
     int MotorPosition = 0;
 
     @Override
@@ -44,15 +46,29 @@ public class ServoSteper extends LinearOpMode {
                     position = minServo;
                 }
             }
-            hardware.leftKickstand.setPosition(position + deltaPosition);
-            hardware.rightKickstand.setPosition(position - deltaPosition);
 
             if (gamepad1.a){
-                hardware.setIntakePower(1);
+                deltaPosition2 -= 0.01;
+                if(position < minServo){
+                    position = minServo;
+                }
             }
-            else {
-                hardware.setIntakePower(0);
+
+            if (gamepad1.b){
+                deltaPosition2 += 0.01;
+                if(position < minServo){
+                    position = minServo;
+                }
             }
+            hardware.leftKickstand.setPosition(position + deltaPosition);
+            hardware.rightKickstand.setPosition(position + deltaPosition2);
+
+//            if (gamepad1.a){
+//                hardware.setIntakePower(1);
+//            }
+//            else {
+//                hardware.setIntakePower(0);
+//            }
 
             if (gamepad1.right_trigger > 0.5){
                 MotorPosition += 10;
@@ -67,7 +83,7 @@ public class ServoSteper extends LinearOpMode {
 
 //            telemetry.addData("motorPosition", hardware.turret.getCurrentPosition());
             telemetry.addData("positionleft",position+deltaPosition);
-            telemetry.addData("positionright",position-deltaPosition);
+            telemetry.addData("positionright",position+deltaPosition2);
             telemetry.update();
 
             sleep(50);

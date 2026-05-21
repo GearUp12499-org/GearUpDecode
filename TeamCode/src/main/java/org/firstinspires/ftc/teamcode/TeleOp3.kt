@@ -527,6 +527,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot{
                         hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
                         hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
+
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
                     })
                 }
                 )
@@ -537,6 +539,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     add(OneShot{
                         hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
                         hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_NEUTRAL
+
+                        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                     })
                 }
                 )
