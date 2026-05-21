@@ -84,6 +84,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private var isContinuation: Boolean = true
     private var pinpointSetupTask: PinpointSetupTask? = null
 
+    private var kickstandUp = false
+
     // Offsets the Limelight camera position to the robot center,
     // accounting for the turret angle and camera mounting offset.
     // Mirrors TurretTrack.getPoseRobotFromLL() exactly so they stay consistent
@@ -379,9 +381,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp2upD = false
         private var gp2back = false
 
-        private var gp2RB = false
+        private var gp2RT = false
 
-        private var gp2LB = false
+        private var gp2LT = false
 
         fun inOut(sch: Scheduler) {
             val rb    = gamepad1.right_bumper
@@ -392,8 +394,21 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val b2    = gamepad2.b
             val back2 = gamepad2.back
             val upD   = gamepad2.dpad_up
-            val rb2 = gamepad2.right_bumper
-            val lb2 = gamepad2.left_bumper
+            val rt2 = gamepad2.right_trigger > 0.5
+            val lt2 = gamepad2.left_trigger > 0.5
+
+            if(kickstandUp){
+                gp1RB = true
+                gp1LB = true
+                gp1X = true
+                gp1Y = true
+                gp2r = true
+                gp2l = true
+                gp2upD = true
+                gp2A = true
+                gp2B = true
+
+            }
 
 
 
@@ -520,21 +535,42 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
                 shooter.setTarget(SHOOT_MID_RANGE)
 
-            if(rb2 && !gp2RB){
+            if(rt2 && !gp2RT){
+                kickstandUp = true
+                sch.stopUsing(Locks.DRIVE_MOTORS)
 
                 //TODO: Add lock so drive motors can't move while up
-                sch.add(VirtualGroup{
-                    add(OneShot{
-                        hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
-                        hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
+                sch.add(object : Group({}) {
 
-                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
-                    })
-                }
-                )
+                    var resumeAfterward = trackState
+
+                    init {
+                        getScheduler()
+                            .add(VirtualGroup {
+                                hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
+                                hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
+                                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
+                            })
+                        require(Locks.INTAKE_STORAGE)
+                        require(Locks.DRIVE_MOTORS)
+                    }
+
+                    override fun onStart() {
+                        trackState = TrackState.Off
+                    }
+
+                    override fun onFinish(completedNormally: Boolean) {
+                        super.onFinish(completedNormally)
+                        trackState = resumeAfterward
+                    }
+                })
+
             }
 
-            if(lb2 && !gp2LB){
+            if(lt2 && !gp2LT){
+                kickstandUp = false
+
+
                 sch.add(VirtualGroup{
                     add(OneShot{
                         hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
@@ -554,8 +590,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp2B   = b2
             gp2upD = upD
             gp2back = back2
-            gp2RB = rb2
-            gp2LB = lb2
+            gp2RT = rt2
+            gp2LT = lt2
         }
 
         private var gp2l = false
