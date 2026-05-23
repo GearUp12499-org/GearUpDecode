@@ -395,7 +395,7 @@ class Kalman(
         get() = REmover.RobotPose(stateX, stateY, stateTheta)
 
     val distance: Double
-        get() = hypot((stateX-poseSet.goalAT.x),(stateY- poseSet.goalAT.y))
+        get() = (hypot((stateX-poseSet.goalAT.x),(stateY- poseSet.goalAT.y))-1.0)
 
     val limelightx: Double
         get() = llx

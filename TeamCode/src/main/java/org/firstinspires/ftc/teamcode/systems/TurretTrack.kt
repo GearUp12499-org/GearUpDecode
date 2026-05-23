@@ -352,7 +352,7 @@ class TurretTrack(
 
             lastFix = now
 
-            distance = taToDistance(target.targetArea)
+            distance = (taToDistance(target.targetArea) - 10.0)
 6
             //use limelight only?
             turret.setDeltaTarget(-target.targetXDegrees)

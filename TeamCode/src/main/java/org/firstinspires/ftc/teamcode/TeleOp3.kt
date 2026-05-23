@@ -541,9 +541,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
                 //TODO: Add lock so drive motors can't move while up
                 sch.add(VirtualGroup {
+                    add(OneShot{
                     hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
                     hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
                     hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
+                        })
+                        .then(Wait.s(10000.0))
+
+                    require(Locks.DRIVE_MOTORS)
                 })
 
             }
@@ -559,6 +564,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 
                         hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                     })
+
                 }
                 )
             }

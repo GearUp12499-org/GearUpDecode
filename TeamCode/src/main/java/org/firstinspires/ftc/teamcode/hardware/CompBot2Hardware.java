@@ -320,7 +320,7 @@ public class CompBot2Hardware extends HardwareMapper {
 //        if (distance > SHOOT_MAX_DIST) {
 //            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO,????);
 
-        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 2.0;
+        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 12.0;
 
         //distance into speed and hood
         double speed = 6.81246 * distance + 1075.16505;
