@@ -308,6 +308,7 @@ public class CompBot2Hardware extends HardwareMapper {
         if (distance > SHOOT_MAX_DIST) {
             return new Pair<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO);
         }
+        distance += 10.0;
         double speed = 6.81246 * distance + 1075.16505;
         double hood = 0.00492724 * distance + 0.0769453;
         if (hood > 0.5578) hood = 0.5578;
@@ -325,14 +326,15 @@ public class CompBot2Hardware extends HardwareMapper {
             double accelY,
             double dt,
             boolean far){
-//        if (distance > SHOOT_MAX_DIST) {
-//            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO,????);
 
-        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 9.0;
+
+        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 10.0;
         if (far) {
             distance =  Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y));
         }
-
+//
+//        if (distance > SHOOT_MAX_DIST) {
+//            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO);
         //distance into speed and hood
         double speed = 6.81246 * distance + 1075.16505;
         double hood = 0.00492724 * distance + 0.0769453;
@@ -357,10 +359,10 @@ public class CompBot2Hardware extends HardwareMapper {
         double vBy = vBh*Math.sin(alphaB);
 
         //velocity of ball with respect to robot (v)
-//        double vx = (vBx - robotVelX);
-//        double vy = (vBy - robotVelY);
-        double vx = (vBx - robotVelX) + accelX * dt;
-        double vy = (vBy - robotVelY) + accelY * dt;
+        double vx = (vBx - robotVelX);
+        double vy = (vBy - robotVelY);
+//        double vx = (vBx - robotVelX) + accelX * dt * 0.1;
+//        double vy = (vBy - robotVelY) + accelY * dt * 0.1;
         double vz = vBz;
 
         double alpha = Math.atan2(vy,vx);
@@ -406,7 +408,11 @@ public class CompBot2Hardware extends HardwareMapper {
         //return new Triple<>(alpha, alphaB, finalTurret);
 
 
+        if (far && robotPose.y > 0.0){
+            finalSpeed = 2040;
+        }
 
+        Log.i("flywheelSpeed", String.valueOf(finalSpeed));
         return new Triple<>(finalHood, finalSpeed, finalTurret);
 
 
