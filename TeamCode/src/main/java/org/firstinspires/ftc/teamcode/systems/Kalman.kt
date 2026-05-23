@@ -298,6 +298,10 @@ class Kalman(
             return false
         }
 
+        if ((abs(llFieldX) > 72.0) || abs(llFieldY) > 72.0){
+            return false
+        }
+
         update(llFieldX, llFieldY, llFieldTheta, R)
          updateCounter += 1
         hasRead = true
