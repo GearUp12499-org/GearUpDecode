@@ -28,6 +28,7 @@ class PoseSet private constructor(val invert: Boolean) {
 
         //58, -56
         private val goalAT = RobotPose(66.0, -66.0, -2.318)
+        private val goalAtFAR = RobotPose (58.0, -56.0, -2.318)
         private val closeShoot = RobotPose(60.0, -12.48, 0.55 * Math.PI)
         private val closeShoot2 = RobotPose(36.0, -36.0, 2.39)
         private val closeShoot3 = RobotPose(48.66, -25.0, 2.06)
@@ -103,6 +104,9 @@ class PoseSet private constructor(val invert: Boolean) {
 
     @JvmField
     val goalAT = Companion.goalAT.bind
+
+    @JvmField
+    val goalAtFAR = Companion.goalAtFAR.bind
 
     @JvmField
     val closeShoot = Companion.closeShoot.bind

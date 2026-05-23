@@ -316,11 +316,22 @@ public class CompBot2Hardware extends HardwareMapper {
     }
 
     //ROBOT VELX and VELY MUST BE IN METERS/SECOND
-    public static Triple<Double, Double, Double> hoodAndSpeedAndTurret(double robotVelX, double robotVelY, REmover.RobotPose goalPose, REmover.RobotPose robotPose){
+    public static Triple<Double, Double, Double> hoodAndSpeedAndTurret(
+            double robotVelX,
+            double robotVelY,
+            REmover.RobotPose goalPose,
+            REmover.RobotPose robotPose,
+            double accelX,
+            double accelY,
+            double dt,
+            boolean far){
 //        if (distance > SHOOT_MAX_DIST) {
 //            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO,????);
 
-        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 12.0;
+        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 9.0;
+        if (far) {
+            distance =  Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y));
+        }
 
         //distance into speed and hood
         double speed = 6.81246 * distance + 1075.16505;
@@ -346,8 +357,10 @@ public class CompBot2Hardware extends HardwareMapper {
         double vBy = vBh*Math.sin(alphaB);
 
         //velocity of ball with respect to robot (v)
-        double vx = vBx - robotVelX;
-        double vy = vBy - robotVelY;
+//        double vx = (vBx - robotVelX);
+//        double vy = (vBy - robotVelY);
+        double vx = (vBx - robotVelX) + accelX * dt;
+        double vy = (vBy - robotVelY) + accelY * dt;
         double vz = vBz;
 
         double alpha = Math.atan2(vy,vx);

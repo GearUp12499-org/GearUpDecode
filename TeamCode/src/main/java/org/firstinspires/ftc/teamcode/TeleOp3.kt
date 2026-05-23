@@ -107,21 +107,47 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         return Pair(llX + xOff, llY + yOff)
     }
 
+    private var currentTime: Long = 0
+    private var prevTime: Long = 0
+
+    private var dt: Double = 0.0
+
+    private var prevVelX: Double = 0.0
+    private var prevVelY: Double = 0.0
+
+
     private fun startTrackingFull() {
         activeTrack?.stop()
         activeLegacyTrack?.stop()
         activeBind?.stop()
         activeTrack = scheduler.add(turretTrack.track())
+        currentTime = System.nanoTime()
+        prevTime = currentTime
+        prevVelX = hw.pinpoint.getVelX(DistanceUnit.METER)
+        prevVelY = hw.pinpoint.getVelY(DistanceUnit.METER)
         activeBind = scheduler.add(compose {
             onTick {
                 activeTrack ?: return@onTick true
+                currentTime = System.nanoTime()
+                dt = (currentTime - prevTime) * 10e9
+                val velX = hw.pinpoint.getVelX(DistanceUnit.METER)
+                val velY = hw.pinpoint.getVelY(DistanceUnit.METER)
+                val accelX = (velX - prevVelX) / dt
+                val accelY = (velY - prevVelY) / dt
+                var goalPose = poseSet.goalAT
+                if (kalman.stateX < -24.0){
+                    goalPose = poseSet.goalAtFAR
+                }
                 val hoodSpeedTurret = activeTrack!!.distance.let {
                     CompBot2Hardware.hoodAndSpeedAndTurret(
-                        hw.pinpoint.getVelX(DistanceUnit.METER),
-                        hw.pinpoint.getVelY(DistanceUnit.METER),
-                        poseSet.goalAT,
-                         kalman.kalmanPose2D
-                    )
+                        velX,
+                        velY,
+                        goalPose,
+                         kalman.kalmanPose2D,
+                        accelX,
+                        accelY,
+                        dt,
+                        kalman.stateY < -24.0)
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
