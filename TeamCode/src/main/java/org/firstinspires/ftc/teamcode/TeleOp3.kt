@@ -459,7 +459,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                 .then(VirtualGroup {
                                     add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
                                     add(OneShot { shooter.pushThreshold = 0 })
-                                        .then(shooter.awaitTarget(minimumDuration = 0.2, maximumDuration = 0.75))
+                                        .then(shooter.awaitTarget(minimumDuration = 0.0, maximumDuration = 0.75))
                                 })
                                 .then(Combo.shoot(hw))
                                 .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
