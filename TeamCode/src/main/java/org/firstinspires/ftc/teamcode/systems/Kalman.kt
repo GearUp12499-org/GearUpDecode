@@ -171,10 +171,7 @@ class Kalman(
 //        }
 
 
-
         val result = ll.latestResult
-
-
 
 
         //safety to make sure you are in the right pipeline
