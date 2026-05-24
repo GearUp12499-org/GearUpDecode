@@ -253,8 +253,8 @@ class Kalman(
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
                 doubleArrayOf(2.0, -0.5 * reverse, 0.0),
-                doubleArrayOf(-0.5 * reverse, 2.0 * reverse, 0.0),
-                doubleArrayOf(0.0, 0.0, 0.0)
+                doubleArrayOf(-0.5 * reverse, 2.0, 0.0),
+                doubleArrayOf(0.0, 0.0, 0.00001)
             )
         )
 
@@ -265,8 +265,8 @@ class Kalman(
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(1.0, 0.0320, 0.0),
-                    doubleArrayOf(0.0320, 4.0 * reverse, 0.0),
-                    doubleArrayOf(0.0, 0.0, 0.0)
+                    doubleArrayOf(0.0320, 4.0, 0.0),
+                    doubleArrayOf(0.0, 0.0, 0.00001)
                 )
             )
 
@@ -276,8 +276,8 @@ class Kalman(
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(4.0, -0.0842, 0.0),
-                    doubleArrayOf(-0.08421, 1.0 * reverse, 0.0),
-                    doubleArrayOf(0.0, 0.0, 0.0)
+                    doubleArrayOf(-0.08421, 1.0, 0.0),
+                    doubleArrayOf(0.0, 0.0, 0.00001)
                 )
             )
 
@@ -306,6 +306,14 @@ class Kalman(
 
         Log.i("usedLLFieldX", llFieldX.toString())
         Log.i("usedLLFieldY", llFieldY.toString())
+
+        Log.i("stateX", stateX.toString())
+        Log.i("stateY", stateY.toString())
+        Log.i("stateTheta", stateTheta.toString())
+
+        Log.i("pinpointX", pinpointPose.getX(DistanceUnit.INCH).toString())
+        Log.i("pinpointY", pinpointPose.getY(DistanceUnit.INCH).toString())
+        Log.i("pinpointTheta", pinpointPose.getHeading(AngleUnit.RADIANS).toString())
 
 //        Log.i("state", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 //        Log.i("llField", "x: " + llFieldX.toString() + " y: " + llFieldY.toString() + " theta: " + llFieldTheta.toString())
@@ -434,6 +442,8 @@ class Kalman(
         val kalmanGain = P.mult((P.plus(R)).invert())
 
         kalmanState = kalmanState.plus(kalmanGain.mult((measurement.minus(kalmanState))))
+
+     //   Log.i("kalmanGain",kalmanGain.toString())
 
         val identity = SimpleMatrix.identity(3)
         P = (identity.minus(kalmanGain)).mult(P)
