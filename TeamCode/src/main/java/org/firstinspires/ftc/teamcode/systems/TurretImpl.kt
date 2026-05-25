@@ -28,11 +28,11 @@ class TurretImpl(private val hw: CompBot2Hardware) : Task<TurretImpl>() {
         // approx min power 0.0486
 
         private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 * 2 * 2.33 // DEPENDS ON kI
-        private var P = 0.000_10
+        var P = 0.000_10
 //        private var I = 0.000_2 / 2.33 // 0.000_2
-        private var I = 0.088 / INTEGRAL_ERROR_SUM_LIMIT // 0.000_2
+        var I = 0.088 / INTEGRAL_ERROR_SUM_LIMIT // 0.000_2
         // current best options: 1e-5, 5e-6
-        private var D = 0.000_005 // 0.000_062
+        var D = 0.000_005 // 0.000_062
 
         init {
             systemPackages.add(TurretImpl::class.qualifiedName!!)

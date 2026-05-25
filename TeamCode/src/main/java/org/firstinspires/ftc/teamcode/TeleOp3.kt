@@ -21,9 +21,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_D
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_I
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_P
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_DOWN
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_UP
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.REDUCED_TRACK_D
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.REDUCED_TRACK_I
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.REDUCED_TRACK_P
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_FAR_RANGE
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MAX_DIST
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOT_MID_RANGE
@@ -125,6 +131,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         prevTime = currentTime
         prevVelX = hw.pinpoint.getVelX(DistanceUnit.METER)
         prevVelY = hw.pinpoint.getVelY(DistanceUnit.METER)
+        TurretImpl.P = ACTIVE_TRACK_P
+        TurretImpl.I = ACTIVE_TRACK_I
+        TurretImpl.D = ACTIVE_TRACK_D
         activeBind = scheduler.add(compose {
             onTick {
                 activeTrack ?: return@onTick true
@@ -157,7 +166,6 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
 //                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
 //                telemetry.addData("alphaB", hoodSpeedTurret.second)
 //                telemetry.addData("alpha", hoodSpeedTurret.first)
-                telemetry.addData("turret", hoodSpeedTurret.third)
                 telemetry.addData("ppx", hw.pinpoint.getPosX(DistanceUnit.INCH))
                 telemetry.addData("ppy", hw.pinpoint.getPosY(DistanceUnit.INCH))
                 telemetry.addData("ppa", hw.pinpoint.getHeading(AngleUnit.RADIANS))
@@ -165,6 +173,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 telemetry.addData("statey", kalman.kalmanPose2D.y)
                 telemetry.addData("statea", kalman.kalmanPose2D.a)
                 telemetry.addData("counter", kalman.updateCounter)
+
+                telemetry.addData("P", TurretImpl.P.toString())
 
                 false
             }
@@ -176,6 +186,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         activeLegacyTrack?.stop()
         activeBind?.stop()
         activeLegacyTrack = scheduler.add(turretTrack.trackLegacy())
+        TurretImpl.P = REDUCED_TRACK_P
+        TurretImpl.I = REDUCED_TRACK_I
+        TurretImpl.D = REDUCED_TRACK_D
         activeBind = scheduler.add(compose {
             onTick {
                 activeLegacyTrack ?: return@onTick true
@@ -183,9 +196,14 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
                 shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
+
+                telemetry.addData("P", TurretImpl.P.toString())
+                telemetry.update()
                 false
             }
         })
+
+
     }
 
     private fun stopTracking() {

@@ -356,6 +356,7 @@ class TurretTrack(
 6
             //use limelight only?
             turret.setDeltaTarget(-target.targetXDegrees)
+            Log.i("tx",(-target.targetXDegrees).toString())
             Log.i(
                 this::class.simpleName,
                 "XYZLegacy: Limelight info: dist %.4f bearing %.4f".format(
