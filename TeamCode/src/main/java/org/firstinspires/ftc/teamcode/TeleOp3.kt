@@ -144,7 +144,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val accelX = (velX - prevVelX) / dt
                 val accelY = (velY - prevVelY) / dt
                 var goalPose = poseSet.goalAT
-                if (kalman.stateX < -24.0){
+                if (kalman.stateX < -24.0) {
                     goalPose = poseSet.goalAtFAR
                 }
                 val hoodSpeedTurret = activeTrack!!.distance.let {
@@ -152,11 +152,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         velX,
                         velY,
                         goalPose,
-                         kalman.kalmanPose2D,
+                        kalman.kalmanPose2D,
                         accelX,
                         accelY,
                         dt,
-                        kalman.stateX < -24.0)
+                        kalman.stateX < -24.0
+                    )
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
@@ -298,8 +299,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             tag(BuiltInTags.DAEMON)
         })
-        kalman = robotStartTask.then(Kalman(hw,hw.limelight, red, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
-            DistanceUnit.INCH), hw.pinpoint.getHeading(AngleUnit.RADIANS)))
+        kalman = robotStartTask.then(
+            Kalman(
+                hw, hw.limelight, red, hw.pinpoint.getPosX(DistanceUnit.INCH), hw.pinpoint.getPosY(
+                    DistanceUnit.INCH
+                ), hw.pinpoint.getHeading(AngleUnit.RADIANS)
+            )
+        )
 
         while (opModeInInit()) {
             scheduler.tick()
@@ -378,7 +384,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val rx = gamepad1.right_stick_x.toDouble()
             if (sch.getLockOwner(Locks.DRIVE_MOTORS) == null) mecanum(y, x, rx)
             val pushValue = max(hypot(x, y), rx)
-            if (pushValue >= Options.DRIVE_PUSH_TO_OVERRIDE) {
+            if (pushValue >= Options.DRIVE_PUSH_TO_OVERRIDE && sch.getLockOwner(Locks.LOCKOUT_MOTORS) == null) {
                 sch.stopUsing(Locks.DRIVE_MOTORS)
                 mecanum(y, x, rx)
             }
@@ -406,15 +412,15 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             rotX *= 1.1 // Counteract imperfect strafing
 
             val denominator = max(abs(rotY) + abs(rotX) + abs(rx), 1.0)
-            val frontLeftPower  = (rotY + rotX + rx) / denominator
-            val backLeftPower   = (rotY - rotX + rx) / denominator
+            val frontLeftPower = (rotY + rotX + rx) / denominator
+            val backLeftPower = (rotY - rotX + rx) / denominator
             val frontRightPower = (rotY - rotX - rx) / denominator
-            val backRightPower  = (rotY + rotX - rx) / denominator
+            val backRightPower = (rotY + rotX - rx) / denominator
 
-            hw.frontLeft.power  = frontLeftPower
-            hw.backLeft.power   = backLeftPower
+            hw.frontLeft.power = frontLeftPower
+            hw.backLeft.power = backLeftPower
             hw.frontRight.power = frontRightPower
-            hw.backRight.power  = backRightPower
+            hw.backRight.power = backRightPower
         }
 
         private var gp1RB = false
@@ -431,18 +437,18 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp2LT = false
 
         fun inOut(sch: Scheduler) {
-            val rb    = gamepad1.right_bumper
-            val lb    = gamepad1.left_bumper
-            val x     = gamepad1.x
-            val y1    = gamepad1.y
-            val a2    = gamepad2.a
-            val b2    = gamepad2.b
+            val rb = gamepad1.right_bumper
+            val lb = gamepad1.left_bumper
+            val x = gamepad1.x
+            val y1 = gamepad1.y
+            val a2 = gamepad2.a
+            val b2 = gamepad2.b
             val back2 = gamepad2.back
-            val upD   = gamepad2.dpad_up
+            val upD = gamepad2.dpad_up
             val rt2 = gamepad2.right_trigger > 0.5
             val lt2 = gamepad2.left_trigger > 0.5
 
-            if(kickstandUp){
+            if (kickstandUp) {
                 gp1RB = true
                 gp1LB = true
                 gp1X = true
@@ -492,10 +498,17 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                 .then(VirtualGroup {
                                     add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
                                     add(OneShot { shooter.pushThreshold = 0 })
-                                        .then(shooter.awaitTarget(minimumDuration = 0.2, maximumDuration = 0.75))
+                                        .then(
+                                            shooter.awaitTarget(
+                                                minimumDuration = 0.2,
+                                                maximumDuration = 0.75
+                                            )
+                                        )
                                 })
                                 .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
-                                .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
+                                .then(OneShot {
+                                    shooter.pushThreshold = shooter.defaultPushThreshold
+                                })
                                 .then(Combo.shootAfter(hw))
                         })
                     } else {
@@ -504,10 +517,17 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                                 .then(VirtualGroup {
                                     add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
                                     add(OneShot { shooter.pushThreshold = 0 })
-                                        .then(shooter.awaitTarget(minimumDuration = 0.0, maximumDuration = 0.75))
+                                        .then(
+                                            shooter.awaitTarget(
+                                                minimumDuration = 0.0,
+                                                maximumDuration = 0.75
+                                            )
+                                        )
                                 })
                                 .then(Combo.shoot(hw))
-                                .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
+                                .then(OneShot {
+                                    shooter.pushThreshold = shooter.defaultPushThreshold
+                                })
                                 .then(Combo.shootAfter(hw))
                         })
                     }
@@ -515,9 +535,9 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             }
             if (back2 && !gp2back) {
                 trackState = when (trackState) {
-                    TrackState.Full    -> TrackState.Reduced
+                    TrackState.Full -> TrackState.Reduced
                     TrackState.Reduced -> TrackState.Off
-                    TrackState.Off     -> TrackState.Full
+                    TrackState.Off -> TrackState.Full
                 }
             }
             if (x && !gp1X) {
@@ -580,46 +600,43 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             if (upD && !gp2upD && sch.getLockOwner(Locks.INTAKE_STORAGE) == null)
                 shooter.setTarget(SHOOT_MID_RANGE)
 
-            if(rt2 && !gp2RT){
+            if (rt2 && !gp2RT && lt2 && !gp2LT) {
                 kickstandUp = true
                 sch.stopUsing(Locks.DRIVE_MOTORS)
 
                 //TODO: Add lock so drive motors can't move while up
                 sch.add(VirtualGroup {
-                    add(OneShot{
-                    hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
-                    hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
-                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
+                    add(OneShot {
+                        hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_UP
+                        hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_UP
+                        trackState = TrackState.Off
+                        turret.setTarget(90.0)
+                        shooter.setTarget(0.0)
+                    })
+                        .then(Wait.s(1.0))
+                        .then(OneShot {
+                            hw.rightKickstand.setPwmDisable()
+                            hw.leftKickstand.setPwmDisable()
+                            hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
                         })
-                        .then(Wait.s(10000.0))
 
-                    require(Locks.DRIVE_MOTORS)
+                    add(compose {
+                        onTick {
+                            false
+                        }
+                        require(Locks.DRIVE_MOTORS)
+                        require(Locks.LOCKOUT_MOTORS)
+                    })
                 })
 
             }
 
-            if(lt2 && !gp2LT){
-                kickstandUp = false
-
-
-                sch.add(VirtualGroup{
-                    add(OneShot{
-                        hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
-                        hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_NEUTRAL
-
-                        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
-                    })
-
-                }
-                )
-            }
-
-            gp1RB  = rb
-            gp1LB  = lb
-            gp1X   = x
-            gp1Y   = y1
-            gp2A   = a2
-            gp2B   = b2
+            gp1RB = rb
+            gp1LB = lb
+            gp1X = x
+            gp1Y = y1
+            gp2A = a2
+            gp2B = b2
             gp2upD = upD
             gp2back = back2
             gp2RT = rt2

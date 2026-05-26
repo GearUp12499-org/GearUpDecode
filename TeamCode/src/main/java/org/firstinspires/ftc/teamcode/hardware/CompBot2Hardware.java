@@ -38,8 +38,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double DROP_DOWN_BOTTOM = 0.44;
     public static final double DROP_DOWN_TOP = 0.64;
 
-    public static final double LEFT_KICKSTAND_NEUTRAL = 0.72;
-    public static final double RIGHT_KICKSTAND_NEUTRAL = 0.42;
+    public static final double LEFT_KICKSTAND_NEUTRAL = 0.73;
+    public static final double RIGHT_KICKSTAND_NEUTRAL = 0.41;
     public static final double LEFT_KICKSTAND_UP = 0.39;
     public static final double RIGHT_KICKSTAND_UP = 0.77;
     public static final double LEFT_KICKSTAND_BRAKE = 0.56;
@@ -312,6 +312,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static class Locks {
         public static final Lock.StrLock DRIVE_MOTORS = new Lock.StrLock("drive_motors");
         public static final Lock.StrLock INTAKE_STORAGE = new Lock.StrLock("intake_storage");
+        public static final Lock.StrLock LOCKOUT_MOTORS = new Lock.StrLock("lockout_motors");
     }
 
     /**
