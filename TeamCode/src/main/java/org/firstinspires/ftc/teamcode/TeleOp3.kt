@@ -156,7 +156,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         accelX,
                         accelY,
                         dt,
-                        kalman.stateY < -24.0)
+                        kalman.stateX < -24.0)
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50

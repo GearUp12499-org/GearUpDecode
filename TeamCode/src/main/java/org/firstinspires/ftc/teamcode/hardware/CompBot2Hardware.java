@@ -422,14 +422,16 @@ public class CompBot2Hardware extends HardwareMapper {
         //return new Triple<>(alpha, alphaB, finalTurret);
 
 
-        if (far && robotPose.y > 0.0){
-            finalSpeed = 2040;
+        if (far) {
+            if (robotPose.y > 0.0) {
+                finalSpeed = 2040;
+            } else {
+                finalSpeed = 1960;
+            }
         }
 
         Log.i("flywheelSpeed", String.valueOf(finalSpeed));
         return new Triple<>(finalHood, finalSpeed, finalTurret);
-
-
     }
 }
 
