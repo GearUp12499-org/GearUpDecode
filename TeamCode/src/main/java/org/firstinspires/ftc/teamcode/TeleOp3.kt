@@ -195,7 +195,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 activeLegacyTrack ?: return@onTick true
                 val hoodSpeed =
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
-                shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+
+                if(kalman.distance > 85.0){
+                    shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE)
+                } else{
+                    shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
+                }
                 hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
 
                 telemetry.addData("P", TurretImpl.P.toString())
