@@ -196,7 +196,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val hoodSpeed =
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
 
-                if(kalman.distance > 85.0){
+                if(kalman.distance > 100.0){
                     shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE)
                 } else{
                     shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
