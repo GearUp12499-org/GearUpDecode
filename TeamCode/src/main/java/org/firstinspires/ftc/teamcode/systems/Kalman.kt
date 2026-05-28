@@ -150,11 +150,11 @@ class Kalman(
 
         val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
 
-        Log.i("turretVel", deltaTurret.toString())
-        Log.i("velocity", velocity.toString())
-        Log.i("dt", dt.toString())
-        Log.i("currentTurret", currentTurret.toString())
-        Log.i("prevTurret", prevTurret.toString())
+//        Log.i("turretVel", deltaTurret.toString())
+//        Log.i("velocity", velocity.toString())
+//        Log.i("dt", dt.toString())
+//        Log.i("currentTurret", currentTurret.toString())
+//        Log.i("prevTurret", prevTurret.toString())
 
         if (velocity > 1 || abs(deltaTurret) > 100.0){
             startTime = (now / 1e9).toLong()
@@ -176,7 +176,7 @@ class Kalman(
 
         //safety to make sure you are in the right pipeline
         val actualPipeline = result.pipelineIndex
-        Log.i("pipeline", actualPipeline.toString())
+
         if (actualPipeline != pipe) {
             Log.w(
                 this::class.simpleName,
@@ -202,7 +202,7 @@ class Kalman(
 
 
         ll.updateRobotOrientation((pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)))
-        Log.i("kalman_orientation",(pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)).toString() )
+//        Log.i("kalman_orientation",(pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)).toString() )
         val botpose = result.botpose_MT2
         val testpose = result.botpose
 
@@ -212,10 +212,10 @@ class Kalman(
 
         val limelightX: Double = botpose.getPosition().x * INCHES_PER_METER * -1
         val limelightY: Double = botpose.getPosition().y * INCHES_PER_METER * -1
-
-        Log.i("MT2cameraX", limelightX.toString())
-        Log.i("MTcameraX", testX.toString())
-        Log.i("cameraY", limelightY.toString())
+//
+//        Log.i("MT2cameraX", limelightX.toString())
+//        Log.i("MTcameraX", testX.toString())
+//        Log.i("cameraY", limelightY.toString())
 
 //        Log.i("LLX", llx.toString())
 //        Log.i("LLY", lly.toString())
@@ -230,17 +230,17 @@ class Kalman(
         //if the reading is very different from the last one
         if((abs(prevLLX - llFieldX) > 1.0) || (abs(prevLLY - llFieldY) > 1.0)){
            counter = 0
-            Log.i("llx",llFieldX.toString())
-            Log.i("lly",llFieldY.toString())
-            Log.i("prevLLX",prevLLX.toString())
-            Log.i("prevLLY",prevLLY.toString())
-            Log.i("diffLLX", (prevLLX-llx).toString())
-            Log.i("diffLLY",(prevLLY-lly).toString())
+//            Log.i("llx",llFieldX.toString())
+//            Log.i("lly",llFieldY.toString())
+//            Log.i("prevLLX",prevLLX.toString())
+//            Log.i("prevLLY",prevLLY.toString())
+//            Log.i("diffLLX", (prevLLX-llx).toString())
+//            Log.i("diffLLY",(prevLLY-lly).toString())
         } else{
             counter += 1
-            Log.i("madeIt","")
+//            Log.i("madeIt","")
         }
-        Log.i("counter",counter.toString())
+//        Log.i("counter",counter.toString())
 
         prevLLX = llFieldX
         prevLLY = llFieldY
@@ -304,16 +304,16 @@ class Kalman(
         hasRead = true
         counter = 0
 
-        Log.i("usedLLFieldX", llFieldX.toString())
-        Log.i("usedLLFieldY", llFieldY.toString())
-
-        Log.i("stateX", stateX.toString())
-        Log.i("stateY", stateY.toString())
-        Log.i("stateTheta", stateTheta.toString())
-
-        Log.i("pinpointX", pinpointPose.getX(DistanceUnit.INCH).toString())
-        Log.i("pinpointY", pinpointPose.getY(DistanceUnit.INCH).toString())
-        Log.i("pinpointTheta", pinpointPose.getHeading(AngleUnit.RADIANS).toString())
+//        Log.i("usedLLFieldX", llFieldX.toString())
+//        Log.i("usedLLFieldY", llFieldY.toString())
+//
+//        Log.i("stateX", stateX.toString())
+//        Log.i("stateY", stateY.toString())
+//        Log.i("stateTheta", stateTheta.toString())
+//
+//        Log.i("pinpointX", pinpointPose.getX(DistanceUnit.INCH).toString())
+//        Log.i("pinpointY", pinpointPose.getY(DistanceUnit.INCH).toString())
+//        Log.i("pinpointTheta", pinpointPose.getHeading(AngleUnit.RADIANS).toString())
 
 //        Log.i("state", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 //        Log.i("llField", "x: " + llFieldX.toString() + " y: " + llFieldY.toString() + " theta: " + llFieldTheta.toString())
@@ -373,10 +373,10 @@ class Kalman(
         val turretAngle = PI - ((-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI/180))
         val atan2Angle = atan2(poseSet.goalAT.y - yLL, poseSet.goalAT.x - xLL)
         val bearing = (target.targetXDegrees)*(PI/180)
-        Log.i("KalmanMath","start")
-        Log.i("KalmanMath",turretAngle.toString())
-        Log.i("KalmanMath",atan2Angle.toString())
-        Log.i("KalmanMath",bearing.toString())
+//        Log.i("KalmanMath","start")
+//        Log.i("KalmanMath",turretAngle.toString())
+//        Log.i("KalmanMath",atan2Angle.toString())
+//        Log.i("KalmanMath",bearing.toString())
         var llAngle = turretAngle + atan2Angle + bearing
         llAngle %= (2*PI)
         if (llAngle > PI) {
@@ -385,7 +385,7 @@ class Kalman(
         if (llAngle < -PI) {
             llAngle += 2*PI
         }
-        Log.i("KalmanMath", llAngle.toString())
+//        Log.i("KalmanMath", llAngle.toString())
         return Triple(xRobot, yRobot, thetaRobot)
     }
 
@@ -414,7 +414,7 @@ class Kalman(
 
 
     fun predict(dx: Double, dy: Double, dTheta: Double, pinpointTheta: Double) {
-        Log.i("Kalman","predicting")
+//        Log.i("Kalman","predicting")
 
         //rotation matrix from pinpoint field to state field
 
@@ -433,7 +433,7 @@ class Kalman(
     }
 
     fun update(zx: Double, zy: Double, zTheta: Double, R: SimpleMatrix) {
-        Log.i("Kalman","updating")
+//        Log.i("Kalman","updating")
 
         val measurement = SimpleMatrix(doubleArrayOf(zx, zy, zTheta))
 

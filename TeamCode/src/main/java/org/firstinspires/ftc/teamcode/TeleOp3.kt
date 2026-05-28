@@ -162,7 +162,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
                 turret.setTarget(hoodSpeedTurret?.third ?: 0.0)
-                Log.i("shooterVel", hw.getShoot1Vel().toString())
+//                Log.i("shooterVel", hw.getShoot1Vel().toString())
 
 //                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
 //                telemetry.addData("alphaB", hoodSpeedTurret.second)

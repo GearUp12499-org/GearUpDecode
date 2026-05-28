@@ -431,7 +431,7 @@ public class CompBot2Hardware extends HardwareMapper {
             }
         }
 
-        Log.i("flywheelSpeed", String.valueOf(finalSpeed));
+//        Log.i("flywheelSpeed", String.valueOf(finalSpeed));
         return new Triple<>(finalHood, finalSpeed, finalTurret);
     }
 }

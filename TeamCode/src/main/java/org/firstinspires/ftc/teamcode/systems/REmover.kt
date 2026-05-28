@@ -178,8 +178,8 @@ object REmover {
 
                 val tempTargetAngle1 = normalize(atan2(deltaY, deltaX))
                 val tempTargetAngle2 = normalize(tempTargetAngle1 + PI)
-                Log.i("tempA2", tempTargetAngle2.toString())
-                Log.i("tempA1", tempTargetAngle1.toString())
+//                Log.i("tempA2", tempTargetAngle2.toString())
+//                Log.i("tempA1", tempTargetAngle1.toString())
                 tgta = normalize(tgta)
 
                 val error1 = angleDifference(tempTargetAngle1, angle) + angleDifference(
@@ -209,8 +209,8 @@ object REmover {
 
 
                 if (curveAround != pose){
-                    Log.i("StartPos", startPos.toString())
-                    Log.i("EndPos", pose.toString())
+//                    Log.i("StartPos", startPos.toString())
+//                    Log.i("EndPos", pose.toString())
 //                    val startY: Double = startPos.y
 //                    val curveY: Double = curveAround.y
 //                    val startX: Double = startPos.x
@@ -219,26 +219,26 @@ object REmover {
 //                    estimateCurveLength = hypot(startY-curveY, startX-curveX) + hypot(curveY - tgty,curveX - tgtx)
                     var prevSS = startPos
                     for(i in 1..subSections+1 step 1){
-                        Log.i("Remover", "for loop")
+//                        Log.i("Remover", "for loop")
                         //do this to return a double not int
                         val tI = i.toDouble()
                         val tSubSections = (subSections+1).toDouble()
                         val t = (tI/tSubSections)
-                        Log.i("t", t.toString())
+//                        Log.i("t", t.toString())
 
                         val subSection = bezier(startPos,curveAround,pose,t)
 
                         val SSLength = hypot(subSection.x - prevSS.x, subSection.y - prevSS.y)
 
-                        Log.i("SubSection", "length of pose # " + (i-1).toString() + " " +SSLength.toString())
+//                        Log.i("SubSection", "length of pose # " + (i-1).toString() + " " +SSLength.toString())
 
                         estimateCurveLength += SSLength
 
                         SSPoses.add(subSection)
 
                         prevSS = subSection
-                        Log.i("ArcLength", estimateCurveLength.toString())
-                        Log.i("SubSection", "pose # " + (i-1).toString() + " " +SSPoses[i-1].toString())
+//                        Log.i("ArcLength", estimateCurveLength.toString())
+//                        Log.i("SubSection", "pose # " + (i-1).toString() + " " +SSPoses[i-1].toString())
                     }
 
                 }
@@ -357,8 +357,8 @@ object REmover {
                     }
                 }
 
-                Log.i("currentTarget", fakeTgt.toString())
-                Log.i("Removern", n.toString())
+//                Log.i("currentTarget", fakeTgt.toString())
+//                Log.i("Removern", n.toString())
 
                 val tempDeltaX = fakeTgt.x - currentX
                 val tempDeltaY = fakeTgt.y - currentY
@@ -405,7 +405,7 @@ object REmover {
                         Log.w("Remover", "finished")
                     }
                     if (stopCond.stopAtEnd) {
-                        Log.i("Remover", "runtime " + (currentTime / 1000).toString())
+//                        Log.i("Remover", "runtime " + (currentTime / 1000).toString())
                         hardware.frontLeft.power = 0.0
                         hardware.frontRight.power = 0.0
                         hardware.backLeft.power = 0.0
@@ -508,7 +508,7 @@ object REmover {
                     pbr /= scale
                 }
 
-                Log.i("power", greatestPower.toString())
+//                Log.i("power", greatestPower.toString())
 
 
 
