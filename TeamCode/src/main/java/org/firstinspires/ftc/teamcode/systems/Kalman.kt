@@ -279,7 +279,7 @@ class Kalman(
 
             structuralErrorX = 0.1606325833
             structuralErrorY = 1.280544028 * reverse
-        } else if (stateY < -48 * (if (red) 1 else -1)) {
+        } else if (reverse * stateY < -48) {
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(4.0, -0.0842, 0.0),
