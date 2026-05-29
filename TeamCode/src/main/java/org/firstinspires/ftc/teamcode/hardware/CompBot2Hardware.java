@@ -339,7 +339,7 @@ public class CompBot2Hardware extends HardwareMapper {
             boolean red) {
 
 
-        double distance = Math.hypot((goalPose.x - robotPose.x), (goalPose.y - robotPose.y)) - 10.0;
+        double distance = Math.hypot((goalPose.x - robotPose.x), (goalPose.y - robotPose.y)) - 14.0;
         if (far) {
             distance =  Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y));
         }
