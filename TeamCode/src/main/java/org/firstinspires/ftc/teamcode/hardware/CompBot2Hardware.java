@@ -347,7 +347,7 @@ public class CompBot2Hardware extends HardwareMapper {
 //        if (distance > SHOOT_MAX_DIST) {
 //            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO);
         //distance into speed and hood
-        double speed = 6.81246 * distance + 1075.16505;
+        double speed = 6.81246 * distance + 1055.16505;
         double hood = 0.00492724 * distance + 0.0769453;
 
         //hood into percent of total range
