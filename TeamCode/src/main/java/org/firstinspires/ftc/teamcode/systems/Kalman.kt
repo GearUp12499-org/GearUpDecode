@@ -139,6 +139,10 @@ class Kalman(
         val currentY = pinpointPose.getY(DistanceUnit.INCH)
         val currentTheta = pinpointPose.getHeading(AngleUnit.RADIANS)
 
+        val currentThetaDeg = currentTheta * 180/PI
+
+        Log.i("pinpointAngle", currentThetaDeg.toString())
+
         val dx = currentX - prevX
         val dy = currentY - prevY
         val dTheta = currentTheta - prevTheta
@@ -257,6 +261,8 @@ class Kalman(
         }
         //make R
 
+        //middle area
+
         var R = SimpleMatrix(
             arrayOf<DoubleArray?>(
                 doubleArrayOf(2.0, -0.5 * reverse, 0.0),
@@ -267,6 +273,8 @@ class Kalman(
 
         structuralErrorX = -1.069
         structuralErrorY = 1.439 * reverse
+
+        //far wall
 
         if (stateX > 48) {
             R = SimpleMatrix(
@@ -279,17 +287,30 @@ class Kalman(
 
             structuralErrorX = 0.1606325833
             structuralErrorY = 1.280544028 * reverse
-        } else if (reverse * stateY < -48) {
+
+            //red side wall
+        } else if ((stateY < -48) && red) {
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
-                    doubleArrayOf(4.0, -0.0842, 0.0),
-                    doubleArrayOf(-0.08421, 1.0, 0.0),
+                    doubleArrayOf(4.0, 0.0320, 0.0),
+                    doubleArrayOf(0.0320, 1.0, 0.0),
                     doubleArrayOf(0.0, 0.0, 0.00001)
                 )
             )
 
             structuralErrorX = -0.682
             structuralErrorY = 2.203 * reverse
+        }
+
+        //blue side wall
+        else if ((stateY > 48) && !red){
+            R = SimpleMatrix(
+                arrayOf<DoubleArray?>(
+                    doubleArrayOf(4.0, 0.0320, 0.0),
+                    doubleArrayOf(0.0320, 1.0, 0.0),
+                    doubleArrayOf(0.0, 0.0, 0.00001)
+                )
+            )
         }
 
         llFieldX -= structuralErrorX
@@ -443,6 +464,9 @@ class Kalman(
     fun update(zx: Double, zy: Double, zTheta: Double, R: SimpleMatrix) {
 //        Log.i("Kalman","updating")
 
+        val prevStateX = stateX
+        val prevStateY = stateY
+
         val measurement = SimpleMatrix(doubleArrayOf(zx, zy, zTheta))
 
         //R is measurement error, we can customize with data to change how much the measurement is trusted
@@ -455,6 +479,13 @@ class Kalman(
         }
 
         kalmanState = kalmanState.plus(kalmanGain.mult((measurement.minus(kalmanState))))
+
+        if ((abs(stateX - prevStateX) > 15.0) || (abs(stateY - prevStateY) > 15.0)){
+            kalmanState.set(0, prevStateX)
+            kalmanState.set(1, prevStateY)
+            Log.i("kalmanError", stateX.toString())
+            Log.i("kalmanError", stateY.toString())
+        }
 
         //   Log.i("kalmanGain",kalmanGain.toString())
 

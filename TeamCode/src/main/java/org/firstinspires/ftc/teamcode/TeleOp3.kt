@@ -71,6 +71,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
     private val skew = (if (red) 1 else -1) * PI / 2
 
+    private val reverse = (if(red) 1 else -1)
+
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
     private lateinit var turret: TurretImpl
@@ -191,9 +193,12 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val hoodSpeed =
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
 
-                if(kalman.distance > 90.0){
+                if((kalman.distance > 90.0) && ((kalman.stateY*reverse) < 0.0) ){
                     shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO)
-                } else{
+                }
+                else if((kalman.distance > 90.0) && ((kalman.stateY*reverse) > 0.0)){
+                    shooter.setTarget(2040.0)
+                }else{
                     shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
                 }
                 hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
