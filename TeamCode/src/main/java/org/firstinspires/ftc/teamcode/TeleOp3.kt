@@ -18,14 +18,11 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver.Artboard
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_D
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_I
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.ACTIVE_TRACK_P
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_DOWN
-import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_UP
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.Locks
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.REDUCED_TRACK_D
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.REDUCED_TRACK_I
@@ -153,10 +150,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         velY,
                         goalPose,
                         kalman.kalmanPose2D,
-                        accelX,
-                        accelY,
-                        dt,
-                        kalman.stateX < -24.0
+                        kalman.stateX < -24.0,
+                        red
                     )
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
@@ -196,8 +191,8 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val hoodSpeed =
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
 
-                if(kalman.distance > 100.0){
-                    shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE)
+                if(kalman.distance > 90.0){
+                    shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO)
                 } else{
                     shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
                 }

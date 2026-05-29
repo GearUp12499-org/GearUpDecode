@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import android.util.Log;
 import android.util.Pair;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
-import com.qualcomm.hardware.rev.Rev9AxisImuOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -19,10 +17,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.PoseSet;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPinpoint2Driver;
 import org.firstinspires.ftc.teamcode.drivers.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.drivers.IGoBildaPrismDriver;
@@ -87,7 +82,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double SHOOTER_STOP_UP = 0.63;
     public static final double SHOOTER_STOP_DOWN = 1;
 
-//    private var P = 0.000_10
+    //    private var P = 0.000_10
 //    //        private var I = 0.000_2 / 2.33 // 0.000_2
 //    private var I = 0.088 / INTEGRAL_ERROR_SUM_LIMIT // 0.000_2
 //    // current best options: 1e-5, 5e-6
@@ -261,14 +256,16 @@ public class CompBot2Hardware extends HardwareMapper {
         shoot1.setPower(power);
         shoot2.setPower(power);
     }
+
     public double getShoot1Vel() {
         return shoot1.getVelocity();
     }
+
     public double getShoot1Power() {
         return shoot1.getPower();
     }
 
-    public double gethoodpos(){
+    public double gethoodpos() {
         return hood.getPosition();
     }
 
@@ -304,6 +301,7 @@ public class CompBot2Hardware extends HardwareMapper {
         if (!shooterMode) setupShooterVel1();
         shoot1.setVelocity(vel);
     }
+
     public void copyShooterPower() {
         if (!shooterMode) setupShooterVel1();
         shoot2.setPower(shoot1.getPower());
@@ -337,13 +335,11 @@ public class CompBot2Hardware extends HardwareMapper {
             double robotVelY,
             REmover.RobotPose goalPose,
             REmover.RobotPose robotPose,
-            double accelX,
-            double accelY,
-            double dt,
-            boolean far){
+            boolean far,
+            boolean red) {
 
 
-        double distance = Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y)) - 14.0;
+        double distance = Math.hypot((goalPose.x - robotPose.x), (goalPose.y - robotPose.y)) - 10.0;
         if (far) {
             distance =  Math.hypot((goalPose.x-robotPose.x),(goalPose.y-robotPose.y));
         }
@@ -355,23 +351,23 @@ public class CompBot2Hardware extends HardwareMapper {
         double hood = 0.00492724 * distance + 0.0769453;
 
         //hood into percent of total range
-        double hoodPercent = (hood-HOOD_DOWN)/(HOOD_UP-HOOD_DOWN)*100;
+        double hoodPercent = (hood - HOOD_DOWN) / (HOOD_UP - HOOD_DOWN) * 100;
 
         //use model to convert speed and hoodPercent into a V and Theta
         double vB = 0.00331412 * speed + 0.426853;
         double thetaB = -0.181376 * hoodPercent + 71.29116;
 
         //thetaB into radians for sin and cos
-        thetaB = thetaB * Math.PI/180;
+        thetaB = thetaB * Math.PI / 180;
 
         //azimuthal angle
         double alphaB = Math.atan2(goalPose.y - robotPose.y, goalPose.x - robotPose.x);
 
         //break up velocity of the ball with respect to the ground into components
-        double vBz = vB*Math.sin(thetaB);
-        double vBh = vB*Math.cos(thetaB);
-        double vBx = vBh*Math.cos(alphaB);
-        double vBy = vBh*Math.sin(alphaB);
+        double vBz = vB * Math.sin(thetaB);
+        double vBh = vB * Math.cos(thetaB);
+        double vBx = vBh * Math.cos(alphaB);
+        double vBy = vBh * Math.sin(alphaB);
 
         //velocity of ball with respect to robot (v)
         double vx = (vBx - robotVelX);
@@ -380,18 +376,18 @@ public class CompBot2Hardware extends HardwareMapper {
 //        double vy = (vBy - robotVelY) + accelY * dt * 0.1;
         double vz = vBz;
 
-        double alpha = Math.atan2(vy,vx);
-        double vh = Math.hypot(vx,vy);
+        double alpha = Math.atan2(vy, vx);
+        double vh = Math.hypot(vx, vy);
         double theta = Math.atan2(vz, vh);
-        theta = theta * 180/Math.PI;
-        double v = Math.sqrt((vx*vx)+(vy*vy)+(vz*vz));
+        theta = theta * 180 / Math.PI;
+        double v = Math.sqrt((vx * vx) + (vy * vy) + (vz * vz));
 
         //use model to convert to hood and speed, alpha is turret angle
-        double finalHood = (theta-71.29116)/(-0.181376);
-        finalHood = (finalHood/100)*(HOOD_UP-HOOD_DOWN) + HOOD_DOWN;
-        double finalSpeed = (v-0.426853)/(0.00331412);
+        double finalHood = (theta - 71.29116) / (-0.181376);
+        finalHood = (finalHood / 100) * (HOOD_UP - HOOD_DOWN) + HOOD_DOWN;
+        double finalSpeed = (v - 0.426853) / (0.00331412);
 
-        alpha = alpha * 180/Math.PI;
+        alpha = alpha * 180 / Math.PI;
         alpha = alpha % 360;
         if (alpha > 180) {
             alpha -= 360;
@@ -399,12 +395,12 @@ public class CompBot2Hardware extends HardwareMapper {
         if (alpha < -180) {
             alpha += 360;
         }
-        double finalTurret = -180 + alpha - (robotPose.a * 180/Math.PI);
+        double finalTurret = -180 + alpha - (robotPose.a * 180 / Math.PI);
         finalTurret = finalTurret % 360;
-        if (finalTurret > 180){
+        if (finalTurret > 180) {
             finalTurret -= 360;
         }
-        if (finalTurret < -180){
+        if (finalTurret < -180) {
             finalTurret += 360;
         }
 
@@ -412,22 +408,22 @@ public class CompBot2Hardware extends HardwareMapper {
         if (finalHood > 0.5578) finalHood = 0.5578;
         else if (finalHood < 0.1817) finalHood = 0.1817;
 
-        if (finalSpeed < 0){
+        if (finalSpeed < 0) {
             finalSpeed = 0;
         }
         //hood over 0.5578, negative speed
 
-        alphaB = alphaB * 180/Math.PI;
+        alphaB = alphaB * 180 / Math.PI;
 
 
         //return new Triple<>(alpha, alphaB, finalTurret);
 
 
         if (far) {
-            if (robotPose.y > 0.0) {
+            if ((red ? 1.0 : -1.0) * robotPose.y > 0.0) {
                 finalSpeed = 2040;
             } else {
-                finalSpeed = 1960;
+                finalSpeed = 1940;
             }
         }
 
