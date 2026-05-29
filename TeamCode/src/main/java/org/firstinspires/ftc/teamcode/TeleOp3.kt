@@ -64,6 +64,7 @@ import kotlin.time.Duration.Companion.seconds
 abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private enum class TrackState(val htmlLabel: String) {
         Full("<font color=\"#40ff40\">ACTIVE</font>"),
+        Mixed("<font color=\"#40ff40\">MIXED</font>"),
         Reduced("<font color=\"#ffb040\">REDUCED</font>"),
         Off("<font color=\"#ff4040\">DISABLED</font>")
     }
@@ -155,6 +156,70 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                         kalman.stateX < -24.0,
                         red
                     )
+                }
+                if (kalman.stateX < -48.0) {
+                    shooter.setTarget(SHOOT_FAR_RANGE)
+                }
+                shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
+                hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
+                turret.setTarget(hoodSpeedTurret?.third ?: 0.0)
+//                Log.i("shooterVel", hw.getShoot1Vel().toString())
+
+//                telemetry.addData("alphaB less than alpha", (hoodSpeedTurret.second < hoodSpeedTurret.first))
+//                telemetry.addData("alphaB", hoodSpeedTurret.second)
+//                telemetry.addData("alpha", hoodSpeedTurret.first)
+                telemetry.addData("ppx", hw.pinpoint.getPosX(DistanceUnit.INCH))
+                telemetry.addData("ppy", hw.pinpoint.getPosY(DistanceUnit.INCH))
+                telemetry.addData("ppa", hw.pinpoint.getHeading(AngleUnit.RADIANS))
+                telemetry.addData("statex", kalman.kalmanPose2D.x)
+                telemetry.addData("statey", kalman.kalmanPose2D.y)
+                telemetry.addData("statea", kalman.kalmanPose2D.a)
+                telemetry.addData("counter", kalman.updateCounter)
+
+                telemetry.addData("P", TurretImpl.P.toString())
+
+                false
+            }
+        })
+    }
+
+    private fun startTrackingMixed() {
+        activeTrack?.stop()
+        activeLegacyTrack?.stop()
+        activeBind?.stop()
+        activeLegacyTrack = scheduler.add(turretTrack.trackLegacy())
+        currentTime = System.nanoTime()
+        prevTime = currentTime
+        prevVelX = hw.pinpoint.getVelX(DistanceUnit.METER)
+        prevVelY = hw.pinpoint.getVelY(DistanceUnit.METER)
+        TurretImpl.P = ACTIVE_TRACK_P
+        TurretImpl.I = ACTIVE_TRACK_I
+        TurretImpl.D = ACTIVE_TRACK_D
+
+        activeBind = scheduler.add(compose {
+            onTick {
+                currentTime = System.nanoTime()
+                dt = (currentTime - prevTime) * 10e9
+                val velX = hw.pinpoint.getVelX(DistanceUnit.METER)
+                val velY = hw.pinpoint.getVelY(DistanceUnit.METER)
+                val accelX = (velX - prevVelX) / dt
+                val accelY = (velY - prevVelY) / dt
+                var goalPose = poseSet.goalAT
+                if (kalman.stateX < -24.0) {
+                    goalPose = poseSet.goalAtFAR
+                }
+                val hoodSpeedTurret = activeTrack!!.distance.let {
+                    CompBot2Hardware.hoodAndSpeedAndTurret(
+                        velX,
+                        velY,
+                        goalPose,
+                        kalman.kalmanPose2D,
+                        kalman.stateX < -24.0,
+                        red
+                    )
+                }
+                if (kalman.stateX < -48.0) {
+                    shooter.setTarget(SHOOT_FAR_RANGE)
                 }
                 shooter.setTarget(hoodSpeedTurret?.second ?: SHOOT_MID_RANGE)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50
