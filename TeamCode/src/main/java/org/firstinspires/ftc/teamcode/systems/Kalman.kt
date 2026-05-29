@@ -4,6 +4,7 @@ import android.util.Log
 import com.qualcomm.hardware.limelightvision.Limelight3A
 import io.github.gearup12499.taskshark.Task
 import io.github.gearup12499.taskshark.systemPackages
+import org.ejml.data.SingularMatrixException
 import org.ejml.simple.SimpleMatrix
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -70,7 +71,7 @@ class Kalman(
 
     private var lastTime = 0L
 
-    var startTime:Long = 0
+    var startTime: Long = 0
 
     var prevLLX = 0.0
 
@@ -81,7 +82,7 @@ class Kalman(
     var reverse = 1.0
 
 
-    init{
+    init {
         //give initial position
         kalmanState.set(0, initX)
         kalmanState.set(1, initY)
@@ -94,6 +95,7 @@ class Kalman(
         prevY = initY
         prevTheta = initTheta
     }
+
     companion object {
         init {
             systemPackages.add(Kalman::class.qualifiedName!!)
@@ -108,7 +110,7 @@ class Kalman(
         ll.start()
         ll.pipelineSwitch(pipe)
 
-        if(!red){
+        if (!red) {
             reverse = -1.0
         }
 
@@ -148,7 +150,8 @@ class Kalman(
         prevY = currentY
         prevTheta = currentTheta
 
-        val velocity = hypot(hw.pinpoint.getVelX(DistanceUnit.INCH),hw.pinpoint.getVelX(DistanceUnit.INCH))
+        val velocity =
+            hypot(hw.pinpoint.getVelX(DistanceUnit.INCH), hw.pinpoint.getVelX(DistanceUnit.INCH))
 
 //        Log.i("turretVel", deltaTurret.toString())
 //        Log.i("velocity", velocity.toString())
@@ -156,14 +159,12 @@ class Kalman(
 //        Log.i("currentTurret", currentTurret.toString())
 //        Log.i("prevTurret", prevTurret.toString())
 
-        if (velocity > 1 || abs(deltaTurret) > 100.0){
+        if (velocity > 1 || abs(deltaTurret) > 100.0) {
             startTime = (now / 1e9).toLong()
             hasRead = false
             counter = 0
             return false
         }
-
-
 
 
 //        if (hasRead || inMotion){
@@ -183,7 +184,7 @@ class Kalman(
                 "Wrong pipeline ($actualPipeline), trying to switch to $pipe"
             )
             ll.pipelineSwitch(pipe)
-            Log.i("Kalman","wrong pipeline")
+            Log.i("Kalman", "wrong pipeline")
             return false
         }
 
@@ -195,7 +196,7 @@ class Kalman(
 
         if (!result.isValid) {
             Log.i("Kalman", result.ta.toString())
-            Log.i("Kalman","limelight not valid")
+            Log.i("Kalman", "limelight not valid")
             return false
         }
 
@@ -220,23 +221,29 @@ class Kalman(
 //        Log.i("LLX", llx.toString())
 //        Log.i("LLY", lly.toString())
 
-        val thetaTurretRelTurret = (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180)
+        val thetaTurretRelTurret =
+            (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180)
 
-        var (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(limelightX, limelightY, thetaTurretRelTurret, stateTheta)
+        var (llFieldX, llFieldY, llFieldTheta) = getPoseRobotFromLL(
+            limelightX,
+            limelightY,
+            thetaTurretRelTurret,
+            stateTheta
+        )
 
         llx = llFieldX
         lly = llFieldY
 
         //if the reading is very different from the last one
-        if((abs(prevLLX - llFieldX) > 1.0) || (abs(prevLLY - llFieldY) > 1.0)){
-           counter = 0
+        if ((abs(prevLLX - llFieldX) > 1.0) || (abs(prevLLY - llFieldY) > 1.0)) {
+            counter = 0
 //            Log.i("llx",llFieldX.toString())
 //            Log.i("lly",llFieldY.toString())
 //            Log.i("prevLLX",prevLLX.toString())
 //            Log.i("prevLLY",prevLLY.toString())
 //            Log.i("diffLLX", (prevLLX-llx).toString())
 //            Log.i("diffLLY",(prevLLY-lly).toString())
-        } else{
+        } else {
             counter += 1
 //            Log.i("madeIt","")
         }
@@ -245,7 +252,7 @@ class Kalman(
         prevLLX = llFieldX
         prevLLY = llFieldY
 
-        if(counter <= 4 || hasRead){
+        if (counter <= 4 || hasRead) {
             return false
         }
         //make R
@@ -261,7 +268,7 @@ class Kalman(
         structuralErrorX = -1.069
         structuralErrorY = 1.439 * reverse
 
-        if(stateX > 48){
+        if (stateX > 48) {
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(1.0, 0.0320, 0.0),
@@ -272,7 +279,7 @@ class Kalman(
 
             structuralErrorX = 0.1606325833
             structuralErrorY = 1.280544028 * reverse
-        } else if(stateY < -48){
+        } else if (stateY < -48) {
             R = SimpleMatrix(
                 arrayOf<DoubleArray?>(
                     doubleArrayOf(4.0, -0.0842, 0.0),
@@ -291,16 +298,16 @@ class Kalman(
 //        Log.i("PBeforeUpdate", P.toString())
 //        Log.i("stateBeforeUpdate", "x: " + stateX.toString() + " y: " + stateY.toString() + " theta: " + stateTheta.toString())
 
-        if(stateX <= -24.0){
+        if (stateX <= -24.0) {
             return false
         }
 
-        if ((abs(llFieldX) > 72.0) || abs(llFieldY) > 72.0){
+        if ((abs(llFieldX) > 72.0) || abs(llFieldY) > 72.0) {
             return false
         }
 
         update(llFieldX, llFieldY, llFieldTheta, R)
-         updateCounter += 1
+        updateCounter += 1
         hasRead = true
         counter = 0
 
@@ -370,27 +377,28 @@ class Kalman(
         }
 
         //THIS IS VERY LIKELY WRONG :)
-        val turretAngle = PI - ((-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI/180))
+        val turretAngle =
+            PI - ((-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180))
         val atan2Angle = atan2(poseSet.goalAT.y - yLL, poseSet.goalAT.x - xLL)
-        val bearing = (target.targetXDegrees)*(PI/180)
+        val bearing = (target.targetXDegrees) * (PI / 180)
 //        Log.i("KalmanMath","start")
 //        Log.i("KalmanMath",turretAngle.toString())
 //        Log.i("KalmanMath",atan2Angle.toString())
 //        Log.i("KalmanMath",bearing.toString())
         var llAngle = turretAngle + atan2Angle + bearing
-        llAngle %= (2*PI)
+        llAngle %= (2 * PI)
         if (llAngle > PI) {
-            llAngle -= 2*PI
+            llAngle -= 2 * PI
         }
         if (llAngle < -PI) {
-            llAngle += 2*PI
+            llAngle += 2 * PI
         }
 //        Log.i("KalmanMath", llAngle.toString())
         return Triple(xRobot, yRobot, thetaRobot)
     }
 
 
-//getters
+    //getters
     val stateX: Double
         get() = kalmanState.get(0, 0)
 
@@ -404,7 +412,7 @@ class Kalman(
         get() = REmover.RobotPose(stateX, stateY, stateTheta)
 
     val distance: Double
-        get() = (hypot((stateX-poseSet.goalAT.x),(stateY- poseSet.goalAT.y))-1.0)
+        get() = (hypot((stateX - poseSet.goalAT.x), (stateY - poseSet.goalAT.y)) - 1.0)
 
     val limelightx: Double
         get() = llx
@@ -439,11 +447,16 @@ class Kalman(
 
         //R is measurement error, we can customize with data to change how much the measurement is trusted
 
-        val kalmanGain = P.mult((P.plus(R)).invert())
+        val kalmanGain = try {
+            P.mult((P.plus(R)).invert())
+        } catch (e: SingularMatrixException) {
+            Log.e("Kalman", "singular matrix exception", e)
+            return
+        }
 
         kalmanState = kalmanState.plus(kalmanGain.mult((measurement.minus(kalmanState))))
 
-     //   Log.i("kalmanGain",kalmanGain.toString())
+        //   Log.i("kalmanGain",kalmanGain.toString())
 
         val identity = SimpleMatrix.identity(3)
         P = (identity.minus(kalmanGain)).mult(P)
