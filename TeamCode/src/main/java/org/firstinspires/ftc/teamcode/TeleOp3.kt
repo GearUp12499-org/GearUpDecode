@@ -46,6 +46,7 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
+import org.firstinspires.ftc.teamcode.tasks.isAliveOrQueued
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.teamcode.utilities.reportIt
@@ -85,6 +86,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private var activeLegacyTrack: TurretTrack.LegacyTrackTask? = null
 
     private var activeBind: ITask<*>? = null
+    private var modeController: ITask<*>? = null
     private lateinit var scheduler: FastScheduler
     private var isContinuation: Boolean = true
     private var pinpointSetupTask: PinpointSetupTask? = null
@@ -322,6 +324,10 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     }
 
     fun runningVisuals() {
+        if (modeController?.isAliveOrQueued() ?: false)
+            telemetry.addLine(
+                "<big>Live tracking is <strong>auto</strong></big>"
+            )
         telemetry.addLine(
             "<big>Live tracking is <strong>" + trackState.htmlLabel + "</strong></big>"
         )
@@ -542,6 +548,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 }
             }
             if (back2 && !gp2back) {
+                modeController?.stop()
                 trackState = when (trackState) {
                     TrackState.Full -> TrackState.Reduced
                     TrackState.Reduced -> TrackState.Off
@@ -549,11 +556,24 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 }
             }
             if (x2 && !gp2X) {
-                trackState = when (trackState) {
-                    TrackState.Full -> TrackState.Reduced
-                    TrackState.Reduced -> TrackState.Full
-                    else -> trackState
-                }
+                if (modeController?.isAliveOrQueued() ?: false) {
+                    modeController?.stop()
+                } else modeController = sch.add(compose {
+                    var last = trackState
+                    onTick {
+                        val x = kalman.stateX
+                        val y = kalman.stateY
+                        val intent = when {
+                            x < -40 && abs(y) < 36 -> TrackState.Reduced
+                            else -> TrackState.Full
+                        }
+                        if (intent != last) {
+                            trackState = intent
+                            last = intent
+                        }
+                        false
+                    }
+                })
             }
             if (x && !gp1X) {
                 if (trackState == TrackState.Off) {
