@@ -46,8 +46,10 @@ import org.firstinspires.ftc.teamcode.tasks.PinpointSetupTask
 import org.firstinspires.ftc.teamcode.tasks.PinpointTask
 import org.firstinspires.ftc.teamcode.tasks.SentinelTask
 import org.firstinspires.ftc.teamcode.tasks.compose
+import org.firstinspires.ftc.teamcode.tasks.raceTasks
 import org.firstinspires.ftc.teamcode.tasks.isAliveOrQueued
 import org.firstinspires.ftc.teamcode.tasks.stopUsing
+import org.firstinspires.ftc.teamcode.tasks.then
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
 import org.firstinspires.ftc.teamcode.utilities.reportIt
 import kotlin.math.PI
@@ -72,7 +74,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private val poseSet = if (red) PoseSet.RED else PoseSet.BLUE
     private val skew = (if (red) 1 else -1) * PI / 2
 
-    private val reverse = (if(red) 1 else -1)
+    private val reverse = (if (red) 1 else -1)
 
     private lateinit var hw: CompBot2Hardware
     private lateinit var shooter: ShooterImpl
@@ -195,12 +197,11 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 val hoodSpeed =
                     activeLegacyTrack!!.distance?.let { CompBot2Hardware.hoodAndSpeed(it) }
 
-                if((kalman.distance > 100.0) && ((kalman.stateY*reverse) < 0.0) ){
+                if ((kalman.distance > 100.0) && ((kalman.stateY * reverse) < 0.0)) {
                     shooter.setTarget(CompBot2Hardware.SHOOT_FAR_RANGE_AUTO)
-                }
-                else if((kalman.distance > 100.0) && ((kalman.stateY*reverse) > 0.0)){
+                } else if ((kalman.distance > 100.0) && ((kalman.stateY * reverse) > 0.0)) {
                     shooter.setTarget(2040.0)
-                }else{
+                } else {
                     shooter.setTarget(hoodSpeed?.second ?: SHOOT_MID_RANGE)
                 }
                 hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
@@ -483,69 +484,91 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 intakeTask = task
                 task.then(Combo.intakeAfter(hw))
             }
-            if (a2 && !gp2A) {
-                if (trackState == TrackState.Off) {
-                    sch.stopUsing(Locks.INTAKE_STORAGE)
-                    sch.add(VirtualGroup {
-                        add(shooter.setTargetAndWait(SHOOT_MID_RANGE, 0.2))
-                        add(OneShot { hw.hood.position = CompBot2Hardware.HOOD_50 })
-                        add(WaitUntil { abs(turret.currentPosition()) < DEADBAND_TICKS })
-                    })
-                        .then(OneShot { shooter.pushThreshold = 0 })
-                        .then(Combo.shoot(hw))
-                        .then(OneShot { shooter.pushThreshold = shooter.defaultPushThreshold })
-                        .then(Combo.shootAfter(hw))
-                }
+            if (a2 && !gp2A && sch.getLockOwner(Locks.LOCKOUT_MOTORS) == null) {
+                val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
+                sch.stopUsing(Locks.INTAKE_STORAGE)
+                sch.stopUsing(Locks.DRIVE_MOTORS)
+
+                sch.add(object : Group({}) {
+                    var isActuallyFinished = false
+
+                    fun finalizer(): ITask<*> = VirtualGroup {
+                        add(OneShot {
+                            hw.leftKickstand.position = CompBot2Hardware.LEFT_KICKSTAND_NEUTRAL
+                            hw.rightKickstand.position = CompBot2Hardware.RIGHT_KICKSTAND_NEUTRAL
+                        })
+                            .then(Wait.s(.5))
+                    }.require(Locks.LOCKOUT_MOTORS)
+
+                    init {
+                        require(Locks.LOCKOUT_MOTORS)
+                        require(Locks.DRIVE_MOTORS)
+                        require(Locks.INTAKE_STORAGE)
+
+                        getScheduler().apply {
+                            val s = this
+
+                            val main = add(VirtualGroup {
+                                add(OneShot {
+                                    hw.frontLeft.power = 0.0
+                                    hw.frontRight.power = 0.0
+                                    hw.backLeft.power = 0.0
+                                    hw.backRight.power = 0.0
+                                })
+                                    .then(WaitUntil {
+                                        hypot(hw.pinpoint.getVelX(DistanceUnit.INCH), hw.pinpoint.getVelY(DistanceUnit.INCH)) < 2
+                                    })
+                                    .then(OneShot {
+                                        hw.leftKickstand.position =
+                                            CompBot2Hardware.LEFT_KICKSTAND_BRAKE
+                                        hw.rightKickstand.position =
+                                            CompBot2Hardware.RIGHT_KICKSTAND_BRAKE
+                                    })
+                                    .then(Wait.s(.5))
+                                    .then(shoot(s, needToStopIntake) ?: OneShot {
+                                        Log.w(
+                                            "TeleOp",
+                                            "i don't think you can shoot in this configuration smhsmhsmh"
+                                        )
+                                    })
+                            })
+
+                            // TIMEOUT FOR BRAKES
+                            val timeout = add(Wait.s(5))
+                            val collected = arrayOf(timeout, *main.inside.toTypedArray())
+                            timeout.then(OneShot {
+                                collected.forEach(ITask<*>::finish)
+                            })
+                            main.then(OneShot {
+                                collected.forEach(ITask<*>::finish)
+                            })
+                            listOf(timeout, main)
+                                .then(finalizer())
+                                .then(OneShot { isActuallyFinished = true })
+                        }
+                    }
+
+                    override fun onStart() {
+                        super.onStart()
+                        hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_7)
+                    }
+
+                    override fun onFinish(completedNormally: Boolean) {
+                        super.onFinish(completedNormally)
+                        if (!isActuallyFinished) {
+                            finalizer().let {
+                                scheduler?.add(it)
+                                scheduler?.refresh(it) // this preempt never works lmao
+                            }
+                        }
+                        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                    }
+                })
             }
             if (b2 && !gp2B) {
                 val needToStopIntake = intakeTask?.getState() == ITask.State.Ticking
                 sch.stopUsing(Locks.INTAKE_STORAGE)
-                if (trackState != TrackState.Off) {
-                    val distance = kalman.distance
-                    if (distance < SHOOT_MIN_DIST) {
-                        sch.add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5) })
-                            .then(Wait.s(0.5))
-                            .then(OneShot { hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard) })
-                    } else if (distance > SHOOT_MAX_DIST) {
-                        sch.add(VirtualGroup {
-                            add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
-                                .then(VirtualGroup {
-                                    add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
-                                    add(OneShot { shooter.pushThreshold = 0 })
-                                        .then(
-                                            shooter.awaitTarget(
-                                                minimumDuration = 0.2,
-                                                maximumDuration = 0.75
-                                            )
-                                        )
-                                })
-                                .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
-                                .then(OneShot {
-                                    shooter.pushThreshold = shooter.defaultPushThreshold
-                                })
-                                .then(Combo.shootAfter(hw))
-                        })
-                    } else {
-                        sch.add(VirtualGroup {
-                            add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
-                                .then(VirtualGroup {
-                                    add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
-                                    add(OneShot { shooter.pushThreshold = 0 })
-                                        .then(
-                                            shooter.awaitTarget(
-                                                minimumDuration = 0.0,
-                                                maximumDuration = 0.75
-                                            )
-                                        )
-                                })
-                                .then(Combo.shoot(hw))
-                                .then(OneShot {
-                                    shooter.pushThreshold = shooter.defaultPushThreshold
-                                })
-                                .then(Combo.shootAfter(hw))
-                        })
-                    }
-                }
+                shoot(sch, needToStopIntake)?.let { sch.add(it) }
             }
             if (back2 && !gp2back) {
                 modeController?.stop()
@@ -677,6 +700,59 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp2back = back2
             gp2RT = rt2
             gp2LT = lt2
+        }
+
+        private fun shoot(
+            sch: Scheduler,
+            needToStopIntake: Boolean
+        ): ITask<*>? {
+            if (trackState != TrackState.Off) {
+                val distance = kalman.distance
+                if (distance < SHOOT_MIN_DIST) {
+                    return OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_5) }
+                        .then(Wait.s(0.5))
+                        .then(OneShot { hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard) })
+                } else if (distance > SHOOT_MAX_DIST) {
+                    return VirtualGroup {
+                        add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
+                            .then(VirtualGroup {
+                                add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
+                                add(OneShot { shooter.pushThreshold = 0 })
+                                    .then(
+                                        shooter.awaitTarget(
+                                            minimumDuration = 0.2,
+                                            maximumDuration = 0.75
+                                        )
+                                    )
+                            })
+                            .then(Combo.shoot(hw, 0.5, intakePower = 0.6))
+                            .then(OneShot {
+                                shooter.pushThreshold = shooter.defaultPushThreshold
+                            })
+                            .then(Combo.shootAfter(hw))
+                    }
+                } else {
+                    return VirtualGroup {
+                        add(OneShot { hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4) })
+                            .then(VirtualGroup {
+                                add(Deferred { if (needToStopIntake) Combo.intakeAfter(hw) else null })
+                                add(OneShot { shooter.pushThreshold = 0 })
+                                    .then(
+                                        shooter.awaitTarget(
+                                            minimumDuration = 0.0,
+                                            maximumDuration = 0.75
+                                        )
+                                    )
+                            })
+                            .then(Combo.shoot(hw))
+                            .then(OneShot {
+                                shooter.pushThreshold = shooter.defaultPushThreshold
+                            })
+                            .then(Combo.shootAfter(hw))
+                    }
+                }
+            }
+            return null
         }
 
         private var gp2l = false
