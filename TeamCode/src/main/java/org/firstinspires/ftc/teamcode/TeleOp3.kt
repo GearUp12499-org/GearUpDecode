@@ -431,6 +431,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         private var gp1RB = false
         private var gp1LB = false
         private var gp1X = false
+        private var gp2X = false
         private var gp1Y = false
         private var gp2A = false
         private var gp2B = false
@@ -445,6 +446,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             val rb = gamepad1.right_bumper
             val lb = gamepad1.left_bumper
             val x = gamepad1.x
+            val x2 = gamepad2.x
             val y1 = gamepad1.y
             val a2 = gamepad2.a
             val b2 = gamepad2.b
@@ -457,6 +459,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                 gp1RB = true
                 gp1LB = true
                 gp1X = true
+                gp2X = true
                 gp1Y = true
                 gp2r = true
                 gp2l = true
@@ -543,6 +546,13 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
                     TrackState.Full -> TrackState.Reduced
                     TrackState.Reduced -> TrackState.Off
                     TrackState.Off -> TrackState.Full
+                }
+            }
+            if (x2 && !gp2X) {
+                trackState = when (trackState) {
+                    TrackState.Full -> TrackState.Reduced
+                    TrackState.Reduced -> TrackState.Full
+                    else -> trackState
                 }
             }
             if (x && !gp1X) {
@@ -639,6 +649,7 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
             gp1RB = rb
             gp1LB = lb
             gp1X = x
+            gp2X = x2
             gp1Y = y1
             gp2A = a2
             gp2B = b2
