@@ -37,8 +37,8 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double RIGHT_KICKSTAND_NEUTRAL = 0.41;
     public static final double LEFT_KICKSTAND_UP = 0.39;
     public static final double RIGHT_KICKSTAND_UP = 0.77;
-    public static final double LEFT_KICKSTAND_BRAKE = 0.56;
-    public static final double RIGHT_KICKSTAND_BRAKE = 0.58;
+    public static final double LEFT_KICKSTAND_BRAKE = 0.58;
+    public static final double RIGHT_KICKSTAND_BRAKE = 0.56;
 
     public static final double SLIDER_OUT = 0.10;
     public static final double SLIDER_MIDDLE = 0.25;
@@ -51,7 +51,7 @@ public class CompBot2Hardware extends HardwareMapper {
     public static final double BALL_STOP_STOWED = 0.37;
     public static final double BALL_STOP_MIDDLE = 0.47;
 
-    public static final double FLIPPER_DOWN = 0.25;
+    public static final double FLIPPER_DOWN = 0.30;
     public static final double FLIPPER_MID = 0.50;
     public static final double FLIPPER_UP = 0.70;
 
@@ -347,7 +347,7 @@ public class CompBot2Hardware extends HardwareMapper {
 //        if (distance > SHOOT_MAX_DIST) {
 //            return new Triple<>(HOOD_UP, SHOOT_FAR_RANGE_AUTO);
         //distance into speed and hood
-        double speed = 6.81246 * distance + 1055.16505;
+        double speed = 6.81246 * distance + 1035.16505;
         double hood = 0.00492724 * distance + 0.0769453;
 
         //hood into percent of total range
