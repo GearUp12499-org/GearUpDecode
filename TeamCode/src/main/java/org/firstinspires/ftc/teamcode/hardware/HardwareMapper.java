@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +22,12 @@ import java.util.ArrayList;
  * Annotation processor for hardware map things.
  */
 public abstract class HardwareMapper {
+
+    private void drive2pose(double test){
+        while (true){
+            Math.abs()
+        }
+    }
     static final class BadAnnotationSetException extends RuntimeException {
         private static <A extends Annotation, B extends Annotation> String reason(
                 Class<A> existing, Class<B> incoming, @Nullable String context

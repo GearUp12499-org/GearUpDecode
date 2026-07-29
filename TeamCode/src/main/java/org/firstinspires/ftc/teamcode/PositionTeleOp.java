@@ -55,6 +55,19 @@ public class  PositionTeleOp extends LinearOpMode {
 
 
         hardware = new CompBot2Hardware(hardwareMap);
+
+        double xOrigOffset = 0;
+        double xOffset = 0;
+        double yOrigOffset = 0;
+        double yOffset = 0;
+
+        hardware.pinpoint.setOffsets(xOrigOffset + xOffset,yOrigOffset + yOffset,DistanceUnit.INCH);
+
+        double x1 = 1;
+        double y1 = 2;
+        double theta = 3;
+
+        hardware.pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, x1, y1, AngleUnit.DEGREES, theta));
  
         limelight3A = hardwareMap.get(Limelight3A.class, "limelight");
         limelight3A.pipelineSwitch(2);
@@ -69,6 +82,18 @@ public class  PositionTeleOp extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+
+            hardware.pinpoint.update();
+
+            Pose2D currentPose = hardware.pinpoint.getPosition();
+            double currentX = currentPose.getX(DistanceUnit.INCH);
+            double currentY = currentPose.getY(DistanceUnit.INCH);
+            double currentTheta = currentPose.getHeading(AngleUnit.DEGREES);
+
+            telemetry.addData("x", currentX);
+            telemetry.addData("y", currentY);
+            telemetry.addData("theta", currentTheta);
+            telemetry.update();
 
             if (gamepad1.x) {
                 File f = FileUtil.getfile();
@@ -98,7 +123,7 @@ public class  PositionTeleOp extends LinearOpMode {
             }
 
             hardware.pinpoint.update();
-            Pose2D currentPose = hardware.pinpoint.getPosition();
+//            Pose2D currentPose = hardware.pinpoint.getPosition();
 
             double ppX = currentPose.getX(DistanceUnit.INCH);
             double ppY = currentPose.getY(DistanceUnit.INCH);
