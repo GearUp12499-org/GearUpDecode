@@ -209,10 +209,10 @@ class Kalman(
         ll.updateRobotOrientation((pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)))
 //        Log.i("kalman_orientation",(pinpointPose.getHeading(AngleUnit.DEGREES) + (-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG)).toString() )
         val botpose = result.botpose_MT2
-        val testpose = result.botpose
+//        val testpose = result.botpose
 
 
-        val testX = testpose.getPosition().x * INCHES_PER_METER * -1
+//        val testX = testpose.getPosition().x * INCHES_PER_METER * -1
 
 
         val limelightX: Double = botpose.getPosition().x * INCHES_PER_METER * -1

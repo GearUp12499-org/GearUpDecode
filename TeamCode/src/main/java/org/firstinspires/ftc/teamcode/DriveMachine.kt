@@ -9,6 +9,9 @@ import kotlin.math.sin
 class DriveMachine (private val hw: CompBot2Hardware){
     /*
     all four drive motors belong to this class
+
+    needs:
+    joystick input for x, y, rx
      */
 
     public enum class State{

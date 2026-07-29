@@ -18,6 +18,15 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
     - flipper
     - bottom ball stop
     - intake
+
+    sensor inputs that this class needs:
+    gp1rb (transition to STARTING)
+    gp1lb (transition to OFF)
+    gp2y (shoot)
+    colorTopRight
+    colorTopLeft
+    ramps
+
      */
 
     public enum class State {
@@ -52,9 +61,6 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
     }
 
     private var shootingSubState = SHOOTINGSubState.PRE_FLIPPER
-    private var conditionContiniousStartTimeNs: Long = 0L
-
-    private var stateStartTimeNs: Long = 0L
 
     companion object {
         private val INTAKE_POWER = 1.0
@@ -62,13 +68,17 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
     }
 
     private var stepStartTimeNs: Long = 0L
+    private var conditionContiniousStartTimeNs: Long = 0L
+    private var stateStartTimeNs: Long = 0L
 
     fun init(){
         state = State.OFF
         onStateEnter(State.OFF)
     }
 
-    fun update(gp1rb: Boolean, gp1lb: Boolean, gp2y: Boolean){
+    fun update(gp1rb: Boolean, gp1lb: Boolean, gp2y: Boolean,
+               topLeftDistance: Double, topRightDistance: Double,
+               rampsActive: Boolean){
 
         val justTransitioned = (state != prevState)
         prevState = state
@@ -101,17 +111,13 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
             State.INTAKING -> {
                 when(intakeSubState) {
                     INTAKINGSubState.WAIT_FOR_DISTANCE_SENSORS -> {
-                        val leftDistance = hw.colorTopLeft.getDistance(DistanceUnit.MM)
-                        val rightDistance = hw.colorTopRight.getDistance(DistanceUnit.MM)
 
-                        if (leftDistance < 95.0 || rightDistance < 95.0) {
+                        if (topLeftDistance < 95.0 || topRightDistance < 95.0) {
                             intakeSubState = INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS
                             conditionContiniousStartTimeNs = 0L
                         }
                     }
                     INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS -> {
-                        val rampsActive = hw.frontRamp.state && hw.middleRamp.state
-
                         if (rampsActive) {
                             if (conditionContiniousStartTimeNs == 0L) {
                                 conditionContiniousStartTimeNs = System.nanoTime()
@@ -198,10 +204,6 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
                 hw.shooterBallStop.position = SHOOTER_STOP_DOWN
             }
             State.STARTING -> {
-                hw.setIntakePower(0.0)
-                hw.bottomBallStop.position = BOTTOM_STOP_STOWED
-                hw.flipper.position = FLIPPER_DOWN
-                hw.shooterBallStop.position = SHOOTER_STOP_DOWN
                 hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
             }
             State.INTAKING -> {
@@ -223,15 +225,12 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
         }
     }
 
+
     private fun getElapsedSec(startTimeNs: Long): Double {
         return (System.nanoTime() - startTimeNs) / 1_000_000_000.0
     }
 
     private fun transitionTo(newState: State) {
-        state = newState
-        if (state != prevState){
-            onStateEnter(state)
-        }
         prevState = state
     }
 
