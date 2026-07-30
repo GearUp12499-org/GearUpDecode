@@ -26,28 +26,26 @@ class DriveMachine (private val hw: CompBot2Hardware){
     /*
     angle in rad
      */
-    fun update(x: Double, y: Double, rx: Double, angle: Double){
+    fun update(robotState: RobotState, input: GamepadState){
 
-        if (this.state == State.TICKING){
-            var rotX = x * cos(-angle) - y * sin(-angle) //why is angle negative here?
-            val rotY = x * sin(-angle) + y * cos(-angle)
+        when(state){
+            State.TICKING -> {
+                var rotX = input.jx1 * cos(-robotState.ppThetaRad) - input.jy1 * sin(-robotState.ppThetaRad)
+                val rotY = input.jx1 * sin(-robotState.ppThetaRad) + input.jy1 * cos(-robotState.ppThetaRad)
 
-            rotX *= 1.1 // Counteract imperfect strafing
+                rotX *= 1.1 // Counteract imperfect strafing
 
-            val denominator = max(abs(rotY) + abs(rotX) + abs(rx), 1.0)
-            val frontLeftPower = (rotY + rotX + rx) / denominator
-            val backLeftPower = (rotY - rotX + rx) / denominator
-            val frontRightPower = (rotY - rotX - rx) / denominator
-            val backRightPower = (rotY + rotX - rx) / denominator
+                val denominator = max(abs(rotY) + abs(rotX) + abs(input.rx1), 1.0)
+                val frontLeftPower = (rotY + rotX + input.rx1) / denominator
+                val backLeftPower = (rotY - rotX + input.rx1) / denominator
+                val frontRightPower = (rotY - rotX - input.rx1) / denominator
+                val backRightPower = (rotY + rotX - input.rx1) / denominator
 
-            hw.frontLeft.power = frontLeftPower
-            hw.backLeft.power = backLeftPower
-            hw.frontRight.power = frontRightPower
-            hw.backRight.power = backRightPower
-
+                hw.frontLeft.power = frontLeftPower
+                hw.backLeft.power = backLeftPower
+                hw.frontRight.power = frontRightPower
+                hw.backRight.power = backRightPower
+            }
         }
-
     }
-
-
 }

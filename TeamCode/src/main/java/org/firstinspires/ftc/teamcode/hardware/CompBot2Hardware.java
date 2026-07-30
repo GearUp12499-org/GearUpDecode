@@ -430,6 +430,72 @@ public class CompBot2Hardware extends HardwareMapper {
 //        Log.i("flywheelSpeed", String.valueOf(finalSpeed));
         return new Triple<>(finalHood, finalSpeed, finalTurret);
     }
+
+    public static Triple<Double, Double, Double>getPoseRobotFromLL(
+            double xLL,
+            double yLL,
+            double thetaTurret,
+            double thetaRobot
+    ){
+        // thetaRobot MUST be in radians
+
+        double rTurret = 6.5;
+        double tOffset = 0.5;
+
+        double d = Math.sqrt(
+                (rTurret)*(rTurret) +
+                        (tOffset)*(tOffset) -
+                        2 * (rTurret) * (tOffset) * Math.cos(Math.PI - thetaTurret)
+        );
+
+        double x = Math.asin(
+                Math.sin(Math.PI - thetaTurret) * rTurret / d
+        );
+
+        double f = d * Math.cos(x);
+        double s = d * Math.sin(x);
+
+        double xOff = f * Math.cos(thetaRobot) - s * Math.sin(thetaRobot);
+        double yOff = f * Math.sin(thetaRobot) + s * Math.cos(thetaRobot);
+
+        double xRobot = xLL + xOff;
+        double yRobot = yLL + yOff;
+
+        return new Triple<>(xRobot, yRobot, thetaRobot);
+
+//
+//        //use fiducial tag to get relative to goal angle
+//        val tags = ll.latestResult.fiducialResults
+//        val target = tags.firstOrNull { it.fiducialId == targetTag }
+//        //just use pinpoint angle if no fiducial tag is found
+//        if (target == null) {
+//            return Triple(xRobot, yRobot, thetaRobot)
+//        }
+//
+//        //THIS IS VERY LIKELY WRONG :)
+//        val turretAngle =
+//                PI - ((-hw.turretEncoder.getCurrentPosition() / TICKS_PER_DEG) * (PI / 180))
+//        val atan2Angle = atan2(poseSet.goalAT.y - yLL, poseSet.goalAT.x - xLL)
+//        val bearing = (target.targetXDegrees) * (PI / 180)
+////        Log.i("KalmanMath","start")
+////        Log.i("KalmanMath",turretAngle.toString())
+////        Log.i("KalmanMath",atan2Angle.toString())
+////        Log.i("KalmanMath",bearing.toString())
+//        var llAngle = turretAngle + atan2Angle + bearing
+//        llAngle %= (2 * PI)
+//        if (llAngle > PI) {
+//            llAngle -= 2 * PI
+//        }
+//        if (llAngle < -PI) {
+//            llAngle += 2 * PI
+//        }
+////        Log.i("KalmanMath", llAngle.toString())
+//        return Triple(xRobot, yRobot, thetaRobot)
+//    }
+}
+    public static Double taToDistance(double ta) {
+        return Math.sqrt(56.0 / ta) - 5.82; // use for legacy task
+    }
 }
 
 

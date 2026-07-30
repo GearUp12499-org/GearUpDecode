@@ -4,7 +4,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.variants.TurretImpl2
 
-class AimingMachine (private val hw: CompBot2Hardware) {
+class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: PoseSet) {
 
     /*
     Things that belong to this class
@@ -31,18 +31,21 @@ class AimingMachine (private val hw: CompBot2Hardware) {
     private val shooter = ShooterImpl2(hw)
     private val turret = TurretImpl2(hw)
 
+    private var lastGoodReadTime = System.nanoTime()
+
     fun init() {
         state = State.FULL
         onEnter(State.FULL)
     }
 
+
+//    changeModes: Boolean, deltaTarget: Double, lldistance: Double?,
+//    robotVelX: Double, robotVelY: Double, goalPose: REmover.RobotPose,
+//    robotPose: REmover.RobotPose, red: Boolean
+
     //deltaTarget = -target.targetXDegrees (see turretTrack LegacyTurretTrack)
     //lldistance = (taToDisstance(target.targetArea)- 10.0) see Legacy TurretTrack
-    fun update(
-        changeModes: Boolean, deltaTarget: Double, lldistance: Double,
-        robotVelX: Double, robotVelY: Double, goalPose: REmover.RobotPose,
-        robotPose: REmover.RobotPose, red: Boolean
-    ) {
+    fun update(robotState: RobotState, input: GamepadState) {
         if (prevState != state){
             onEnter(state)
         }
@@ -51,7 +54,7 @@ class AimingMachine (private val hw: CompBot2Hardware) {
         turret.tickTurret()
         shooter.tickShooter()
 
-        if (changeModes) {
+        if (input.x2) {
             when (state){
                 State.HARDCODE -> transitionTo(State.FULL)
                 State.LIMELIGHT_ONLY -> transitionTo(State.HARDCODE)
@@ -65,20 +68,28 @@ class AimingMachine (private val hw: CompBot2Hardware) {
             }
 
             State.LIMELIGHT_ONLY -> {
-                turret.setTurretDeltaTarget(deltaTarget)
-                val hoodSpeed = CompBot2Hardware.hoodAndSpeed(lldistance)
+                val now = System.nanoTime()
+                if (robotState.llDistance == null || robotState.tx == null){
+                    if (now - lastGoodReadTime > 2e9){
+                        turret.setTurretTarget(0.0)
+                    }
+                    return
+                }
+                turret.setTurretDeltaTarget(robotState.tx!!)
+                val hoodSpeed = CompBot2Hardware.hoodAndSpeed(robotState.llDistance!!)
                 hw.hood.position = hoodSpeed?.first ?: CompBot2Hardware.HOOD_50
                 shooter.setTarget(hoodSpeed?.second ?: 1800.0)
+                lastGoodReadTime = System.nanoTime()
             }
 
             State.FULL -> {
                 val hoodSpeedTurret = CompBot2Hardware.hoodAndSpeedAndTurret(
-                    robotVelX,
-                    robotVelY,
-                    goalPose,
-                    robotPose,
-                    robotPose.x < -24.0,
-                    red
+                    robotState.velXM,
+                    robotState.velYM,
+                    poseSet.goalAT,
+                    robotState.kalmanPose,
+                    robotState.kalmanX < -24.0,
+                    robotState.red
                 )
                 turret.setTurretTarget(hoodSpeedTurret?.third ?: 0.0)
                 hw.hood.position = hoodSpeedTurret?.first ?: CompBot2Hardware.HOOD_50

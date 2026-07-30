@@ -141,7 +141,7 @@ class Kalman(
 
         val currentThetaDeg = currentTheta * 180/PI
 
-        Log.i("pinpointAngle", currentThetaDeg.toString())
+//        Log.i("pinpointAngle", currentThetaDeg.toString())
 
         val dx = currentX - prevX
         val dy = currentY - prevY

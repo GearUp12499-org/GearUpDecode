@@ -93,15 +93,15 @@ class KalmanImpl (
     }
 
     fun tickKalman(
-        currentTurret: Double,
-        currentX: Double,
-        currentY: Double,
-        currentTheta: Double,
-        velocity: Double,
-        result: LLResult?,
-        llFieldX: Double,
-        llFieldY: Double,
-        llFieldTheta: Double
+        turretDeg: Double,
+        ppX: Double,
+        ppY: Double,
+        ppThetaRad: Double,
+        velocityInch: Double,
+        goodLLRead: Boolean,
+        llFieldX: Double?,
+        llFieldY: Double?,
+        llFieldTheta: Double?
         ) {
 
         var llFieldX = llFieldX
@@ -115,36 +115,35 @@ class KalmanImpl (
         }
         lastTime = now
 
-        val deltaTurret = (currentTurret - prevTurret) / dt
-        prevTurret = currentTurret
+        val deltaTurret = (turretDeg - prevTurret) / dt
+        prevTurret = turretDeg
 
-        val currentThetaDeg = currentTheta * 180 / PI
-        val dx = currentX - prevX
-        val dy = currentY - prevY
-        val dTheta = currentTheta - prevTheta
+        val currentThetaDeg = ppThetaRad * 180 / PI
+        val dx = ppX - prevX
+        val dy = ppY - prevY
+        val dTheta = ppThetaRad - prevTheta
 
-        predict(dx, dy, dTheta, currentTheta)
+        predict(dx, dy, dTheta, ppThetaRad)
 
-        prevX = currentX
-        prevY = currentY
-        prevTheta = currentTheta
+        prevX = ppX
+        prevY = ppY
+        prevTheta = ppThetaRad
 
-        if (velocity > 1 || abs(deltaTurret) > 100.0) {
+        if (velocityInch > 1 || abs(deltaTurret) > 100.0) {
             startTime = (now / 1e9).toLong()
             hasRead = false
             counter = 0
             return
         }
-        if (result == null) {
-            Log.i("Kalman", "limelight null")
+
+        if (!goodLLRead){
             return
         }
 
-        if (!result.isValid) {
-            Log.i("Kalman", result.ta.toString())
-            Log.i("Kalman", "limelight not valid")
-            return
-        }
+        llFieldX = llFieldX!!
+        llFieldY = llFieldY!!
+        llFieldTheta = llFieldTheta!!
+
         //if the reading is very different from the last one
         if ((abs(prevLLX - llFieldX) > 1.0) || (abs(prevLLY - llFieldY) > 1.0)) {
             counter = 0
@@ -240,10 +239,10 @@ class KalmanImpl (
 
         //rotation matrix from pinpoint field to state field
 
-        val rotationTheta = pinpointTheta - kalmanState.get(2, 0)
-
-        val rotatedX = dx * cos(rotationTheta) - dy * sin(rotationTheta)
-        val rotatedY = dx * sin(rotationTheta) + dy * cos(rotationTheta)
+//        val rotationTheta = pinpointTheta - kalmanState.get(2, 0)
+//
+//        val rotatedX = dx * cos(rotationTheta) - dy * sin(rotationTheta)
+//        val rotatedY = dx * sin(rotationTheta) + dy * cos(rotationTheta)
 
         val u = SimpleMatrix(doubleArrayOf(dx, dy, dTheta))
         //predict the next state based on how much pinpoint says you have moved since last call
@@ -300,9 +299,9 @@ class KalmanImpl (
     val kalmanPose2D: REmover.RobotPose
         get() = REmover.RobotPose(stateX, stateY, stateTheta)
 
-    val distance: Double
-        get() = (hypot((stateX - poseSet.goalAT.x), (stateY - poseSet.goalAT.y)) - 1.0)
-
+//    val distance: Double
+//        get() = (hypot((stateX - poseSet.goalAT.x), (stateY - poseSet.goalAT.y)) - 1.0)
+//
 
 
 }

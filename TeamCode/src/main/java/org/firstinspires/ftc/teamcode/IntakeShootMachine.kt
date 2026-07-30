@@ -76,9 +76,7 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
         onStateEnter(State.OFF)
     }
 
-    fun update(gp1rb: Boolean, gp1lb: Boolean, gp2y: Boolean,
-               topLeftDistance: Double, topRightDistance: Double,
-               rampsActive: Boolean){
+    fun update(robotState: RobotState, input: GamepadState){
 
         val justTransitioned = (state != prevState)
         prevState = state
@@ -87,19 +85,19 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
             onStateEnter(state)
         }
 
-        if (gp1lb){
+        if (input.lb1){
             transitionTo(State.OFF)
             return
         }
 
-        if (gp2y && state != State.SHOOTING){
+        if (input.y2 && state != State.SHOOTING){
             transitionTo(State.SHOOTING)
             return
         }
 
         when (state) {
             State.OFF -> {
-                if (gp1rb){
+                if (input.rb1){
                     transitionTo(State.STARTING)
                 }
             }
@@ -112,13 +110,13 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
                 when(intakeSubState) {
                     INTAKINGSubState.WAIT_FOR_DISTANCE_SENSORS -> {
 
-                        if (topLeftDistance < 95.0 || topRightDistance < 95.0) {
+                        if (robotState.colorTopLeft < 95.0 || robotState.colorTopRight < 95.0) {
                             intakeSubState = INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS
                             conditionContiniousStartTimeNs = 0L
                         }
                     }
                     INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS -> {
-                        if (rampsActive) {
+                        if (robotState.frontRamp && robotState.middleRamp) {
                             if (conditionContiniousStartTimeNs == 0L) {
                                 conditionContiniousStartTimeNs = System.nanoTime()
                             } else if (getElapsedSec(conditionContiniousStartTimeNs) >= 0.5) {
