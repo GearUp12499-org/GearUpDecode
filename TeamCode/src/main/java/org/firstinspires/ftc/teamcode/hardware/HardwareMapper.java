@@ -23,11 +23,6 @@ import java.util.ArrayList;
  */
 public abstract class HardwareMapper {
 
-    private void drive2pose(double test){
-        while (true){
-            Math.abs()
-        }
-    }
     static final class BadAnnotationSetException extends RuntimeException {
         private static <A extends Annotation, B extends Annotation> String reason(
                 Class<A> existing, Class<B> incoming, @Nullable String context

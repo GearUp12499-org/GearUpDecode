@@ -67,7 +67,6 @@ import kotlin.time.Duration.Companion.seconds
 abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
     private enum class TrackState(val htmlLabel: String) {
         Full("<font color=\"#40ff40\">ACTIVE</font>"),
-        Mixed("<font color=\"#40ff40\">MIXED</font>"),
         Reduced("<font color=\"#ffb040\">REDUCED</font>"),
         Off("<font color=\"#ff4040\">DISABLED</font>")
     }
