@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.robotcore.robot.Robot
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
@@ -12,26 +14,33 @@ class DriveMachine (private val hw: CompBot2Hardware){
 
     needs:
     joystick input for x, y, rx
+    robotAngleRAD (kalman which is technically pinpoint)
      */
 
-    public enum class State{
+    enum class State{
         TICKING
     }
 
+    private var skew = 0.0
+
     public lateinit var state: State
 
-    fun init(){
+    fun init(robotState: RobotState){
         this.state = State.TICKING
+        skew = (if (robotState.red) 1 else -1) * PI/2
+
+
     }
-    /*
-    angle in rad
-     */
+
     fun update(robotState: RobotState, input: GamepadState){
 
         when(state){
             State.TICKING -> {
-                var rotX = input.jx1 * cos(-robotState.ppThetaRad) - input.jy1 * sin(-robotState.ppThetaRad)
-                val rotY = input.jx1 * sin(-robotState.ppThetaRad) + input.jy1 * cos(-robotState.ppThetaRad)
+
+                val angle = -(robotState.ppThetaRad + skew)
+
+                var rotX = input.jx1 * cos(angle) - input.jy1 * sin(angle)
+                val rotY = input.jx1 * sin(angle) + input.jy1 * cos(angle)
 
                 rotX *= 1.1 // Counteract imperfect strafing
 

@@ -19,7 +19,7 @@ class ShooterImpl2 (private val hw: CompBot2Hardware) {
         hw.setupShooterVel()
     }
 
-    fun tickShooter(){
+    fun tickShooter(shoot1Velk: Double){
         val targetMode = target - hw.shoot1Vel <= pushThreshold
         if (targetMode != mode) if (targetMode) hw.shoot1Vel = target
         mode = targetMode

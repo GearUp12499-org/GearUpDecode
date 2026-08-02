@@ -9,8 +9,10 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.FLIPPER_UP
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_DOWN
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SHOOTER_STOP_UP
 import org.firstinspires.ftc.teamcode.utilities.StaticStore
+import android.util.Log
 
-class IntakeShootMachine (private val hw: CompBot2Hardware){
+
+class IntakeShootMachine(private val hw: CompBot2Hardware) {
 
     /*
     things that belong to this class
@@ -23,168 +25,160 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
     gp1rb (transition to STARTING)
     gp1lb (transition to OFF)
     gp2y (shoot)
-    colorTopRight
-    colorTopLeft
-    ramps
+    colorTopRight (distance)
+    colorTopLeft (distance)
+    colorBottomRight (distance)
+    colorBottomLeft (distance)
+    ramps (front, middle) booleans
 
      */
 
-    public enum class State {
+    enum class State {
         OFF,
-        STARTING,
-        INTAKING,
+        INTAKING_DISTANCE_SENSORS,
+        INTAKING_RAMPS,
         FINISHING,
-        SHOOTING
+        SHOOTING_PREFLIPPER,
+        SHOOTING_FLIPPER,
+        RECOVER_FLIPPER_SHOOTERSTOP
     }
 
-    var state = State.OFF
+    lateinit var state: State
         private set
     private var prevState = State.OFF
 
-    private enum class INTAKINGSubState{
-        WAIT_FOR_DISTANCE_SENSORS,
-        WAIT_FOR_RAMP_CONTINUOUS
-    }
-    private var intakeSubState = INTAKINGSubState.WAIT_FOR_DISTANCE_SENSORS
-
-    private enum class FINISHINGSubState{
-        INTAKE_SETTLING,
-        FINISH_MOVES
-    }
-
-    private var finishingSubState = FINISHINGSubState.INTAKE_SETTLING
-
-    private enum class SHOOTINGSubState{
-        PRE_FLIPPER,
-        FLIPPERING,
-        POST_FLIPPER
-    }
-
-    private var shootingSubState = SHOOTINGSubState.PRE_FLIPPER
+    private var waitingFlipper = false
 
     companion object {
         private val INTAKE_POWER = 1.0
         private val OUTTAKE_POWER = CompBot2Hardware.OUTTAKE_POWER
     }
 
-    private var stepStartTimeNs: Long = 0L
     private var conditionContiniousStartTimeNs: Long = 0L
     private var stateStartTimeNs: Long = 0L
 
-    fun init(){
-        state = State.OFF
-        onStateEnter(State.OFF)
+    fun init() {
+        state = State.RECOVER_FLIPPER_SHOOTERSTOP
+
+        hw.bottomBallStop.position = BOTTOM_STOP_STOWED
+
     }
 
-    fun update(robotState: RobotState, input: GamepadState){
+    fun update(robotState: RobotState, input: GamepadState) {
 
         val justTransitioned = (state != prevState)
+        if (justTransitioned){
+            Log.i("IntakeShootMachine","TRANSITIONED TO $state")
+            clearTimers()
+        }
         prevState = state
 
-        if (justTransitioned) {
-            onStateEnter(state)
-        }
-
-        if (input.lb1){
-            transitionTo(State.OFF)
+        if (input.lb1) {
+            state = State.RECOVER_FLIPPER_SHOOTERSTOP
             return
         }
 
-        if (input.y2 && state != State.SHOOTING){
-            transitionTo(State.SHOOTING)
+        if (input.y2 && state == State.OFF) {
+            state = State.SHOOTING_PREFLIPPER
             return
         }
 
         when (state) {
-            State.OFF -> {
-                if (input.rb1){
-                    transitionTo(State.STARTING)
+            State.RECOVER_FLIPPER_SHOOTERSTOP -> {
+                if (justTransitioned) {
+                    if (hw.shooterBallStop.position != SHOOTER_STOP_DOWN) {
+                        hw.shooterBallStop.position = SHOOTER_STOP_DOWN
+                    }
+                    waitingFlipper = (hw.flipper.position != FLIPPER_DOWN)
+                    if (waitingFlipper) {
+                        hw.setIntakePower(OUTTAKE_POWER)
+                        hw.flipper.position = FLIPPER_DOWN
+                    } else{
+                        state = State.OFF
+                        hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
+                        return
+                    }
+                }
+                if (getElapsedSec(stateStartTimeNs) > 0.5) {
+                    state = State.OFF
+                    hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
                 }
             }
-            State.STARTING -> {
-                if (getElapsedSec(stateStartTimeNs) >= 0.25){
-                    transitionTo(State.INTAKING)
-                }
-            }
-            State.INTAKING -> {
-                when(intakeSubState) {
-                    INTAKINGSubState.WAIT_FOR_DISTANCE_SENSORS -> {
 
-                        if (robotState.colorTopLeft < 95.0 || robotState.colorTopRight < 95.0) {
-                            intakeSubState = INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS
-                            conditionContiniousStartTimeNs = 0L
-                        }
-                    }
-                    INTAKINGSubState.WAIT_FOR_RAMP_CONTINUOUS -> {
-                        if (robotState.frontRamp && robotState.middleRamp) {
-                            if (conditionContiniousStartTimeNs == 0L) {
-                                conditionContiniousStartTimeNs = System.nanoTime()
-                            } else if (getElapsedSec(conditionContiniousStartTimeNs) >= 0.5) {
-                                transitionTo(State.FINISHING)
-                                return
-                            }
-                        } else {
-                            conditionContiniousStartTimeNs = 0L
-                        }
-                    }
+            State.OFF -> {
+                if (justTransitioned) {
+                    hw.setIntakePower(0.0)
+                    hw.shooterBallStop.position = SHOOTER_STOP_UP
+                }
+                if (input.rb1) {
+                    state = State.INTAKING_DISTANCE_SENSORS
                 }
             }
+
+            State.INTAKING_DISTANCE_SENSORS -> {
+                if (justTransitioned) {
+                    hw.shooterBallStop.position = SHOOTER_STOP_DOWN
+                    hw.setIntakePower(INTAKE_POWER)
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
+                }
+                if (robotState.colorTopLeft < 95.0 || robotState.colorTopRight < 95.0) {
+                    state = State.INTAKING_RAMPS
+                    conditionContiniousStartTimeNs = 0L
+                }
+            }
+
+            State.INTAKING_RAMPS -> {
+                if (robotState.frontRamp && robotState.middleRamp) {
+                    if (conditionContiniousStartTimeNs == 0L) {
+                        conditionContiniousStartTimeNs = System.nanoTime()
+                    } else if (getElapsedSec(conditionContiniousStartTimeNs) >= 0.5) {
+                        state = State.FINISHING
+                        return
+                    }
+                } else {
+                    conditionContiniousStartTimeNs = 0L
+                }
+            }
+
             State.FINISHING -> {
-                when (finishingSubState){
-                    FINISHINGSubState.INTAKE_SETTLING -> {
-                        if (getElapsedSec(stepStartTimeNs) >= 0.05){
-                            hw.shooterBallStop.position = SHOOTER_STOP_UP
-                            finishingSubState = FINISHINGSubState.FINISH_MOVES
-                            stepStartTimeNs = System.nanoTime()
-                        }
-                    }
-                    FINISHINGSubState.FINISH_MOVES -> {
-                        if (getElapsedSec(stepStartTimeNs) >= 0.15){
-                            transitionTo(State.OFF)
-                        }
-                    }
+                if (justTransitioned) {
+                    hw.setIntakePower(0.0)
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
+                }
+                if (getElapsedSec(stateStartTimeNs) >= 0.15) {
+                    state = State.RECOVER_FLIPPER_SHOOTERSTOP
                 }
             }
-            State.SHOOTING -> {
-                when (shootingSubState){
-                    SHOOTINGSubState.PRE_FLIPPER -> {
-                        val stuck = !hw.frontRamp.state && (hw.colorBottomLeft.getDistance(DistanceUnit.MM) < 110.0
-                                || hw.colorBottomRight.getDistance(DistanceUnit.MM) < 110.0)
-                        if (getElapsedSec(stateStartTimeNs) > 1.0){
-                            hw.flipper.position = FLIPPER_UP
-                            stepStartTimeNs = System.nanoTime()
-                            shootingSubState = SHOOTINGSubState.FLIPPERING
-                            return
-                        }
-                        if (stuck){
-                            if (conditionContiniousStartTimeNs == 0L){
-                                conditionContiniousStartTimeNs = System.nanoTime()
-                            }else if (getElapsedSec(conditionContiniousStartTimeNs) > 0.15){
-                                hw.flipper.position = FLIPPER_UP
-                                stepStartTimeNs = System.nanoTime()
-                                shootingSubState = SHOOTINGSubState.FLIPPERING
-                                return
-                            }
-                        } else{
-                            conditionContiniousStartTimeNs = 0L
-                        }
+
+            State.SHOOTING_PREFLIPPER -> {
+                if (justTransitioned) {
+                    hw.setIntakePower(INTAKE_POWER)
+                    hw.shooterBallStop.position = SHOOTER_STOP_UP
+                    hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
+                }
+                val stuck = !robotState.frontRamp && (robotState.colorBottomLeft < 110.0
+                        || robotState.colorBottomRight < 110.0)
+                if (getElapsedSec(stateStartTimeNs) > 1.0) {
+                    hw.flipper.position = FLIPPER_UP
+                    state = State.SHOOTING_FLIPPER
+                    return
+                }
+                if (stuck) {
+                    if (conditionContiniousStartTimeNs == 0L) {
+                        conditionContiniousStartTimeNs = System.nanoTime()
+                    } else if (getElapsedSec(conditionContiniousStartTimeNs) > 0.15) {
+                        hw.flipper.position = FLIPPER_UP
+                        state = State.SHOOTING_FLIPPER
+                        return
                     }
-                    SHOOTINGSubState.FLIPPERING -> {
-                        if (getElapsedSec(stepStartTimeNs) > 0.4){
-                            stepStartTimeNs = System.nanoTime()
-                            hw.flipper.position = FLIPPER_DOWN
-                            hw.setIntakePower(OUTTAKE_POWER)
-                            shootingSubState = SHOOTINGSubState.POST_FLIPPER
-                            return
-                    }
-                    }
-                    SHOOTINGSubState.POST_FLIPPER -> {
-                        if (getElapsedSec(stepStartTimeNs) > 0.5) {
-                            hw.setIntakePower(0.0)
-                            hw.prism.loadAnimationsFromArtboard(StaticStore.fallbackArtboard)
-                            transitionTo(State.OFF)
-                        }
-                    }
+                } else {
+                    conditionContiniousStartTimeNs = 0L
+                }
+            }
+
+            State.SHOOTING_FLIPPER -> {
+                if (getElapsedSec(stateStartTimeNs) > 0.4) {
+                    state = State.RECOVER_FLIPPER_SHOOTERSTOP
                 }
             }
 
@@ -192,50 +186,14 @@ class IntakeShootMachine (private val hw: CompBot2Hardware){
         }
     }
 
-    private fun onStateEnter(newState: State) {
-        clearTimers()
-        when (newState) {
-            State.OFF -> {
-                hw.setIntakePower(0.0)
-                hw.bottomBallStop.position = BOTTOM_STOP_STOWED
-                hw.flipper.position = FLIPPER_DOWN
-                hw.shooterBallStop.position = SHOOTER_STOP_DOWN
-            }
-            State.STARTING -> {
-                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_2)
-            }
-            State.INTAKING -> {
-                hw.setIntakePower(INTAKE_POWER)
-                intakeSubState = INTAKINGSubState.WAIT_FOR_DISTANCE_SENSORS
-            }
-            State.FINISHING -> {
-                hw.setIntakePower(0.0)
-                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_3)
-                finishingSubState = FINISHINGSubState.INTAKE_SETTLING
-            }
-            State.SHOOTING -> {
-                hw.setIntakePower(INTAKE_POWER)
-                hw.bottomBallStop.position = BOTTOM_STOP_STOWED
-                hw.shooterBallStop.position = SHOOTER_STOP_UP
-                hw.prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_4)
-                shootingSubState = SHOOTINGSubState.PRE_FLIPPER
-            }
-        }
-    }
 
+private fun getElapsedSec(startTimeNs: Long): Double {
+    return (System.nanoTime() - startTimeNs) / 1_000_000_000.0
+}
 
-    private fun getElapsedSec(startTimeNs: Long): Double {
-        return (System.nanoTime() - startTimeNs) / 1_000_000_000.0
-    }
-
-    private fun transitionTo(newState: State) {
-        prevState = state
-    }
-
-    private fun clearTimers(){
-        val now = System.nanoTime()
-        conditionContiniousStartTimeNs = 0L
-        stepStartTimeNs = now
-        stateStartTimeNs = now
-    }
+private fun clearTimers() {
+    val now = System.nanoTime()
+    conditionContiniousStartTimeNs = 0L
+    stateStartTimeNs = now
+}
 }

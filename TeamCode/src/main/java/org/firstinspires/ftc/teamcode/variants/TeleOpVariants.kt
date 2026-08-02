@@ -10,3 +10,9 @@ class TeleOpRed : TeleOp3(true)
 
 @TeleOp
 class TeleOpBlue : TeleOp3(false)
+
+@TeleOp
+class StateTeleOpRed: StateTeleop(true)
+
+@TeleOp
+class StateTeleopBlue: StateTeleop(false)

@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.variants.TurretImpl2
+import android.util.Log
+
 
 class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: PoseSet) {
 
@@ -18,7 +20,7 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
     - pinpoint x and y velocities (for full)
      */
 
-    public enum class State {
+    enum class State {
         HARDCODE,
         LIMELIGHT_ONLY,
         FULL
@@ -34,6 +36,8 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
     private var lastGoodReadTime = System.nanoTime()
 
     fun init() {
+        shooter.init()
+
         state = State.FULL
         onEnter(State.FULL)
     }
@@ -48,11 +52,12 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
     fun update(robotState: RobotState, input: GamepadState) {
         if (prevState != state){
             onEnter(state)
+            Log.i("AimingMachine","TRANSITIONED TO $state")
         }
         prevState = state
 
         turret.tickTurret()
-        shooter.tickShooter()
+        shooter.tickShooter(robotState.shoot1Vel)
 
         if (input.x2) {
             when (state){

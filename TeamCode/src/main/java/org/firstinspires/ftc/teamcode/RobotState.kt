@@ -2,7 +2,10 @@ package org.firstinspires.ftc.teamcode
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SLIDER_IN
+import org.firstinspires.ftc.teamcode.systems.Kalman
 import org.firstinspires.ftc.teamcode.systems.Kalman.Companion.INCHES_PER_METER
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.systems.TurretTrack.Companion.TAG_BLUE
@@ -13,7 +16,10 @@ import kotlin.times
 
 class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
 
+
     //pinpoint items
+
+    val initPose = Pose2D (DistanceUnit.INCH, 0.0, 0.0, AngleUnit.RADIANS, 0.0)
     var ppX: Double = 0.0
     var ppY: Double = 0.0
     var ppThetaDeg: Double = 0.0
@@ -35,6 +41,7 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
     val pipe = if (red) 2 else 7
     val targetTag = if (red) TAG_RED else TAG_BLUE
     var goodLLRead: Boolean = true//used to skip unnesessary steps and decide whether or
+
     //not to kalman update
     var llFieldX: Double? = 0.0
     var llFieldY: Double? = 0.0
@@ -45,12 +52,7 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
 
     //kalman related
 
-    val kalman = KalmanImpl(
-        0.0,
-        0.0,
-        0.0,
-        red
-    )
+    lateinit var kalman: KalmanImpl
 
     var kalmanX: Double = 0.0
     var kalmanY: Double = 0.0
@@ -62,16 +64,33 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
     var colorTopRight: Double = 0.0
     var colorTopLeft: Double = 0.0
 
+    var colorBottomLeft: Double = 0.0
+    var colorBottomRight: Double = 0.0
+
     var frontRamp: Boolean = false
     var middleRamp: Boolean = false
 
-    fun init(){
+    var shoot1Vel: Double = 0.0
+
+
+    fun init() {
         hw.limelight.start()
         hw.limelight.pipelineSwitch(pipe)
+
+        hw.pinpoint.setPosition(Pose2D(DistanceUnit.INCH, 0.0, 0.0, AngleUnit.RADIANS, 0.0))
+        kalman = KalmanImpl(
+            initPose.getX(DistanceUnit.INCH),
+            initPose.getY(DistanceUnit.INCH),
+            initPose.getHeading(AngleUnit.RADIANS),
+            red
+        )
+        kalman.init()
+
+        hw.slider.position = SLIDER_IN
     }
 
 
-    fun updateState(){
+    fun updateState() {
 
         //update pinpoint
         hw.pinpoint.update()
@@ -101,7 +120,7 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
 
         if (result == null || !result.isValid) {
             goodLLRead = false
-        } else if (result.pipelineIndex != pipe){
+        } else if (result.pipelineIndex != pipe) {
             hw.limelight.pipelineSwitch(pipe)
             goodLLRead = false
         }
@@ -128,11 +147,11 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
             if (target != null) {
                 llDistance = CompBot2Hardware.taToDistance(target.targetArea)
                 tx = -target.targetXDegrees
-            }else{
+            } else {
                 llDistance = null
                 tx = null
             }
-        }else{
+        } else {
             llFieldX = null
             llFieldY = null
             llFieldTheta = null
@@ -159,11 +178,18 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
         kalmanPose = kalman.kalmanPose2D
 
         //update sensors
-        colorTopRight = hw.colorTopRight.getDistance(DistanceUnit.MM)
-        colorTopLeft = hw.colorTopLeft.getDistance(DistanceUnit.MM)
+
+        //5ms/read
+        //round robin read? read 1 ever loop and cycle the one that is read
+//        colorTopRight = hw.colorTopRight.getDistance(DistanceUnit.MM)
+//        colorTopLeft = hw.colorTopLeft.getDistance(DistanceUnit.MM)
+//        colorBottomLeft = hw.colorBottomLeft.getDistance(DistanceUnit.MM)
+//        colorBottomRight = hw.colorBottomRight.getDistance(DistanceUnit.MM)
 
         frontRamp = hw.frontRamp.state
         middleRamp = hw.middleRamp.state
+
+        shoot1Vel = hw.shoot1Vel
 
 
     }

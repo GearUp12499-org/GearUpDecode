@@ -384,7 +384,10 @@ abstract class TeleOp3(private val red: Boolean) : LinearOpMode() {
         }
         robotStartTask.requestStart()
         while (opModeIsActive()) {
+            val startTime = System.nanoTime()
             scheduler.tick()
+            val endTime = System.nanoTime()
+            Log.i("TOTALTIME", ((endTime-startTime)/1e6).toString())
         }
     }
 

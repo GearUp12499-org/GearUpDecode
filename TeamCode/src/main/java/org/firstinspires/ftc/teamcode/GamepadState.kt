@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1
+import org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry
 
 class GamepadState (private val gp1: Gamepad, private val gp2: Gamepad) {
 
@@ -17,14 +18,28 @@ class GamepadState (private val gp1: Gamepad, private val gp2: Gamepad) {
     var x2 = false
     var wasx2 = false
 
+    var b1 = false
+    var wasb1 = false
+
     var jx1 = 0.0
     var jy1 = 0.0
     var rx1 = 0.0
 
     fun update(){
+//        if (gp1 == null){
+//            telemetry.addData("init gp1","")
+//            return
+//        }
+//        if (gp2 == null){
+//            telemetry.addData("init gp2","")
+//            return
+//        }
+//        gp1 = gp1!!
+//        gp2 = gp2!!
+
         //field centric drive (DM)
         jx1 = gp1.left_stick_x.toDouble()
-        jy1 = gp1.left_stick_y.toDouble()
+        jy1 = -gp1.left_stick_y.toDouble()
         rx1 = gp1.right_stick_x.toDouble()
 
         //intake on (ISM)
@@ -42,6 +57,9 @@ class GamepadState (private val gp1: Gamepad, private val gp2: Gamepad) {
         x2 = gp2.x && !wasx2
         wasx2 = gp2.x
 
+        //hybrid intake
+        b1 = gp1.b && !wasb1
+        wasb1 = gp1.b
 
     }
 }
