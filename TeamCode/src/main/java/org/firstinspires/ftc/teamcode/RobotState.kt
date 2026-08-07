@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.SLIDER_IN
 import org.firstinspires.ftc.teamcode.systems.Kalman
@@ -31,6 +32,8 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
     var velXInch: Double = 0.0
     var velYInch: Double = 0.0
     var velInch: Double = 0.0
+
+    var angVelRad: Double = 0.0
 
     //turret related
     var turretDeg: Double = 0.0
@@ -107,6 +110,8 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
         velXInch = hw.pinpoint.getVelX(DistanceUnit.INCH)
         velYInch = hw.pinpoint.getVelY(DistanceUnit.INCH)
         velInch = hypot(velXInch, velYInch)
+
+        angVelRad = hw.pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
 
         //update turret
         turretDeg =

@@ -8,7 +8,7 @@ import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
 
-class DriveMachine (private val hw: CompBot2Hardware){
+class DriveMachine (private val hw: CompBot2Hardware) {
     /*
     all four drive motors belong to this class
 
@@ -17,24 +17,34 @@ class DriveMachine (private val hw: CompBot2Hardware){
     robotAngleRAD (kalman which is technically pinpoint)
      */
 
-    enum class State{
-        TICKING
+    enum class State {
+        TICKING,
+        AUTO,
+        OFF
     }
 
     private var skew = 0.0
 
     public lateinit var state: State
+    var prevState: State? = null
 
-    fun init(robotState: RobotState){
+    var justTransitioned = false
+
+    val removerImpl = REmoverImpl()
+
+    fun init(robotState: RobotState) {
         this.state = State.TICKING
-        skew = (if (robotState.red) 1 else -1) * PI/2
+        skew = (if (robotState.red) 1 else -1) * PI / 2
 
 
     }
 
-    fun update(robotState: RobotState, input: GamepadState){
+    fun update(robotState: RobotState, input: GamepadState) {
 
-        when(state){
+        justTransitioned = state != prevState
+        prevState = state
+
+        when (state) {
             State.TICKING -> {
 
                 val angle = -(robotState.ppThetaRad + skew)
@@ -54,6 +64,39 @@ class DriveMachine (private val hw: CompBot2Hardware){
                 hw.backLeft.power = backLeftPower
                 hw.frontRight.power = frontRightPower
                 hw.backRight.power = backRightPower
+            }
+
+            State.AUTO -> {
+                if (justTransitioned) {
+                    //uh oh???
+                }
+
+                removerImpl.tick(
+                    robotState.ppX,
+                    robotState.ppY,
+                    robotState.ppThetaRad,
+                    robotState.velXInch,
+                    robotState.velYInch,
+                    robotState.angVelRad,
+                    robotState.velInch,
+                    hw
+                )
+
+            }
+
+            State.OFF -> {
+                if (hw.frontRight.power != 0.0) {
+                    hw.frontRight.power = 0.0
+                }
+                if (hw.frontLeft.power != 0.0) {
+                    hw.frontLeft.power = 0.0
+                }
+                if (hw.backRight.power != 0.0) {
+                    hw.backRight.power = 0.0
+                }
+                if (hw.backLeft.power != 0.0){
+                    hw.backLeft.power = 0.0
+                }
             }
         }
     }
