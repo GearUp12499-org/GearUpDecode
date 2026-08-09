@@ -25,7 +25,7 @@ class DriveMachine (private val hw: CompBot2Hardware) {
 
     private var skew = 0.0
 
-    public lateinit var state: State
+    lateinit var state: State
     var prevState: State? = null
 
     var justTransitioned = false

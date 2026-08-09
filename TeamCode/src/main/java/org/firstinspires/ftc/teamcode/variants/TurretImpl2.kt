@@ -37,7 +37,7 @@ class TurretImpl2 (private val hw: CompBot2Hardware){
 
 
     private var resetPid = true
-    private var targetAngleDeg = 0.0
+    var targetAngleDeg = 0.0
     private var lastPidTime = 0L
     private var prevError = 0.0
     private var integralErrorSum = 0.0

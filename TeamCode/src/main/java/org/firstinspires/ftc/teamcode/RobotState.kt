@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.robotcore.hardware.I2cAddr
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
@@ -70,6 +72,12 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
     var colorBottomLeft: Double = 0.0
     var colorBottomRight: Double = 0.0
 
+//    private val I2C_ADDR = I2cAddr.create8bit(0x52)
+//    private lateinit var i2cTopRight: I2cDeviceSynch
+//    private lateinit var i2cTopLeft: I2cDeviceSynch
+//    private lateinit var i2cBottomRight: I2cDeviceSynch
+//    private lateinit var i2cBottomLeft: I2cDeviceSynch
+
     var frontRamp: Boolean = false
     var middleRamp: Boolean = false
 
@@ -90,6 +98,27 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
         kalman.init()
 
         hw.slider.position = SLIDER_IN
+
+//        i2cTopRight = hw.colorTopRight as I2cDeviceSynch
+//        i2cTopLeft = hw.colorTopLeft as I2cDeviceSynch
+//        i2cBottomRight = hw.colorBottomRight as I2cDeviceSynch
+//        i2cBottomLeft = hw.colorBottomLeft as I2cDeviceSynch
+//
+//        i2cTopLeft.readWindow
+//
+//        val sensors = listOf(i2cTopRight, i2cTopLeft, i2cBottomRight, i2cBottomLeft)
+//        for (sensor in sensors){
+//            sensor.i2cAddress = I2C_ADDR
+//            sensor.logging = false
+//
+//            val readWindow = I2cDeviceSynch.ReadWindow(
+//                0x1C,1, I2cDeviceSynch.ReadMode.REPEAT
+//            )
+//
+//            sensor.readWindow = readWindow
+//            sensor.engage()
+//
+//        }
     }
 
 
@@ -186,10 +215,11 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
 
         //5ms/read
         //round robin read? read 1 ever loop and cycle the one that is read
-//        colorTopRight = hw.colorTopRight.getDistance(DistanceUnit.MM)
-//        colorTopLeft = hw.colorTopLeft.getDistance(DistanceUnit.MM)
-//        colorBottomLeft = hw.colorBottomLeft.getDistance(DistanceUnit.MM)
-//        colorBottomRight = hw.colorBottomRight.getDistance(DistanceUnit.MM)
+        colorTopRight = hw.colorTopRight.getDistance(DistanceUnit.MM)
+        colorTopLeft = hw.colorTopLeft.getDistance(DistanceUnit.MM)
+        colorBottomLeft = hw.colorBottomLeft.getDistance(DistanceUnit.MM)
+        colorBottomRight = hw.colorBottomRight.getDistance(DistanceUnit.MM)
+
 
         frontRamp = hw.frontRamp.state
         middleRamp = hw.middleRamp.state

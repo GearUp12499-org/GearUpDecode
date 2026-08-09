@@ -44,7 +44,6 @@ class IntakeShootMachine(private val hw: CompBot2Hardware) {
     }
 
     lateinit var state: State
-        private set
     private var prevState = State.OFF
 
     private var waitingFlipper = false

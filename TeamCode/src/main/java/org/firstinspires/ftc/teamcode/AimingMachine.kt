@@ -4,6 +4,7 @@ import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
 import org.firstinspires.ftc.teamcode.systems.REmover
 import org.firstinspires.ftc.teamcode.variants.TurretImpl2
 import android.util.Log
+import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware.HOOD_50
 
 
 class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: PoseSet) {
@@ -27,8 +28,11 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
     }
 
     var state = State.FULL
-        private set
     private var prevState = State.FULL
+
+    var turretPreset = 0.0
+    var hoodPreset = HOOD_50
+    var shooterPreset = 1800.0
 
     private val shooter = ShooterImpl2(hw)
     private val turret = TurretImpl2(hw)
@@ -69,7 +73,15 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
         }
         when (state) {
             State.HARDCODE -> {
-                return
+                if (turret.targetAngleDeg != turretPreset){
+                    turret.targetAngleDeg = turretPreset
+                }
+                if (shooter.target != shooterPreset){
+                    shooter.target = shooterPreset
+                }
+                if (hw.hood.position != hoodPreset){
+                    hw.hood.position = hoodPreset
+                }
             }
 
             State.LIMELIGHT_ONLY -> {

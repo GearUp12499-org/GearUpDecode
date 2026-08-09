@@ -80,14 +80,23 @@ class REmoverImpl {
 
 
     fun init(
+        ppx: Double,
+        ppy: Double,
+        ppaRad: Double,
+        target: REmover.RobotPose,
         maxPower: Double = 1.0,
         stopCond: StopConditions = StopConditions.Default,
         timeoutAt: Double = 1.0,
         farStrafe: Boolean = false,
         rotateBack: Boolean = false,
-        ppx: Double,
-        ppy: Double,
-        ppaRad: Double) {
+) {
+
+        finished = false
+
+        this.target = target
+        tgtx = target.x
+        tgty = target.y
+        tgta = target.a
 
         this.maxPower = maxPower
         this.stopCond = stopCond
@@ -140,6 +149,14 @@ class REmoverImpl {
         speed: Double,
         hw: CompBot2Hardware,
     ) {
+
+        if (finished) {
+            hw.frontLeft.power = 0.0
+            hw.frontRight.power = 0.0
+            hw.backLeft.power = 0.0
+            hw.backRight.power = 0.0
+            return
+        }
         currentTime = runtime.time()
 
         val timeoutTime = timeout.time()

@@ -8,7 +8,7 @@ class ShooterImpl2 (private val hw: CompBot2Hardware) {
         private const val ACCEPTABLE_VELOCITY_DIFF = 30.0
     }
 
-    private var target = 0.0
+    var target = 0.0
 
     val defaultPushThreshold = 200
     var pushThreshold = defaultPushThreshold
