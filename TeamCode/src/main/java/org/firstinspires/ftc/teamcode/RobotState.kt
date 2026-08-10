@@ -88,6 +88,7 @@ class RobotState(private val hw: CompBot2Hardware, val red: Boolean) {
         hw.limelight.start()
         hw.limelight.pipelineSwitch(pipe)
 
+        hw.pinpoint.resetPosAndIMU()
         hw.pinpoint.setPosition(Pose2D(DistanceUnit.INCH, 0.0, 0.0, AngleUnit.RADIANS, 0.0))
         kalman = KalmanImpl(
             initPose.getX(DistanceUnit.INCH),

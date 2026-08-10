@@ -77,7 +77,7 @@ class AimingMachine (private val hw: CompBot2Hardware, private val poseSet: Pose
                     turret.targetAngleDeg = turretPreset
                 }
                 if (shooter.target != shooterPreset){
-                    shooter.target = shooterPreset
+                    shooter.setTarget(shooterPreset)
                 }
                 if (hw.hood.position != hoodPreset){
                     hw.hood.position = hoodPreset

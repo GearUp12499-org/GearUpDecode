@@ -25,14 +25,28 @@ class REmoverImpl {
     companion object{
         const val THRESHOLD = 0.2
 
+//        const val FKP: Double = 0.1 //0.35
+//        const val FKD: Double = 0.02 //0.02
+//        const val FKI: Double = 0.0005 // 0.0005
+//
+//        //0.4, 0.07, 0.00001
+//        const val SKP: Double = 0.12// 0.4
+//        const val SKD: Double = 0.02 // 0.06
+//        const val SKI: Double = 0.0005 // 0.0005
+//
+//        const val WKP: Double = 0.4 // 0.4
+//        const val WKD: Double = 0.01 //0.005
+//        const val WKI: Double = 0.0
+//        var Wfudge: Double = 1.0
+
         const val FKP: Double = 0.1 //0.35
         const val FKD: Double = 0.02 //0.02
         const val FKI: Double = 0.0005 // 0.0005
 
         //0.4, 0.07, 0.00001
-        const val SKP: Double = 0.12// 0.4
+        const val SKP: Double = 0.12// 0.5
         const val SKD: Double = 0.02 // 0.06
-        const val SKI: Double = 0.0005 // 0.0005
+        const val SKI: Double = 0.0005 // 0.0001
 
         const val WKP: Double = 0.4 // 0.4
         const val WKD: Double = 0.01 //0.005
@@ -88,7 +102,7 @@ class REmoverImpl {
         stopCond: StopConditions = StopConditions.Default,
         timeoutAt: Double = 1.0,
         farStrafe: Boolean = false,
-        rotateBack: Boolean = false,
+        rotateBack: Boolean = true,
 ) {
 
         finished = false

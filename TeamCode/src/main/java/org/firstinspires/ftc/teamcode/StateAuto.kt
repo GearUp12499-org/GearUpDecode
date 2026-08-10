@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import android.util.Log
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.hardware.CompBot2Hardware
@@ -30,18 +31,20 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
     private val sequence = listOf(
         State.DRIVE_TO_MIDSHOOT,
         State.SHOOT,
+        State.DRIVE_TO_SPIKE_2,
+        State.PICKUP_SPIKE_2,
+        State.DRIVE_TO_MIDSHOOT_WAYPOINT,
+        State.DRIVE_TO_MIDSHOOT,
+        State.SHOOT,
         State.DRIVE_TO_SPIKE_1,
         State.PICKUP_SPIKE_1,
         State.DRIVE_TO_MIDSHOOT_WAYPOINT,
         State.DRIVE_TO_MIDSHOOT,
         State.SHOOT,
-        State.PICKUP_SPIKE_2,
-        State.DRIVE_TO_MIDSHOOT_WAYPOINT,
-        State.DRIVE_TO_MIDSHOOT,
-        State.SHOOT,
         State.DRIVE_TO_SPIKE_3,
         State.PICKUP_SPIKE_3,
-        State.DRIVE_TO_MIDSHOOT_WAYPOINT,
+//        State.DRIVE_TO_MIDSHOOT_WAYPOINT,
+        State.DRIVE_TO_MIDSHOOT,
         State.SHOOT,
         State.DONE
         )
@@ -74,12 +77,16 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
             module.bulkCachingMode = LynxModule.BulkCachingMode.MANUAL
         }
 
-        waitForStart()
-
         driveMachine.init(robotState)
         intakeShootMachine.init()
         aimingMachine.init()
         robotState.init()
+
+        while (opModeInInit()){
+            robotState.updateState()
+        }
+
+        waitForStart()
 
         aimingMachine.state = AimingMachine.State.HARDCODE
 
@@ -87,7 +94,39 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
         aimingMachine.hoodPreset = HOOD_50
         aimingMachine.shooterPreset = SHOOT_MID_RANGE
 
+        driveMachine.state = DriveMachine.State.AUTO
+
+        driveMachine.removerImpl.init(
+            robotState.ppX,
+            robotState.ppY,
+            robotState.ppThetaRad,
+            poseSet.midShoot
+        )
+
         while (opModeIsActive()) {
+
+            val start = System.nanoTime()
+
+            telemetry.addData("Auto State", state)
+            telemetry.addData("IntakeShoot", intakeShootMachine.state)
+            telemetry.addData("Drive", driveMachine.state)
+            telemetry.addData("Aiming", aimingMachine.state)
+
+            Log.i("AutoState", state.toString())
+            Log.i("IntakeShoot", intakeShootMachine.state.toString())
+            Log.i("Drive", driveMachine.state.toString())
+            Log.i("aiming", aimingMachine.state.toString())
+
+            telemetry.addData("trying to drive to", driveMachine.removerImpl.target.x)
+            telemetry.addData("trying to drive to", driveMachine.removerImpl.target.y)
+            telemetry.addData("trying to drive to", driveMachine.removerImpl.target.a)
+
+            Log.i("ppx", robotState.ppX.toString())
+            Log.i("ppy", robotState.ppY.toString())
+            Log.i("ppTheta", robotState.ppThetaRad.toString())
+
+
+            telemetry.update()
             for (module in lynxModules) {
                 module.clearBulkCache()
             }
@@ -96,7 +135,6 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
 
             justTransitioned = state != prevState
             prevState = state
-
 
             when (state) {
                 State.DRIVE_TO_MIDSHOOT_WAYPOINT -> {
@@ -138,8 +176,7 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
                             robotState.ppY,
                             robotState.ppThetaRad,
                             poseSet.midShoot,
-                            farStrafe = true,
-                            rotateBack = false
+                            farStrafe = true
                         )
                     }
                     if (driveMachine.removerImpl.finished){
@@ -154,7 +191,8 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
                             robotState.ppX,
                             robotState.ppY,
                             robotState.ppThetaRad,
-                            poseSet.set1pos
+                            poseSet.set1pos,
+                            stopCond = StopConditions.Waypoint
                         )
                     }
                     if (driveMachine.removerImpl.finished){
@@ -189,14 +227,17 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
                             robotState.ppX,
                             robotState.ppY,
                             robotState.ppThetaRad,
-                            poseSet.set2pos
+                            poseSet.set2pos,
+                            stopCond = StopConditions.Waypoint
                         )
                     }
                     if (driveMachine.removerImpl.finished){
                         nextState()
+                        Log.i("1","")
                     } else if (intakeShootMachine.state == IntakeShootMachine.State.OFF){
                         driveMachine.removerImpl.finished = true
                         nextState()
+                        Log.i("2","")
                     }
                 }
                 State.PICKUP_SPIKE_2 -> {
@@ -224,7 +265,8 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
                             robotState.ppX,
                             robotState.ppY,
                             robotState.ppThetaRad,
-                            poseSet.set3pos
+                            poseSet.set3pos,
+                            stopCond = StopConditions.Waypoint
                         )
                     }
                     if (driveMachine.removerImpl.finished){
@@ -268,6 +310,11 @@ abstract class StateAuto(private val red: Boolean): LinearOpMode() {
             driveMachine.update(robotState, gamepadState)
             intakeShootMachine.update(robotState, gamepadState)
             aimingMachine.update(robotState, gamepadState)
+
+            val end = System.nanoTime()
+            val time = (start-end)/1e6
+
+            Log.i("LoopTime", time.toString())
         }
 
     }

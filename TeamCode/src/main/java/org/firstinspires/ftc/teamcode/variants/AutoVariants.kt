@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.Auto1
 import org.firstinspires.ftc.teamcode.Auto1B
 import org.firstinspires.ftc.teamcode.Auto2
 import org.firstinspires.ftc.teamcode.Auto2B
+import org.firstinspires.ftc.teamcode.StateAuto
 
 //import org.firstinspires.ftc.teamcode.Auto2
 //import org.firstinspires.ftc.teamcode.Auto2B
@@ -35,6 +36,12 @@ class Auto2BRed : Auto2B(true)
 
 @Autonomous
 class Auto2BBlue : Auto2B(false)
+
+@Autonomous
+class StateAutoRed: StateAuto(true)
+
+@Autonomous
+class StateAutoBlue: StateAuto(false)
 
 //@Autonomous
 //class Auto3Red : Auto3(true)

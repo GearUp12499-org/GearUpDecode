@@ -27,11 +27,14 @@ class TurretImpl2 (private val hw: CompBot2Hardware){
         // approx min power 0.0486
 
         private var INTEGRAL_ERROR_SUM_LIMIT = 220.0 * 2 * 2.33 // DEPENDS ON kI
-        var P = 0.000_10
-        //        private var I = 0.000_2 / 2.33 // 0.000_2
-        var I = 0.088 / INTEGRAL_ERROR_SUM_LIMIT // 0.000_2
-        // current best options: 1e-5, 5e-6
-        var D = 0.000_005 // 0.000_062
+//        var P = 0.000_10
+//        //        private var I = 0.000_2 / 2.33 // 0.000_2
+//        var I = 0.088 / INTEGRAL_ERROR_SUM_LIMIT // 0.000_2
+//        // current best options: 1e-5, 5e-6
+//        var D = 0.000_005 // 0.000_062
+        var P = 0.000_06
+        var I = 0.0
+        var D = 0.000_0045
 
     }
 
