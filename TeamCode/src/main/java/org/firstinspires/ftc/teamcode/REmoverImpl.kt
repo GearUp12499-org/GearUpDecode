@@ -48,7 +48,7 @@ class REmoverImpl {
         const val SKD: Double = 0.02 // 0.06
         const val SKI: Double = 0.0005 // 0.0001
 
-        const val WKP: Double = 0.4 // 0.4
+        const val WKP: Double = 0.1 // 0.4
         const val WKD: Double = 0.01 //0.005
         const val WKI: Double = 0.0
         var Wfudge: Double = 1.0
@@ -83,7 +83,8 @@ class REmoverImpl {
     var deltaTime = 0.0
     var currentTime = 0.0
     var prevTime = 0.0
-    var prevDeltaAll = 0.0
+    var prevDeltaAll = 1.0
+    var deltaAll = 0.0
 
     //unique to each drive
     var maxPower = 1.0
@@ -264,7 +265,7 @@ class REmoverImpl {
         val pw: Double = (WKP * Wfudge) * w + WKI * sumW - WKD * vW
 
 
-        val deltaAll = sqrt((f * f) + (s * s) + (w * w))
+        deltaAll = sqrt((f * f) + (s * s) + (w * w))
 
         if (farStrafe && (hypot(deltaX, deltaY) < 30.0)) {
             if (rotateBack) {
